@@ -12,9 +12,22 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 
+from environ import Env
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+ENV_FILE = os.path.join(BASE_DIR, ".env")
+if os.path.exists(ENV_FILE):
+    Env.read_env(ENV_FILE)
+
+env = Env(
+    ALLOWED_HOSTS=(str, ""),
+    DEBUG=(bool, False),
+    LOG_LEVEL=(str, "INFO"),
+    BACKGROUND_TASK_ENABLED=(bool, False),
+)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
@@ -74,13 +87,7 @@ WSGI_APPLICATION = "conf.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-    }
-}
-
+DATABASES = {"default": env.db()}
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators

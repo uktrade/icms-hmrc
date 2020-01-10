@@ -1,34 +1,23 @@
 import poplib
 import smtplib
 
-MAIL_SERVER = "localhost"
-MAIL_SERVER_USER = "test18"
-MAIL_SERVER_PASS = "password"
-SMTP_PORT = 587
-POP3_PORT = 995
-
 
 class MailServer(object):
-    def __init__(self):
-        pass
+    def __init__(self, hostname, user, pwd, pop3_port: int, smtp_port: int):
+        self.smtp_port = smtp_port
+        self.pop3_port = pop3_port
+        self.pwd = pwd
+        self.user = user
+        self.hostname = hostname
 
-    def send_email(self, sender_email, receiver_email, message):
-        server = smtplib.SMTP(MAIL_SERVER, str(SMTP_PORT))
-        server.starttls()
-        server.login(MAIL_SERVER_USER, MAIL_SERVER_PASS)
-        server.sendmail(sender_email, receiver_email, message)
-        server.quit()
+    def connect_pop3(self):
+        pop3 = poplib.POP3_SSL(self.hostname, str(self.pop3_port))
+        pop3.user(self.user)
+        pop3.pass_(self.pwd)
+        return pop3
 
-    def read_email(self):
-        pop3 = poplib.POP3_SSL(MAIL_SERVER, str(POP3_PORT))
-        pop3.user(MAIL_SERVER_USER)
-        pop3.pass_(MAIL_SERVER_PASS)
-        msg = self._process_mailbox(pop3)
-        pop3.quit()
-        return msg
-
-    def _process_mailbox(self, pop3_mailbox):
-        msg_obj = pop3_mailbox.list()
-        output = str(msg_obj) + "\n" + "\n"
-        output += str(pop3_mailbox.retr(len(msg_obj[1])))
-        return output
+    def connect_smtp(self):
+        smtp = smtplib.SMTP(self.hostname, str(self.smtp_port))
+        smtp.starttls()
+        smtp.login(self.user, self.pwd)
+        return smtp
