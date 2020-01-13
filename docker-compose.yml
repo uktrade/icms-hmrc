@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  lite-hmrc-postgres:
+    restart: 'always'
+    container_name: "lite-hmrc-postgres"
+    environment:
+      - LITEHMRC_DB_USER=lite
+      - LITEHMRC_DB_PASSWORD=litepass
+      - LITEHMRC_DB_SCHEMA=litehmrc
+      - POSTGRES_PASSWORD=password
+    build: './database'
+    expose:
+      - 5432
+    ports:
+      - 5432:5432
+
+  lite-hmrc-intg:
+    container_name: "lite-hmrc-intg"
+    env_file:
+      - .env
+    build: .
+    volumes:
+      - .:/app
+    ports:
+      - 8000:8000
+    depends_on:
+      - lite-hmrc-postgres
+    expose:
+      - 8000
+    command: pipenv run ./manage.py runserver 0.0.0.0:8000

@@ -1,0 +1,4 @@
+db.*
+**/.git/
+**/database/
+README.md
