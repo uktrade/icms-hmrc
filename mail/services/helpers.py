@@ -3,10 +3,6 @@ from email.message import Message
 from email.parser import Parser
 from mail.dtos import EmailMessageDto
 
-""" 
-Message helpers
-"""
-
 ALLOWED_FILE_MIMETYPES = ["application/octet-stream"]
 
 
@@ -36,7 +32,7 @@ def body_contents_of(msg: Message):
 
     if msg.is_multipart():
         parts = msg.get_payload()
-        for n, part in enumerate(parts):
+        for _, part in enumerate(parts):
             return body_contents_of(part)
     if not msg.is_multipart():
         content_type = msg.get_content_type()

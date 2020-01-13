@@ -1,3 +1,4 @@
+from conf.settings import EMAIL_PASSWORD
 from mail.servers import MailServer
 from mail.services.MailboxService import MailboxService
 import logging
@@ -9,14 +10,12 @@ def reademail_job():
     server = MailServer(
         hostname="localhost",
         user="test18",
-        pwd="password",
+        pwd=EMAIL_PASSWORD,
         pop3_port=995,
         smtp_port=587,
     )
     pop3_conn = server.connect_pop3()
-    log.info(
-        "Last message: \n{}.".format(MailboxService().read_last_message(pop3_conn))
-    )
+    log.info("Last message: \n%s.", str(MailboxService().read_last_message(pop3_conn)))
     pop3_conn.quit()
     # TODO: Some logic which does the following:
     #   - reads the 'last_message'

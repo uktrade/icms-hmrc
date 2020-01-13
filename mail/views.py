@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 
+from conf.settings import EMAIL_PASSWORD
 from mail.services.data_processing import (
     process_and_save_email_message,
     collect_and_send_data_to_dto,
@@ -18,7 +19,7 @@ class SendMailView(APIView):
         server = MailServer(
             hostname="localhost",
             user="test18",
-            pwd="password",
+            pwd=EMAIL_PASSWORD,
             pop3_port=995,
             smtp_port=587,
         )
@@ -36,7 +37,7 @@ class ReadMailView(APIView):
         server = MailServer(
             hostname="localhost",
             user="test18",
-            pwd="password",
+            pwd=EMAIL_PASSWORD,
             pop3_port=995,
             smtp_port=587,
         )
@@ -52,7 +53,7 @@ class RouteMailView(APIView):
         server = MailServer(
             hostname="localhost",
             user="test18",
-            pwd="password",
+            pwd=EMAIL_PASSWORD,
             pop3_port=995,
             smtp_port=587,
         )

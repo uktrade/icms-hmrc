@@ -33,7 +33,7 @@ env = Env(
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "a76)0s^2bn&1!nv+$sjk)bno$w8i7@l5#31f^j*tw!c=m(if4&"
+SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -88,6 +88,8 @@ WSGI_APPLICATION = "conf.wsgi.application"
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 DATABASES = {"default": env.db()}
+
+EMAIL_PASSWORD = env("EMAIL_PASSWORD")
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators

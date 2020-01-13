@@ -13,7 +13,7 @@ class MailboxService(object):
         smtp_connection.send_message(message)
 
     def read_last_message(self, pop3_connection: object):
-        resp, mails, octets = pop3_connection.list()
+        _, mails, _ = pop3_connection.list()
         # 'retr' returns a triplet of response, ['line 1','line 2'], octets
         msg_triplet = pop3_connection.retr(len(mails))
         return to_mail_message_dto(msg_triplet[1])
