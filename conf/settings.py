@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import sys
 
 from environ import Env
 
@@ -61,6 +62,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "conf.middleware.LoggingMiddleware",
 ]
 
 ROOT_URLCONF = "conf.urls"
@@ -117,6 +119,23 @@ USE_L10N = True
 
 USE_TZ = True
 
+if "test" not in sys.argv:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "json": {
+                "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
+                "format": "(asctime)(levelname)(message)(filename)(lineno)(threadName)(name)(thread)(created)(process)(processName)(relativeCreated)(module)(funcName)(levelno)(msecs)(pathname)",  # noqa
+            }
+        },
+        "handlers": {
+            "console": {"class": "logging.StreamHandler", "formatter": "json"}
+        },
+        "loggers": {"": {"handlers": ["console"], "level": env("LOG_LEVEL").upper()}},
+    }
+else:
+    LOGGING = {"version": 1, "disable_existing_loggers": True}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
