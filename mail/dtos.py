@@ -32,6 +32,6 @@ def to_json(email_message_dto: EmailMessageDto):
             "name": email_message_dto.attachment[0],
             "data": email_message_dto.attachment[1],
         },
-        "raw_data": email_message_dto.raw_data,
+        "raw_data": str(email_message_dto.raw_data[1]),
     }
     return json.dumps(_dict)

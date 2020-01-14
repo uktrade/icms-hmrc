@@ -57,22 +57,24 @@ def get_attachment(msg: Message):
             return name, data
 
 
-def to_mail_message_dto(mailContents: list):
-    contents = b"\r\n".join(mailContents).decode("utf-8")
-    msgObj = Parser().parsestr(contents)
-    msg = body_contents_of(msgObj)
-    file_name, file_data = get_attachment(msgObj)
+def to_mail_message_dto(mail_data: object):
+    mail_contents = mail_data[1]
+    contents = b"\r\n".join(mail_contents).decode("utf-8")
+    msg_obj = Parser().parsestr(contents)
+    msg = body_contents_of(msg_obj)
+    file_name, file_data = get_attachment(msg_obj)
     return EmailMessageDto(
-        subject=msgObj.get("Subject"),
-        sender=msgObj.get("From"),
-        receiver=msgObj.get("To"),
+        subject=msg_obj.get("Subject"),
+        sender=msg_obj.get("From"),
+        receiver=msg_obj.get("To"),
         body=msg,
         attachment=[file_name, file_data],
-        run_number=get_runnumber(file_data),
+        run_number=get_runnumber(msg_obj.get("Subject")),
+        raw_data=mail_data,
     )
 
 
-def get_runnumber(file: object):
+def get_runnumber(subject: str):
     """todo: """
     return "99"
 

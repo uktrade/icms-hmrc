@@ -24,8 +24,8 @@ class SendMailView(APIView):
             smtp_port=587,
         )
         smtp_conn = server.connect_smtp()
-        mailBoxService = MailboxService()
-        mailBoxService.send_email(
+        mailbox_service = MailboxService()
+        mailbox_service.send_email(
             smtp_conn, build_text_message("junk@mail.com", "junk2@mail.com")
         )
         smtp_conn.quit()
@@ -42,8 +42,7 @@ class ReadMailView(APIView):
             smtp_port=587,
         )
         pop3_conn = server.connect_pop3()
-        mailBoxService = MailboxService()
-        last_msg_dto = mailBoxService.read_last_message(pop3_conn)
+        last_msg_dto = MailboxService().read_last_message(pop3_conn)
         pop3_conn.quit()
         return JsonResponse(status=HTTP_200_OK, data=to_json(last_msg_dto), safe=False)
 
