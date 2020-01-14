@@ -2,6 +2,7 @@ import string
 from email.message import Message
 from email.parser import Parser
 from mail.dtos import EmailMessageDto
+from mail.models import LicenceUpdate
 
 ALLOWED_FILE_MIMETYPES = ["application/octet-stream"]
 
@@ -95,3 +96,19 @@ def process_attachment(attachment):
         return edi_filename, str(edi_data)
     except IndexError:
         return "", ""
+
+
+def new_hmrc_run_number(dto_run_number: int):
+    last_licence_update = LicenceUpdate.objects.last()
+    if not last_licence_update.source_run_number == dto_run_number:
+        return (
+            last_licence_update.hmrc_run_number + 1
+            if last_licence_update.hmrc_run_number != 99999
+            else 0
+        )
+    else:
+        return last_licence_update.hmrc_run_number
+
+
+def build_msg(email_message_dto):
+    pass

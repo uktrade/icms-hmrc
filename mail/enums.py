@@ -42,3 +42,7 @@ class SourceEnum:
     LITE = "LITE"
 
     choices = [(SPIRE, "SPIRE"), (LITE, "LITE")]
+
+    @classmethod
+    def as_list(cls):
+        return [{"status": choice[0]} for choice in cls.choices]
