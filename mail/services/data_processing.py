@@ -2,11 +2,13 @@ import json
 
 from conf.constants import VALID_SENDERS
 from mail.dtos import EmailMessageDto
+from mail.models import LicenceUpdate
 from mail.serializers import InvalidEmailSerializer, LicenceUpdateMailSerializer
 from mail.services.helpers import (
     convert_sender_to_source,
     process_attachment,
     new_hmrc_run_number,
+    convert_source_to_sender,
 )
 
 
@@ -16,8 +18,8 @@ def process_and_save_email_message(dto: EmailMessageDto):
     serializer = LicenceUpdateMailSerializer(data=data)
 
     if serializer.is_valid():
-        serializer.save()
-        return True
+        mail = serializer.save()
+        return mail
     else:
         data["serializer_errors"] = str(serializer.errors)
         serializer = InvalidEmailSerializer(data=data)
@@ -47,8 +49,15 @@ def convert_dto_data_for_serialization(dto: EmailMessageDto):
     return data
 
 
-def collect_and_send_data_to_dto():
-    # determine run_number to use
-    # get data out
-    # return dto
-    return True
+def collect_and_send_data_to_dto(mail):
+    licence_update = LicenceUpdate.objects.get(mail=mail)
+    dto = EmailMessageDto(
+        run_number=licence_update.hmrc_run_number,
+        sender=convert_source_to_sender(licence_update.source),
+        receiver="HMRC",
+        body="",
+        subject="some_subject",
+        attachment=[mail.edi_filename, mail.edi_data.encode("ascii", "replace")],
+        raw_data=None,
+    )
+    return dto

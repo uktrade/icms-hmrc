@@ -2,6 +2,7 @@ import string
 from email.message import Message
 from email.parser import Parser
 from mail.dtos import EmailMessageDto
+from mail.enums import SourceEnum
 from mail.models import LicenceUpdate
 
 ALLOWED_FILE_MIMETYPES = ["application/octet-stream"]
@@ -85,21 +86,29 @@ def convert_sender_to_source(sender: string):
         return "SPIRE"
     elif sender == "test@lite.com":
         return "LITE"
-    else:
-        return sender
+    return sender
+
+
+def convert_source_to_sender(source):
+    if source == SourceEnum.SPIRE:
+        return "test@spire.com"
+    elif source == SourceEnum.LITE:
+        return "test@lite.com"
+    return source
 
 
 def process_attachment(attachment):
     try:
         edi_filename = attachment[0]
-        edi_data = attachment[1]
-        return edi_filename, str(edi_data)
+        edi_data = attachment[1].decode("ascii", "replace")
+        return edi_filename, edi_data
     except IndexError:
         return "", ""
 
 
 def new_hmrc_run_number(dto_run_number: int):
     last_licence_update = LicenceUpdate.objects.last()
+    dto_run_number = dto_run_number % 100000
     if not last_licence_update.source_run_number == dto_run_number:
         return (
             last_licence_update.hmrc_run_number + 1
@@ -110,5 +119,5 @@ def new_hmrc_run_number(dto_run_number: int):
         return last_licence_update.hmrc_run_number
 
 
-def build_msg(email_message_dto):
+def build_msg(email_message_dto: EmailMessageDto):
     pass

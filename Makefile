@@ -6,3 +6,9 @@ run:
 
 check-format:
 	black --check ./mail
+
+cov:
+	pipenv run coverage run --source='.' manage.py test mail
+
+cov-report:
+	pipenv run coverage report

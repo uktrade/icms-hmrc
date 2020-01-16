@@ -1,13 +1,10 @@
-import os
-
-from django.test import testcases
-
+from conf.test_client import LiteHMRCTestClient
 from mail.dtos import *
 
 
-class TestDtos(testcases.TestCase):
+class TestDtos(LiteHMRCTestClient):
     def setUp(self):
-        pass
+        super().setUp()
 
     def test_EmailMessageDto(self):
         email_message_dto = EmailMessageDto(

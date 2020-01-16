@@ -98,6 +98,8 @@ EMAIL_USER = env("EMAIL_USER")
 EMAIL_POP3_PORT = env("EMAIL_POP3_PORT")
 EMAIL_SMTP_PORT = env("EMAIL_SMTP_PORT")
 
+TIME_TESTS = env("TIME_TESTS")
+
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
