@@ -1,0 +1,13 @@
+[dovecot]
+enabled = true
+port = pop3,pop3s,imap,imaps
+filter = dovecot
+logpath = /var/log/dovecot.log
+maxretry  = 3
+
+[postfix]
+enabled  = true
+port     = smtp,ssmtp
+filter   = postfix
+logpath  = /var/log/mail.log
+maxretry  = 3

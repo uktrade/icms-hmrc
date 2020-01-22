@@ -37,9 +37,15 @@ class MailServer(object):
         self.pop3_connection.quit()
 
     def connect_to_smtp(self):
+        print("establishing connection...")
         self.smtp_connection = smtplib.SMTP(self.hostname, str(self.smtp_port))
+        print("connection established")
+        print("starting tls...")
         self.smtp_connection.starttls()
+        print("tls started")
+        print("logging in...")
         self.smtp_connection.login(self.user, self.password)
+        print("logged in")
         return self.smtp_connection
 
     def quit_smtp_connection(self):

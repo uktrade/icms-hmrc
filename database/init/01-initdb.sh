@@ -9,18 +9,14 @@ set -o errexit
 # Creating an array that defines the environment variables
 # that must be set. This can be consumed later via arrray
 # variable expansion ${REQUIRED_ENV_VARS[@]}.
-readonly REQUIRED_ENV_VARS=(
-  "LITEHMRC_DB_USER"
-  "LITEHMRC_DB_PASSWORD"
-  "LITEHMRC_DB_SCHEMA"
-  "POSTGRES_USER")
+readonly REQUIRED_ENV_VARS=("POSTGRES_USER")
 
 # Main execution:
 # - verifies if all environment variables are set
 # - runs the SQL code to create user and database
 main() {
   check_env_vars_set
-  init_user_and_db
+#  init_user_and_db
 }
 
 

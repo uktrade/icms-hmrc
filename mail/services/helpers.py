@@ -119,5 +119,6 @@ def new_hmrc_run_number(dto_run_number: int):
         return last_licence_update.hmrc_run_number
 
 
+# todo
 def build_msg(email_message_dto: EmailMessageDto):
     pass

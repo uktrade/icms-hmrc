@@ -1,21 +1,29 @@
+import threading
 import time
-import schedule as schedule
+from datetime import datetime
+
+from mail.routing_controller import check_and_route_emails
 
 
-class Scheduler(object):
-    """
-    A scheduler used to schedule a job defined in mail.scheduling.jobs
-    """
+def scheduled_job():
+    # Do some stuff
+    # Offload the blocking job to a new thread
 
-    def __init__(self, interval: int):
-        """interval: the length of time in seconds paused between runs"""
-        self.interval = interval
+    t = threading.Thread(target=some_fn, args=(True,))
+    t.setDaemon(True)
+    t.start()
 
-    def add_job(self, job: object):
-        """add a job to this scheduler"""
-        schedule.every(self.interval).seconds.do(job)
+    return True
 
-    def run(self):
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
+
+def some_fn(x):
+    while x:
+        if not x:
+            check_and_route_emails()
+        print(datetime.now())
+        # if condition:
+        #     return
+        # else:
+        #     time.sleep(interval in seconds)
+        # return 0
+        time.sleep(5)

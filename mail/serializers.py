@@ -43,7 +43,7 @@ class LicenceUpdateMailSerializer(serializers.ModelSerializer):
         return mail
 
 
-class LicenceUpdateUpdateSerializer(serializers.ModelSerializer):
+class LicenceUpdateResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Mail
         fields = ["last_submitted_on", "status", "response_file", "response_data"]

@@ -60,7 +60,7 @@ jobs:
 
       - run:
           name: Run tests
-          command: pipenv run ./manage.py test --parallel
+          command: pipenv run ./manage.py test --parallel --exclude-tag=end-to-end
       - store_test_results:
           path: test-results
 

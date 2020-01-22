@@ -49,7 +49,8 @@ def convert_dto_data_for_serialization(dto: EmailMessageDto):
     return data
 
 
-def collect_and_send_data_to_dto(mail):
+# todo
+def to_email_message_dto_from(mail):
     licence_update = LicenceUpdate.objects.get(mail=mail)
     dto = EmailMessageDto(
         run_number=licence_update.hmrc_run_number,

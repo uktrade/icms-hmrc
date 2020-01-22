@@ -68,3 +68,6 @@ target/
 # Environments
 .env
 .venv
+
+# Test data
+.mailserver/maildata/

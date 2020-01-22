@@ -4,7 +4,7 @@ from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.models import Mail, LicenceUpdate
 from mail.services.data_processing import (
     process_and_save_email_message,
-    collect_and_send_data_to_dto,
+    to_email_message_dto_from,
 )
 from mail.services.helpers import convert_source_to_sender
 
@@ -85,7 +85,7 @@ class TestModels(LiteHMRCTestClient):
         self.assertEqual(email.raw_data, email_message_dto.raw_data)
 
     def test_successful_email_db_record_converted_to_dto(self):
-        dto = collect_and_send_data_to_dto(self.mail)
+        dto = to_email_message_dto_from(self.mail)
 
         self.assertEqual(dto.run_number, self.licence_update.hmrc_run_number)
         self.assertEqual(
