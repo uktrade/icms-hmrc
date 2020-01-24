@@ -1,5 +1,7 @@
 import string
 from email.message import Message
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
 from email.parser import Parser
 from mail.dtos import EmailMessageDto
 from mail.enums import SourceEnum
@@ -76,9 +78,17 @@ def to_mail_message_dto(mail_data: object):
     )
 
 
-def get_runnumber(subject: str):
-    """todo: """
-    return "99"
+def get_runnumber(patterned_text: str):
+    """Gets run-number from a patterned text: abc_xyz_nnn_yyy_1234_datetime.
+    :returns found number; ValueError if it not found or is not a number
+    """
+    if patterned_text is None:
+        raise ValueError("None received")
+
+    split_str = patterned_text.split("_", 6)
+    if len(split_str) != 6 or not split_str[4].isdigit():
+        raise ValueError("Can not find valid run-number")
+    return patterned_text.split("_", 6)[4]
 
 
 def convert_sender_to_source(sender: string):
@@ -119,6 +129,31 @@ def new_hmrc_run_number(dto_run_number: int):
         return last_licence_update.hmrc_run_number
 
 
-# todo
-def build_msg(email_message_dto: EmailMessageDto):
-    pass
+def build_email_message(email_message_dto: EmailMessageDto):
+    """Build mail message from EmailMessageDto.
+    :param email_message_dto: the DTO object this mail message is built upon
+    :return: a multipart message
+    """
+    _validate_dto(email_message_dto)
+
+    multipart_msg = MIMEMultipart()
+    multipart_msg["From"] = email_message_dto.sender
+    multipart_msg["To"] = email_message_dto.receiver
+    multipart_msg["Subject"] = email_message_dto.subject
+    # todo: confirm if we need to set `body`
+    payload = MIMEApplication(email_message_dto.attachment[1])
+    payload.set_payload(email_message_dto.attachment[1])
+    payload.add_header(
+        "Content-Disposition",
+        "attachment; filename= %s" % email_message_dto.attachment[0],
+    )
+    multipart_msg.attach(payload)
+    return multipart_msg
+
+
+def _validate_dto(email_message_dto):
+    if email_message_dto is None:
+        raise TypeError("None email_message_dto received!")
+
+    if email_message_dto.attachment is None:
+        raise TypeError("None file attachment received!")

@@ -7,6 +7,7 @@ from mail.services.helpers import (
     convert_sender_to_source,
     convert_source_to_sender,
     new_hmrc_run_number,
+    get_runnumber,
 )
 
 
@@ -41,7 +42,25 @@ class HelpersTests(LiteHMRCTestClient):
         ]
     )
     def test_process_attachment(self, attachment, attachment_name, attachment_data):
+        # todo
         pass
+
+    def test_get_runnumber_from_subject(self):
+        subject = "ILBDOTI_live_CHIEF_usageData_9876_201901130300"
+        run_number = get_runnumber(subject)
+        self.assertEqual(run_number, "9876")
+
+    def test_value_error_thrown_cannot_find_runnumber(self):
+        subject = "usageData_9876_201901130300"
+        with self.assertRaises(ValueError) as context:
+            get_runnumber(subject)
+        self.assertEqual("Can not find valid run-number", str(context.exception))
+
+    def test_value_error_thrown_runnumber_wrong_format(self):
+        subject = "abc_xyz_nnn_yyy_a1b34_datetime"
+        with self.assertRaises(ValueError) as context:
+            get_runnumber(subject)
+        self.assertEqual("Can not find valid run-number", str(context.exception))
 
     @staticmethod
     def _setup_mail():
