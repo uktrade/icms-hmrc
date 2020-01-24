@@ -1,9 +1,11 @@
 import json
 import uuid
+from datetime import timedelta
 from typing import List
 
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 from mail.enums import ReceptionStatusEnum, ExtractTypeEnum, SourceEnum
 
@@ -39,10 +41,17 @@ class Mail(models.Model):
     serializer_errors = models.TextField(blank=True, null=True)
     errors = models.TextField(blank=True, null=True)
 
+    currently_processing_at = models.DateTimeField(null=True)
+    currently_processed_by = models.CharField(null=True, max_length=100)
+
     objects = MailManager()
 
     class Meta:
         ordering = ["created_at"]
+
+    def set_time(self, offset=0):
+        self.currently_processing_at = timezone.now() + timedelta(seconds=offset)
+        self.save()
 
 
 class LicenceUpdate(models.Model):

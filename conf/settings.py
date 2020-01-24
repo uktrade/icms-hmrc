@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 import sys
+import uuid
 
 from environ import Env
 
@@ -100,6 +101,8 @@ EMAIL_SMTP_PORT = env("EMAIL_SMTP_PORT")
 
 TIME_TESTS = env("TIME_TESTS")
 
+LOCK_INTERVAL = float(env("LOCK_INTERVAL"))
+
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
@@ -112,6 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
 ]
 
+SYSTEM_INSTANCE_UUID = uuid.uuid4()
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/

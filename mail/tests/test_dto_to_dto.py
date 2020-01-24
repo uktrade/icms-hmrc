@@ -16,10 +16,10 @@ class DtoToDtoTests(LiteHMRCTestClient):
         self.hmrc_run_number = 28
         self.source_run_number = 15
         self.mail = Mail.objects.create(
-            edi_data="blank",
-            extract_type=ExtractTypeEnum.INSERT,
+            edi_data=self.file_body,
+            extract_type=ExtractTypeEnum.USAGE_UPDATE,
             status=ReceptionStatusEnum.ACCEPTED,
-            edi_filename="blank",
+            edi_filename=self.file_name,
         )
 
         self.licence_update = LicenceUpdate.objects.create(
@@ -35,8 +35,8 @@ class DtoToDtoTests(LiteHMRCTestClient):
             sender="test@spire.com",
             receiver="receiver@example.com",
             body="body",
-            subject="subject",
-            attachment=["filename", "a line".encode("ascii", "replace")],
+            subject=self.file_name,
+            attachment=[self.file_name, self.file_body,],
             raw_data="qwerty",
         )
 
@@ -52,7 +52,7 @@ class DtoToDtoTests(LiteHMRCTestClient):
         self.assertEqual(
             dto.attachment[1], email_message_dto.attachment[1],
         )
-        self.assertEqual(dto.subject, "some_subject")
+        self.assertEqual(dto.subject, self.file_name)
         self.assertEqual(dto.receiver, "HMRC")
         self.assertEqual(dto.body, "")
         self.assertEqual(dto.raw_data, None)
@@ -63,8 +63,8 @@ class DtoToDtoTests(LiteHMRCTestClient):
             sender="test@general.com",
             receiver="receiver@example.com",
             body="body",
-            subject="subject",
-            attachment=["filename", "a line".encode("ascii", "replace")],
+            subject=self.file_name,
+            attachment=[self.file_name, self.file_body],
             raw_data="qwerty",
         )
 

@@ -66,7 +66,7 @@ class HelpersTests(LiteHMRCTestClient):
     def _setup_mail():
         return Mail.objects.create(
             edi_data="blank",
-            extract_type=ExtractTypeEnum.INSERT,
+            extract_type=ExtractTypeEnum.USAGE_UPDATE,
             status=ReceptionStatusEnum.ACCEPTED,
             edi_filename="blank",
         )

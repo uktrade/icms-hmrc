@@ -12,6 +12,10 @@ class LicenceUpdateSerializer(serializers.ModelSerializer):
         model = LicenceUpdate
         fields = "__all__"
 
+    def create(self, validated_data):
+        instance, _ = LicenceUpdate.objects.get_or_create(**validated_data)
+        return instance
+
 
 class LicenceUpdateMailSerializer(serializers.ModelSerializer):
     licence_update = LicenceUpdateSerializer(write_only=True)
@@ -20,7 +24,6 @@ class LicenceUpdateMailSerializer(serializers.ModelSerializer):
         model = Mail
         fields = [
             "id",
-            "created_at",
             "edi_filename",
             "edi_data",
             "extract_type",
@@ -30,7 +33,7 @@ class LicenceUpdateMailSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         licence_update_data = validated_data.pop("licence_update")
-        mail = Mail.objects.create(**validated_data)
+        mail, _ = Mail.objects.get_or_create(**validated_data)
 
         licence_update_data["mail"] = mail.id
 

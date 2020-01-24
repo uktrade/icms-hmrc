@@ -1,3 +1,5 @@
+from django.test import tag
+
 from conf.test_client import LiteHMRCTestClient
 from mail.dtos import EmailMessageDto
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
@@ -16,10 +18,10 @@ class TestModels(LiteHMRCTestClient):
         self.hmrc_run_number = 28
         self.source_run_number = 15
         self.mail = Mail.objects.create(
-            edi_data="blank",
-            extract_type=ExtractTypeEnum.INSERT,
+            edi_data=self.file_body,
+            extract_type=ExtractTypeEnum.USAGE_UPDATE,
             status=ReceptionStatusEnum.ACCEPTED,
-            edi_filename="blank",
+            edi_filename=self.file_name,
         )
 
         self.licence_update = LicenceUpdate.objects.create(
@@ -29,14 +31,15 @@ class TestModels(LiteHMRCTestClient):
             source=SourceEnum.SPIRE,
         )
 
+    @tag("body")
     def test_email_processed_successfully(self):
         email_message_dto = EmailMessageDto(
             run_number=self.source_run_number + 1,
             sender="test@spire.com",
             receiver="receiver@example.com",
             body="body",
-            subject="subject",
-            attachment=["filename", "a line".encode("ascii", "replace")],
+            subject=self.file_name,
+            attachment=[self.file_name, self.file_body],
             raw_data="qwerty",
         )
 
@@ -48,7 +51,7 @@ class TestModels(LiteHMRCTestClient):
         self.assertEqual(
             email.edi_data, email_message_dto.attachment[1].decode("ascii", "replace")
         )
-        self.assertEqual(email.extract_type, ExtractTypeEnum.INSERT)
+        self.assertEqual(email.extract_type, ExtractTypeEnum.USAGE_UPDATE)
         self.assertEqual(email.response_file, None)
         self.assertEqual(email.response_date, None)
         self.assertEqual(email.edi_filename, email_message_dto.attachment[0])
@@ -78,13 +81,15 @@ class TestModels(LiteHMRCTestClient):
         email = Mail.objects.invalid().last()
 
         self.assertEqual(email.edi_data, "")
-        self.assertEqual(email.extract_type, ExtractTypeEnum.INSERT)
+        self.assertEqual(email.extract_type, None)
         self.assertEqual(email.response_file, None)
         self.assertEqual(email.response_date, None)
         self.assertEqual(email.edi_filename, "")
         self.assertEqual(email.raw_data, email_message_dto.raw_data)
 
+    @tag("only")
     def test_successful_email_db_record_converted_to_dto(self):
+        self.mail.edi_data = self.file_body.decode("ascii", "replace")
         dto = to_email_message_dto_from(self.mail)
 
         self.assertEqual(dto.run_number, self.licence_update.hmrc_run_number)
@@ -93,9 +98,9 @@ class TestModels(LiteHMRCTestClient):
         )
         self.assertEqual(dto.attachment[0], self.mail.edi_filename)
         self.assertEqual(
-            dto.attachment[1], self.mail.edi_data.encode("ascii", "replace")
+            dto.attachment[1], self.mail.edi_data.encode("ascii", "replcae")
         )
-        self.assertEqual(dto.subject, "some_subject")
+        self.assertEqual(dto.subject, self.mail.edi_filename)
         self.assertEqual(dto.receiver, "HMRC")
         self.assertEqual(dto.body, "")
         self.assertEqual(dto.raw_data, None)

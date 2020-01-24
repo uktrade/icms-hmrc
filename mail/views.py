@@ -46,7 +46,7 @@ class SeedMail(APIView):
         if LicenceUpdate.objects.count() == 0:
             mail = Mail.objects.create(
                 edi_data="blank",
-                extract_type=ExtractTypeEnum.INSERT,
+                extract_type=ExtractTypeEnum.USAGE_UPDATE,
                 status=ReceptionStatusEnum.ACCEPTED,
                 edi_filename="blank",
             )

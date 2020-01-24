@@ -20,10 +20,14 @@ class ReceptionStatusEnum:
 
 
 class ExtractTypeEnum:
-    INSERT = "insert"
+    USAGE_UPDATE = "usage_update"
 
     choices = [
-        (INSERT, "Insert"),
+        (USAGE_UPDATE, "Usage update"),
+    ]
+
+    email_keys = [
+        ("usageData", USAGE_UPDATE),
     ]
 
     @classmethod
