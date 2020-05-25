@@ -11,7 +11,7 @@ class LoggingMiddleware:
         start = time.time()
         request.correlation = uuid.uuid4().hex
         data = {
-            "message": "unpopped popcorn lite hmrc",
+            "message": "liteolog hmrc",
             "corrID": request.correlation,
             "type": "http request",
             "method": request.method,

@@ -9,9 +9,7 @@ https://docs.djangoproject.com/en/2.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
-
 import os
-import sys
 import uuid
 
 from environ import Env
@@ -41,7 +39,7 @@ DJANGO_SECRET_KEY = env("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = "*"
 
 
 # Application definition
@@ -98,10 +96,14 @@ EMAIL_HOSTNAME = env("EMAIL_HOSTNAME")
 EMAIL_USER = env("EMAIL_USER")
 EMAIL_POP3_PORT = env("EMAIL_POP3_PORT")
 EMAIL_SMTP_PORT = env("EMAIL_SMTP_PORT")
+SPIRE_ADDRESS = env("SPIRE_ADDRESS")
+HMRC_ADDRESS = env("HMRC_ADDRESS")
 
 TIME_TESTS = env("TIME_TESTS")
 
 LOCK_INTERVAL = float(env("LOCK_INTERVAL"))
+
+POLL_INTERVAL = env("POLL_INTERVAL")
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -130,23 +132,35 @@ USE_L10N = True
 
 USE_TZ = True
 
-if "test" not in sys.argv:
-    LOGGING = {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {
-            "json": {
-                "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
-                "format": "(asctime)(levelname)(message)(filename)(lineno)(threadName)(name)(thread)(created)(process)(processName)(relativeCreated)(module)(funcName)(levelno)(msecs)(pathname)",  # noqa
-            }
+# if "test" not in sys.argv:
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": "(asctime)(levelname)(message)(filename)(lineno)(threadName)(name)(thread)(created)(process)(processName)(relativeCreated)(module)(funcName)(levelno)(msecs)(pathname)",  # noqa
         },
-        "handlers": {
-            "console": {"class": "logging.StreamHandler", "formatter": "json"}
+        "simple": {
+            "format": "%(asctime)s - %(name)s:%(lineno)s - %(funcName)s - %(message)s"
         },
-        "loggers": {"": {"handlers": ["console"], "level": env("LOG_LEVEL").upper()}},
-    }
-else:
-    LOGGING = {"version": 1, "disable_existing_loggers": True}
+    },
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simple"}},
+    "loggers": {
+        "": {
+            "handlers": ["console"],
+            "level": env("LOG_LEVEL").upper(),
+            "propagate": True,
+        },
+        "django.db.models.BaseManager": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+    },
+}
+# else:
+#     LOGGING = {"version": 1, "disable_existing_loggers": True}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/

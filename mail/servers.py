@@ -28,7 +28,7 @@ class MailServer(object):
         self.smtp_connection = None
 
     def connect_to_pop3(self):
-        self.pop3_connection = poplib.POP3_SSL(self.hostname, str(self.pop3_port))
+        self.pop3_connection = poplib.POP3_SSL(self.hostname, self.pop3_port)
         self.pop3_connection.user(self.user)
         self.pop3_connection.pass_(self.password)
         return self.pop3_connection

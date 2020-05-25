@@ -1,5 +1,6 @@
 from parameterized import parameterized
-
+import logging
+from conf.settings import SPIRE_ADDRESS
 from conf.test_client import LiteHMRCTestClient
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.models import LicenceUpdate, Mail
@@ -9,14 +10,17 @@ from mail.services.helpers import (
     new_hmrc_run_number,
     get_runnumber,
 )
+from mail.services.logging_decorator import lite_log
+
+logger = logging.getLogger(__name__)
 
 
 class HelpersTests(LiteHMRCTestClient):
-    @parameterized.expand([["test@spire.com", "SPIRE"], ["test@lite.com", "LITE"]])
+    @parameterized.expand([[SPIRE_ADDRESS, "SPIRE"], ["test@lite.com", "LITE"]])
     def test_convert_sender_to_source(self, sender, source):
         self.assertEqual(convert_sender_to_source(sender), source)
 
-    @parameterized.expand([["test@spire.com", "SPIRE"], ["test@lite.com", "LITE"]])
+    @parameterized.expand([[SPIRE_ADDRESS, "SPIRE"], ["test@lite.com", "LITE"]])
     def test_convert_source_to_sender(self, sender, source):
         self.assertEqual(convert_source_to_sender(source), sender)
 
@@ -67,6 +71,18 @@ class HelpersTests(LiteHMRCTestClient):
         return Mail.objects.create(
             edi_data="blank",
             extract_type=ExtractTypeEnum.USAGE_UPDATE,
-            status=ReceptionStatusEnum.ACCEPTED,
+            status=ReceptionStatusEnum.PENDING,
             edi_filename="blank",
         )
+
+
+def print_all_mails():
+    all_mails = Mail.objects.all()
+    for mail in all_mails:
+        rec = {
+            "id": mail.id,
+            "edi_filename": mail.edi_filename,
+            "status": mail.status,
+            "extract_type": mail.extract_type,
+        }
+        lite_log(logger, logging.DEBUG, "Mail -> {}".format(rec))

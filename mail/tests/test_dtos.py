@@ -27,13 +27,14 @@ class TestDtos(LiteHMRCTestClient):
         )
 
     def test_toJson(self):
+        attachement_data = b"a line"
         email_message_dto = EmailMessageDto(
             run_number=101,
             sender="test@example.com",
             receiver="receiver@example.com",
             body="body",
             subject="subject",
-            attachment=["filename", "a line".encode("ascii", "replace")],
+            attachment=["filename", attachement_data],
             raw_data="qwerty",
         )
         dto_in_json = to_json(email_message_dto)

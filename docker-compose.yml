@@ -27,14 +27,13 @@ services:
     depends_on:
       - lite-hmrc-postgres
       - lite-hmrc-ditmail
-      - lite-hmrc-spiremail
     expose:
       - 8000
     command: pipenv run ./manage.py runserver 0.0.0.0:8000
 
   lite-hmrc-ditmail:
     container_name: "lite-hmrc-ditmail"
-    build: ./mailserver
+    build: ../mailserver
     ports:
       - "25:25"
       - "587:587"
@@ -48,24 +47,6 @@ services:
       CERTBOT_EMAIL: test@test.com
       USE_LETSENCRYPT: "no"
       MAIL_USERNAME: username
-      MAIL_PASSWORD: password
-
-  lite-hmrc-spiremail:
-    container_name: "lite-hmrc-spiremail"
-    build: ./mailserver
-    ports:
-      - "26:25"
-      - "588:587"
-      - "996:995"
-      - "81:80"
-    volumes:
-      - ./mailserver/maildata:/var/vmail
-    environment:
-      EMAIL_DOMAIN: spire.com
-      RELAY_ADDRESS: api:10026
-      CERTBOT_EMAIL: test@test.com
-      USE_LETSENCRYPT: "no"
-      MAIL_USERNAME: test
       MAIL_PASSWORD: password
 
 volumes:

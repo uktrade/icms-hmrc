@@ -1,6 +1,7 @@
 # IDE
 *.iml
 .idea/
+.DS_Store
 
 __pycache__/
 *.py[cod]
@@ -66,8 +67,8 @@ target/
 .python-version
 
 # Environments
-.env
+.env*
 .venv
 
 # Test data
-.mailserver/maildata/
+mailserver/*
