@@ -22,59 +22,53 @@ class HealthCheck(APIView):
 
         start_time = time.time()
 
-        # If no licence update task is scheduled to run in the next LITE_LICENCE_UPDATE_POLL_INTERVAL seconds
-        licence_update_task = Task.objects.filter(
-            queue=LICENCE_UPDATES_TASK_QUEUE,
-            run_at__lte=timezone.now() + datetime.timedelta(seconds=LITE_LICENCE_UPDATE_POLL_INTERVAL),
-        )
-        if not licence_update_task.exists():
-            return self._build_response(
-                HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time, f"{LICENCE_UPDATES_TASK_QUEUE} is not scheduled"
+        if not self._is_lite_licence_update_task_responsive():
+            logging.error(f"{LICENCE_UPDATES_TASK_QUEUE} is not responsive")
+            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
+
+        if not self._is_inbox_polling_task_responsive():
+            logging.error(f"{MANAGE_INBOX_TASK_QUEUE} is not responsive")
+            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
+
+        pending_mail = self._get_awaiting_mail()
+        if pending_mail:
+            logging.error(
+                f"The following Mail has been pending for over {EMAIL_AWAITING_REPLY_TIME} seconds: {pending_mail}"
             )
+            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
 
-        # If no inbox task is scheduled to run in the next INBOX_POLL_INTERVAL seconds
-        manage_inbox_task = Task.objects.filter(
-            queue=MANAGE_INBOX_TASK_QUEUE, run_at__lte=timezone.now() + datetime.timedelta(seconds=INBOX_POLL_INTERVAL)
-        )
-        if not manage_inbox_task.exists():
-            return self._build_response(
-                HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time, f"{MANAGE_INBOX_TASK_QUEUE} is not scheduled"
-            )
+        rejected_mail = self._get_rejected_mail()
+        if rejected_mail:
+            logging.error(f"The following Mail has been rejected: {pending_mail}")
+            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
 
-        # If an email has been rejected
-        rejected_email = Mail.objects.filter(
-            status=ReceptionStatusEnum.REPLY_SENT, response_data__icontains=ReplyStatusEnum.REJECTED,
-        )
-        if rejected_email.exists():
-            mail_ids = rejected_email.values("id", flat=True)
-
-            return self._build_response(
-                start_time, "not OK", HTTP_503_SERVICE_UNAVAILABLE, f"The following Mail has been rejected: {mail_ids}",
-            )
-
-        # If an email has been awaiting for a reply for longer than EMAIL_AWAITING_REPLY_TIME seconds
-        email_awaiting_response_for_prolonged_period_of_time = Mail.objects.filter(
-            status=ReceptionStatusEnum.REPLY_PENDING,
-            sent_at__lte=timezone.now() - datetime.timedelta(seconds=EMAIL_AWAITING_REPLY_TIME),
-        )
-        if email_awaiting_response_for_prolonged_period_of_time.exists():
-            mail_ids = email_awaiting_response_for_prolonged_period_of_time.values("id", flat=True)
-
-            return self._build_response(
-                HTTP_503_SERVICE_UNAVAILABLE,
-                "not OK",
-                start_time,
-                f"The following Mail has been waiting for a response for longer than {EMAIL_AWAITING_REPLY_TIME} "
-                f"seconds: {mail_ids}",
-            )
-
+        logging.info(f"All services are responsive")
         return self._build_response(HTTP_200_OK, "OK", start_time)
 
-    @staticmethod
-    def _build_response(status, message, start_time, error=None):
-        if error:
-            logging.error(error)
+    def _is_lite_licence_update_task_responsive(self) -> bool:
+        return Task.objects.filter(
+            queue=LICENCE_UPDATES_TASK_QUEUE,
+            run_at__lte=timezone.now() + datetime.timedelta(seconds=LITE_LICENCE_UPDATE_POLL_INTERVAL),
+        ).exists()
 
+    def _is_inbox_polling_task_responsive(self) -> bool:
+        return Task.objects.filter(
+            queue=MANAGE_INBOX_TASK_QUEUE, run_at__lte=timezone.now() + datetime.timedelta(seconds=INBOX_POLL_INTERVAL)
+        ).exists()
+
+    def _get_awaiting_mail(self) -> []:
+        return Mail.objects.filter(
+            status=ReceptionStatusEnum.REPLY_PENDING,
+            sent_at__lte=timezone.now() - datetime.timedelta(seconds=EMAIL_AWAITING_REPLY_TIME),
+        ).values("id", flat=True)
+
+    def _get_rejected_mail(self) -> []:
+        return Mail.objects.filter(
+            status=ReceptionStatusEnum.REPLY_SENT, response_data__icontains=ReplyStatusEnum.REJECTED,
+        ).values("id", flat=True)
+
+    @staticmethod
+    def _build_response(status, message, start_time):
         duration_ms = (time.time() - start_time) * 1000
         response_time = "{:.3f}".format(duration_ms)
         context = {"message": message, "response_time": response_time}
