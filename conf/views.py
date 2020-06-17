@@ -2,7 +2,7 @@ import datetime
 import time
 
 from background_task.models import Task
-from django.http import HttpResponse
+from django.shortcuts import render_to_response
 from django.utils import timezone
 from rest_framework.status import HTTP_200_OK, HTTP_503_SERVICE_UNAVAILABLE
 from rest_framework.views import APIView
@@ -30,7 +30,7 @@ class HealthCheck(APIView):
             return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
 
         # If no inbox task is scheduled to run in the next INBOX_POLL_INTERVAL seconds
-        manage_inbox_task = Task.objects.get(
+        manage_inbox_task = Task.objects.filter(
             queue=MANAGE_INBOX_TASK_QUEUE, run_at__lte=timezone.now() + datetime.timedelta(seconds=INBOX_POLL_INTERVAL)
         )
         if not manage_inbox_task.exists():
@@ -50,11 +50,5 @@ class HealthCheck(APIView):
     def _build_response(status, message, start_time):
         duration_ms = (time.time() - start_time) * 1000
         response_time = "{:.3f}".format(duration_ms)
-        xml = f"""
-                   <pingdom_http_custom_check>
-                     <status>{message}</status> 
-                     <response_time>{response_time}</response_time>
-                   </pingdom_http_custom_check>
-                """
-
-        return HttpResponse(content=xml, content_type="application/xml", status=status)
+        context = {"message": message, "response_time": response_time}
+        return render_to_response("healthcheck.xml", context, content_type="application/xml", status=status)
