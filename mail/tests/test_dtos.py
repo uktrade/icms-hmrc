@@ -1,5 +1,5 @@
-from conf.test_client import LiteHMRCTestClient
-from mail.dtos import *
+from mail.libraries.email_message_dto import *
+from mail.tests.libraries.client import LiteHMRCTestClient
 
 
 class TestDtos(LiteHMRCTestClient):
@@ -17,13 +17,9 @@ class TestDtos(LiteHMRCTestClient):
             raw_data="qwerty",
         )
         self.assertEqual(101, email_message_dto.run_number, "Run-number did not match")
+        self.assertEqual("test@example.com", email_message_dto.sender, "sender email did not match")
         self.assertEqual(
-            "test@example.com", email_message_dto.sender, "sender email did not match"
-        )
-        self.assertEqual(
-            "receiver@example.com",
-            email_message_dto.receiver,
-            "receiver email did not match",
+            "receiver@example.com", email_message_dto.receiver, "receiver email did not match",
         )
 
     def test_toJson(self):

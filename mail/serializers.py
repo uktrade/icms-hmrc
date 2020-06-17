@@ -1,15 +1,12 @@
-from rest_framework import serializers
-from mail.models import Mail, LicenceUpdate, UsageUpdate
-from mail.services.logging_decorator import lite_log
 import logging
 
-logger = logging.getLogger(__name__)
+from rest_framework import serializers
+
+from mail.models import Mail, LicenceUpdate, UsageUpdate
 
 
 class LicenceUpdateSerializer(serializers.ModelSerializer):
-    mail = serializers.PrimaryKeyRelatedField(
-        queryset=Mail.objects.all(), required=False
-    )
+    mail = serializers.PrimaryKeyRelatedField(queryset=Mail.objects.all(), required=False)
 
     class Meta:
         model = LicenceUpdate
@@ -44,7 +41,7 @@ class LicenceUpdateMailSerializer(serializers.ModelSerializer):
         if licence_update_serializer.is_valid():
             licence_update_serializer.save()
         else:
-            lite_log(logger, logging.ERROR, licence_update_serializer.errors)
+            logging.error(licence_update_serializer.errors)
             raise serializers.ValidationError(licence_update_serializer.errors)
 
         return mail
@@ -67,9 +64,7 @@ class UpdateResponseSerializer(serializers.ModelSerializer):
 
 
 class UsageUpdateSerializer(serializers.ModelSerializer):
-    mail = serializers.PrimaryKeyRelatedField(
-        queryset=Mail.objects.all(), required=False
-    )
+    mail = serializers.PrimaryKeyRelatedField(queryset=Mail.objects.all(), required=False)
 
     class Meta:
         model = UsageUpdate
@@ -109,12 +104,41 @@ class UsageUpdateMailSerializer(serializers.ModelSerializer):
         return mail
 
 
-class InvalidEmailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Mail
-        fields = "__all__"
+class GoodSerializer(serializers.Serializer):
+    description = serializers.CharField(max_length=2000, allow_blank=False)
+    quantity = serializers.DecimalField(decimal_places=3, max_digits=13)
+    unit = serializers.CharField()
 
-    def create(self, validated_data):
-        mail, _ = Mail.objects.get_or_create(**validated_data)
 
-        return mail
+class CountrySerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+
+
+class AddressSerializer(serializers.Serializer):
+    line_1 = serializers.CharField(allow_blank=False)
+    line_2 = serializers.CharField(allow_blank=True, required=False)
+    line_3 = serializers.CharField(allow_blank=True, required=False)
+    line_4 = serializers.CharField(allow_blank=True, required=False)
+    line_5 = serializers.CharField(allow_blank=True, required=False)
+    postcode = serializers.CharField(allow_blank=True, required=False)
+    country = CountrySerializer()
+
+
+class TraderSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=80, allow_blank=False)
+    address = AddressSerializer()
+
+
+class ForiegnTraderSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=80, allow_blank=False)
+    address = AddressSerializer()
+
+
+class LiteLicenceUpdateSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    reference = serializers.CharField(max_length=35)
+    type = serializers.CharField()
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    action = serializers.CharField()

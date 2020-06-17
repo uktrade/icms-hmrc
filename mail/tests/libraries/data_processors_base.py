@@ -1,14 +1,14 @@
-from conf.test_client import LiteHMRCTestClient
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.models import Mail, LicenceUpdate, UsageUpdate
+from mail.tests.libraries.client import LiteHMRCTestClient
 
 
 class DataProcessorsTestBase(LiteHMRCTestClient):
     def setUp(self):
         super().setUp()
         self.hmrc_run_number = 28
-        self.source_run_number = 15
-        self.license_ids = "GBOIE2017/12345B"
+        self.source_run_number = 28
+        self.licence_ids = "GBOIE2017/12345B"
 
         self.mail = Mail.objects.create(
             edi_data=self.licence_update_file_body,
@@ -21,7 +21,7 @@ class DataProcessorsTestBase(LiteHMRCTestClient):
             mail=self.mail,
             hmrc_run_number=self.hmrc_run_number,
             source_run_number=self.source_run_number,
-            license_ids=self.license_ids,
+            licence_ids=self.licence_ids,
             source=SourceEnum.SPIRE,
         )
 
@@ -35,6 +35,6 @@ class DataProcessorsTestBase(LiteHMRCTestClient):
         self.usage_update = UsageUpdate.objects.create(
             mail=self.usage_mail,
             spire_run_number=self.source_run_number,
-            license_ids=self.license_ids,
+            licence_ids=self.licence_ids,
             hmrc_run_number=self.hmrc_run_number,
         )

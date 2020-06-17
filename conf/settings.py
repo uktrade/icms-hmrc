@@ -9,11 +9,12 @@ https://docs.djangoproject.com/en/2.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
+import json
 import os
+import sys
 import uuid
 
 from environ import Env
-
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,7 +27,11 @@ env = Env(
     ALLOWED_HOSTS=(str, ""),
     DEBUG=(bool, False),
     LOG_LEVEL=(str, "INFO"),
-    BACKGROUND_TASK_ENABLED=(bool, False),
+    HAWK_AUTHENTICATION_ENABLED=(bool, False),
+    INBOX_POLL_INTERVAL=(int, 300),
+    LITE_LICENCE_UPDATE_POLL_INTERVAL=(int, 1200),
+    EMAIL_AWAITING_REPLY_TIME=(int, 3600),
+    NOTIFY_USERS=(str, "[]"),
 )
 
 # Quick-start development settings - unsuitable for production
@@ -51,7 +56,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "mail.apps.MailConfig",
+    "background_task",
+    "mail.app.MailConfig",
 ]
 
 MIDDLEWARE = [
@@ -63,6 +69,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "conf.middleware.LoggingMiddleware",
+    "conf.middleware.HawkSigningMiddleware",
 ]
 
 ROOT_URLCONF = "conf.urls"
@@ -103,15 +110,16 @@ TIME_TESTS = env("TIME_TESTS")
 
 LOCK_INTERVAL = float(env("LOCK_INTERVAL"))
 
-POLL_INTERVAL = env("POLL_INTERVAL")
+INBOX_POLL_INTERVAL = env("INBOX_POLL_INTERVAL")
+LITE_LICENCE_UPDATE_POLL_INTERVAL = env("LITE_LICENCE_UPDATE_POLL_INTERVAL")
+EMAIL_AWAITING_REPLY_TIME = env("EMAIL_AWAITING_REPLY_TIME")
+NOTIFY_USERS = json.loads(env("NOTIFY_USERS"))
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
@@ -132,37 +140,39 @@ USE_L10N = True
 
 USE_TZ = True
 
-# if "test" not in sys.argv:
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "json": {
-            "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
-            "format": "(asctime)(levelname)(message)(filename)(lineno)(threadName)(name)(thread)(created)(process)(processName)(relativeCreated)(module)(funcName)(levelno)(msecs)(pathname)",  # noqa
+if "test" not in sys.argv:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "json": {
+                "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
+                "format": "(asctime)(levelname)(message)(filename)(lineno)(threadName)(name)(thread)(created)(process)(processName)(relativeCreated)(module)(funcName)(levelno)(msecs)(pathname)",  # noqa
+            }
         },
-        "simple": {
-            "format": "%(asctime)s - %(name)s:%(lineno)s - %(funcName)s - %(message)s"
-        },
-    },
-    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simple"}},
-    "loggers": {
-        "": {
-            "handlers": ["console"],
-            "level": env("LOG_LEVEL").upper(),
-            "propagate": True,
-        },
-        "django.db.models.BaseManager": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
-    },
-}
-# else:
-#     LOGGING = {"version": 1, "disable_existing_loggers": True}
+        "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "json"}},
+        "loggers": {"": {"handlers": ["console"], "level": env("LOG_LEVEL").upper()}},
+    }
+else:
+    LOGGING = {"version": 1, "disable_existing_loggers": True}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = "/static/"
+
+# HAWK
+HAWK_AUTHENTICATION_ENABLED = env("HAWK_AUTHENTICATION_ENABLED")
+HAWK_RECEIVER_NONCE_EXPIRY_SECONDS = 60
+HAWK_ALGORITHM = "sha256"
+HAWK_CREDENTIALS = {
+    "hmrc-integration": {
+        "id": "hmrc-integration",
+        "key": env("LITE_HMRC_INTEGRATION_HAWK_KEY"),
+        "algorithm": HAWK_ALGORITHM,
+    },
+    "lite-api": {"id": "lite-api", "key": env("LITE_API_HAWK_KEY"), "algorithm": HAWK_ALGORITHM},
+}
+
+# Background Tasks
+BACKGROUND_TASK_RUN_ASYNC = True
