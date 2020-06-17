@@ -1,4 +1,5 @@
 import datetime
+import logging
 import time
 
 from background_task.models import Task
@@ -27,21 +28,29 @@ class HealthCheck(APIView):
             run_at__lte=timezone.now() + datetime.timedelta(seconds=LITE_LICENCE_UPDATE_POLL_INTERVAL),
         )
         if not licence_update_task.exists():
-            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
+            return self._build_response(
+                HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time, f"{LICENCE_UPDATES_TASK_QUEUE} is not scheduled"
+            )
 
         # If no inbox task is scheduled to run in the next INBOX_POLL_INTERVAL seconds
         manage_inbox_task = Task.objects.filter(
             queue=MANAGE_INBOX_TASK_QUEUE, run_at__lte=timezone.now() + datetime.timedelta(seconds=INBOX_POLL_INTERVAL)
         )
         if not manage_inbox_task.exists():
-            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
+            return self._build_response(
+                HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time, f"{MANAGE_INBOX_TASK_QUEUE} is not scheduled"
+            )
 
         # If an email has been rejected
         rejected_email = Mail.objects.filter(
             status=ReceptionStatusEnum.REPLY_SENT, response_data__icontains=ReplyStatusEnum.REJECTED,
         )
         if rejected_email.exists():
-            return self._build_response(start_time, "not OK", HTTP_503_SERVICE_UNAVAILABLE)
+            mail_ids = rejected_email.values("id", flat=True)
+
+            return self._build_response(
+                start_time, "not OK", HTTP_503_SERVICE_UNAVAILABLE, f"The following Mail has been rejected: {mail_ids}",
+            )
 
         # If an email has been awaiting for a reply for longer than EMAIL_AWAITING_REPLY_TIME seconds
         email_awaiting_response_for_prolonged_period_of_time = Mail.objects.filter(
@@ -49,13 +58,25 @@ class HealthCheck(APIView):
             sent_at__lte=timezone.now() - datetime.timedelta(seconds=EMAIL_AWAITING_REPLY_TIME),
         )
         if email_awaiting_response_for_prolonged_period_of_time.exists():
-            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
+            mail_ids = email_awaiting_response_for_prolonged_period_of_time.values("id", flat=True)
+
+            return self._build_response(
+                HTTP_503_SERVICE_UNAVAILABLE,
+                "not OK",
+                start_time,
+                f"The following Mail has been waiting for a response for longer than {EMAIL_AWAITING_REPLY_TIME} "
+                f"seconds: {mail_ids}",
+            )
 
         return self._build_response(HTTP_200_OK, "OK", start_time)
 
     @staticmethod
-    def _build_response(status, message, start_time):
+    def _build_response(status, message, start_time, error=None):
+        if error:
+            logging.error(error)
+
         duration_ms = (time.time() - start_time) * 1000
         response_time = "{:.3f}".format(duration_ms)
         context = {"message": message, "response_time": response_time}
+
         return render_to_response("healthcheck.xml", context, content_type="application/xml", status=status)
