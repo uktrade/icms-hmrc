@@ -61,7 +61,7 @@ class UpdateLicence(APIView):
                 defaults=dict(lite_id=licence["id"], reference=licence["reference"], data=licence),
             )
 
-            logging.info(f"Created LicencePayload [{licence.lite_id, licence.reference}]")
+            logging.info(f"Created LicencePayload [{licence.lite_id}, {licence.reference}]")
 
             return JsonResponse(
                 status=status.HTTP_201_CREATED if created else status.HTTP_200_OK, data={"licence": licence.data},
