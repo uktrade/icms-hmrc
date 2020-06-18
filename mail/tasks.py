@@ -18,7 +18,7 @@ def email_lite_licence_updates():
     logging.info("Sending sent LITE licence updates to HMRC")
 
     if not _is_email_slot_free():
-        logging.info("There is currently an update in progress or an email in flight")
+        logging.info("There is currently an update in progress or an email is in flight")
         return
 
     with transaction.atomic():
@@ -60,9 +60,24 @@ def manage_inbox_queue():
 
 
 def _is_email_slot_free() -> bool:
-    last_email = Mail.objects.last()
-    if last_email and (
-        last_email.status != ReceptionStatusEnum.REPLY_SENT or ReplyStatusEnum.REJECTED in last_email.response_data
-    ):
+    pending_mail = _get_awaiting_mail()
+    if pending_mail:
+        logging.error(f"The following Mail is pending: {pending_mail}")
         return False
+
+    rejected_mail = _get_rejected_mail()
+    if rejected_mail:
+        logging.error(f"The following Mail has been rejected: {pending_mail}")
+        return False
+
     return True
+
+
+def _get_awaiting_mail() -> []:
+    return Mail.objects.filter(status=ReceptionStatusEnum.REPLY_PENDING).values("id", flat=True)
+
+
+def _get_rejected_mail() -> []:
+    return Mail.objects.filter(
+        status=ReceptionStatusEnum.REPLY_SENT, response_data__icontains=ReplyStatusEnum.REJECTED,
+    ).values("id", flat=True)

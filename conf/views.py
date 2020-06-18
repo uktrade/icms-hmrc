@@ -9,7 +9,7 @@ from rest_framework.status import HTTP_200_OK, HTTP_503_SERVICE_UNAVAILABLE
 from rest_framework.views import APIView
 
 from conf.settings import LITE_LICENCE_UPDATE_POLL_INTERVAL, INBOX_POLL_INTERVAL, EMAIL_AWAITING_REPLY_TIME
-from mail.enums import ReceptionStatusEnum, ReplyStatusEnum
+from mail.enums import ReceptionStatusEnum
 from mail.models import Mail
 from mail.tasks import LICENCE_UPDATES_TASK_QUEUE, MANAGE_INBOX_TASK_QUEUE
 
@@ -37,11 +37,6 @@ class HealthCheck(APIView):
             )
             return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
 
-        rejected_mail = self._get_rejected_mail()
-        if rejected_mail:
-            logging.error(f"The following Mail has been rejected: {pending_mail}")
-            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
-
         logging.info(f"All services are responsive")
         return self._build_response(HTTP_200_OK, "OK", start_time)
 
@@ -60,11 +55,6 @@ class HealthCheck(APIView):
         return Mail.objects.filter(
             status=ReceptionStatusEnum.REPLY_PENDING,
             sent_at__lte=timezone.now() - datetime.timedelta(seconds=EMAIL_AWAITING_REPLY_TIME),
-        ).values("id", flat=True)
-
-    def _get_rejected_mail(self) -> []:
-        return Mail.objects.filter(
-            status=ReceptionStatusEnum.REPLY_SENT, response_data__icontains=ReplyStatusEnum.REJECTED,
         ).values("id", flat=True)
 
     @staticmethod
