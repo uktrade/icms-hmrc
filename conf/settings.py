@@ -28,9 +28,11 @@ env = Env(
     DEBUG=(bool, False),
     LOG_LEVEL=(str, "INFO"),
     HAWK_AUTHENTICATION_ENABLED=(bool, False),
+    BACKGROUND_TASK_ENABLED=(bool, True),
     INBOX_POLL_INTERVAL=(int, 300),
     LITE_LICENCE_UPDATE_POLL_INTERVAL=(int, 1200),
     EMAIL_AWAITING_REPLY_TIME=(int, 3600),
+    EMAIL_AWAITING_CORRECTIONS_TIME=(int, 3600),
     NOTIFY_USERS=(str, "[]"),
 )
 
@@ -113,6 +115,7 @@ LOCK_INTERVAL = float(env("LOCK_INTERVAL"))
 INBOX_POLL_INTERVAL = env("INBOX_POLL_INTERVAL")
 LITE_LICENCE_UPDATE_POLL_INTERVAL = env("LITE_LICENCE_UPDATE_POLL_INTERVAL")
 EMAIL_AWAITING_REPLY_TIME = env("EMAIL_AWAITING_REPLY_TIME")
+EMAIL_AWAITING_CORRECTIONS_TIME = env("EMAIL_AWAITING_CORRECTIONS_TIME")
 NOTIFY_USERS = json.loads(env("NOTIFY_USERS"))
 
 # Password validation
@@ -175,4 +178,7 @@ HAWK_CREDENTIALS = {
 }
 
 # Background Tasks
+BACKGROUND_TASK_ENABLED = env("BACKGROUND_TASK_ENABLED")
 BACKGROUND_TASK_RUN_ASYNC = True
+# Number of times a task is retried given a failure occurs with exponential back-off = ((current_attempt ** 4) + 5)
+MAX_ATTEMPTS = 7  # e.g. 7th attempt occurs approx 40 minutes after 1st attempt (assuming instantaneous failures)

@@ -31,7 +31,7 @@ def check_and_route_emails():
 
 
 def update_mail(mail: Mail, mail_dto: EmailMessageDto):
-    logging.info("Updating mail")
+    logging.info(f"Updating Mail [{mail.id}]")
     if mail.status == ReceptionStatusEnum.PENDING:
         mail.status = ReceptionStatusEnum.REPLY_PENDING
         # Update the mail object to record what we sent to destination
@@ -57,7 +57,7 @@ def send(email_message_dto: EmailMessageDto):
 def _collect_and_send(mail: Mail):
     from mail.tasks import email_lite_licence_updates
 
-    logging.info(f"Mail [{id}] being sent")
+    logging.info(f"Mail [{mail.id}] being sent")
     message_to_send_dto = to_email_message_dto_from(mail)
     is_locked_by_me = lock_db_for_sending_transaction(mail)
     if not is_locked_by_me:
