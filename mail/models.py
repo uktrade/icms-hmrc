@@ -61,7 +61,7 @@ class Mail(models.Model):
     def notify_users(id, response_date):
         from mail.tasks import notify_users_of_rejected_mail
 
-        notify_users_of_rejected_mail(id, response_date)
+        notify_users_of_rejected_mail(str(id), response_date)
 
 
 class LicenceUpdate(models.Model):
