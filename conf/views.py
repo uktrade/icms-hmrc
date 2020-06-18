@@ -1,4 +1,5 @@
 import datetime
+import logging
 import time
 
 from background_task.models import Task
@@ -21,34 +22,46 @@ class HealthCheck(APIView):
 
         start_time = time.time()
 
-        # If no licence update task is scheduled to run in the next LITE_LICENCE_UPDATE_POLL_INTERVAL seconds
-        licence_update_task = Task.objects.filter(
+        if not self._is_lite_licence_update_task_responsive():
+            logging.error(f"{LICENCE_UPDATES_TASK_QUEUE} is not responsive")
+            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
+
+        if not self._is_inbox_polling_task_responsive():
+            logging.error(f"{MANAGE_INBOX_TASK_QUEUE} is not responsive")
+            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
+
+        pending_mail = self._get_pending_mail()
+        if pending_mail:
+            logging.error(
+                f"The following Mail has been pending for over {EMAIL_AWAITING_REPLY_TIME} seconds: {pending_mail}"
+            )
+            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
+
+        logging.info(f"All services are responsive")
+        return self._build_response(HTTP_200_OK, "OK", start_time)
+
+    def _is_lite_licence_update_task_responsive(self) -> bool:
+        return Task.objects.filter(
             queue=LICENCE_UPDATES_TASK_QUEUE,
             run_at__lte=timezone.now() + datetime.timedelta(seconds=LITE_LICENCE_UPDATE_POLL_INTERVAL),
-        )
-        if not licence_update_task.exists():
-            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
+        ).exists()
 
-        # If no inbox task is scheduled to run in the next INBOX_POLL_INTERVAL seconds
-        manage_inbox_task = Task.objects.filter(
+    def _is_inbox_polling_task_responsive(self) -> bool:
+        return Task.objects.filter(
             queue=MANAGE_INBOX_TASK_QUEUE, run_at__lte=timezone.now() + datetime.timedelta(seconds=INBOX_POLL_INTERVAL)
-        )
-        if not manage_inbox_task.exists():
-            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
+        ).exists()
 
-        # If an email has been awaiting for a reply for longer than EMAIL_AWAITING_REPLY_TIME seconds
-        email_awaiting_response_for_prolonged_period_of_time = Mail.objects.filter(
-            status=ReceptionStatusEnum.REPLY_PENDING,
-            sent_at__lte=timezone.now() - datetime.timedelta(seconds=EMAIL_AWAITING_REPLY_TIME),
+    def _get_pending_mail(self) -> []:
+        return (
+            Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT)
+            .filter(sent_at__lte=timezone.now() - datetime.timedelta(seconds=EMAIL_AWAITING_REPLY_TIME))
+            .values_list("id", flat=True)
         )
-        if email_awaiting_response_for_prolonged_period_of_time.exists():
-            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
-
-        return self._build_response(HTTP_200_OK, "OK", start_time)
 
     @staticmethod
     def _build_response(status, message, start_time):
         duration_ms = (time.time() - start_time) * 1000
         response_time = "{:.3f}".format(duration_ms)
         context = {"message": message, "response_time": response_time}
+
         return render_to_response("healthcheck.xml", context, content_type="application/xml", status=status)

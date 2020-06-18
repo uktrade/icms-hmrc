@@ -26,17 +26,21 @@ class UpdateLicence(APIView):
             if not serializer.is_valid():
                 errors.append({"licence": serializer.errors})
 
-            end_user = licence.get("end_user")
-            if not end_user:
-                errors.append({"end_user": "This field is required."})
-            else:
-                serializer = ForiegnTraderSerializer(data=end_user)
-                if not serializer.is_valid():
-                    errors.append({"end_user": serializer.errors})
+            if licence.get("type") in LicenceTypeEnum.OPEN_LICENCES:
+                countries = licence.get("countries")
+                if not countries:
+                    errors.append({"countries": "This field is required."})
 
             if licence.get("type") in LicenceTypeEnum.STANDARD_LICENCES:
-                goods = licence.get("goods")
+                end_user = licence.get("end_user")
+                if not end_user:
+                    errors.append({"end_user": "This field is required."})
+                else:
+                    serializer = ForiegnTraderSerializer(data=end_user)
+                    if not serializer.is_valid():
+                        errors.append({"end_user": serializer.errors})
 
+                goods = licence.get("goods")
                 if not goods:
                     errors.append({"goods": "This field is required."})
                 else:
