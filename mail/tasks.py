@@ -74,10 +74,10 @@ def _is_email_slot_free() -> bool:
 
 
 def _get_awaiting_mail() -> []:
-    return Mail.objects.filter(status=ReceptionStatusEnum.REPLY_PENDING).values("id", flat=True)
+    return Mail.objects.filter(status=ReceptionStatusEnum.REPLY_PENDING).values_list("id", flat=True)
 
 
 def _get_rejected_mail() -> []:
     return Mail.objects.filter(
         status=ReceptionStatusEnum.REPLY_SENT, response_data__icontains=ReplyStatusEnum.REJECTED,
-    ).values("id", flat=True)
+    ).values_list("id", flat=True)
