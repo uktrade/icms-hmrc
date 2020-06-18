@@ -60,7 +60,7 @@ def manage_inbox_queue():
 
 
 def _is_email_slot_free() -> bool:
-    pending_mail = _get_awaiting_mail()
+    pending_mail = _get_pending_mail()
     if pending_mail:
         logging.error(f"The following Mail is pending: {pending_mail}")
         return False
@@ -73,8 +73,8 @@ def _is_email_slot_free() -> bool:
     return True
 
 
-def _get_awaiting_mail() -> []:
-    return Mail.objects.filter(status=ReceptionStatusEnum.REPLY_PENDING).values_list("id", flat=True)
+def _get_pending_mail() -> []:
+    return Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT).values_list("id", flat=True)
 
 
 def _get_rejected_mail() -> []:

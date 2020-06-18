@@ -30,7 +30,7 @@ class HealthCheck(APIView):
             logging.error(f"{MANAGE_INBOX_TASK_QUEUE} is not responsive")
             return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
 
-        pending_mail = self._get_awaiting_mail()
+        pending_mail = self._get_pending_mail()
         if pending_mail:
             logging.error(
                 f"The following Mail has been pending for over {EMAIL_AWAITING_REPLY_TIME} seconds: {pending_mail}"
@@ -51,11 +51,12 @@ class HealthCheck(APIView):
             queue=MANAGE_INBOX_TASK_QUEUE, run_at__lte=timezone.now() + datetime.timedelta(seconds=INBOX_POLL_INTERVAL)
         ).exists()
 
-    def _get_awaiting_mail(self) -> []:
-        return Mail.objects.filter(
-            status=ReceptionStatusEnum.REPLY_PENDING,
-            sent_at__lte=timezone.now() - datetime.timedelta(seconds=EMAIL_AWAITING_REPLY_TIME),
-        ).values("id", flat=True)
+    def _get_pending_mail(self) -> []:
+        return (
+            Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT)
+            .filter(sent_at__lte=timezone.now() - datetime.timedelta(seconds=EMAIL_AWAITING_REPLY_TIME))
+            .values_list("id", flat=True)
+        )
 
     @staticmethod
     def _build_response(status, message, start_time):
