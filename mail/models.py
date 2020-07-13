@@ -35,6 +35,8 @@ class Mail(models.Model):
     currently_processing_at = models.DateTimeField(null=True)
     currently_processed_by = models.CharField(null=True, max_length=100)
 
+    retry = models.BooleanField(default=False)
+
     class Meta:
         db_table = "mail"
         ordering = ["created_at"]
@@ -79,38 +81,77 @@ class LicenceUpdate(models.Model):
 
 
 class UsageUpdate(models.Model):
-    licence_ids = models.TextField()
-    mail = models.ForeignKey(Mail, on_delete=models.DO_NOTHING)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    licence_ids = JSONField()
+    mail = models.ForeignKey(Mail, on_delete=models.DO_NOTHING, null=False)
     spire_run_number = models.IntegerField()
     hmrc_run_number = models.IntegerField()
+    has_lite_data = models.NullBooleanField(default=None)
+    has_spire_data = models.NullBooleanField(default=None)
+    lite_payload = JSONField()
+    lite_sent_at = models.DateTimeField(blank=True, null=True)  # When update was sent to LITE API
+    lite_accepted_licences = JSONField()
+    lite_rejected_licences = JSONField()
+    spire_accepted_licences = JSONField()
+    spire_rejected_licences = JSONField()
+    lite_licences = JSONField()
+    spire_licences = JSONField()
+    lite_response = JSONField()
 
-    def set_licence_ids(self, data: List):
-        self.licence_ids = json.dumps(data)
+    class Meta:
+        ordering = ["mail__created_at"]
 
     def get_licence_ids(self):
         return json.loads(self.licence_ids)
 
+    @staticmethod
+    def send_usage_updates_to_lite(id):
+        from mail.tasks import schedule_licence_usage_figures_for_lite_api
+
+        schedule_licence_usage_figures_for_lite_api(str(id))
+
 
 class LicencePayload(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # Convenience field for cross-referencing LITE services
-    lite_id = models.CharField(null=False, blank=False, max_length=36)
+    lite_id = models.UUIDField(null=False, blank=False, unique=False)
     reference = models.CharField(null=False, blank=False, max_length=35)
     action = models.CharField(choices=LicenceActionEnum.choices, null=False, blank=False, max_length=6)
     data = JSONField()
     received_at = models.DateTimeField(default=timezone.now)
     is_processed = models.BooleanField(default=False)
 
+    class Meta:
+        unique_together = [["lite_id", "action"]]
+
+    def save(self, *args, **kwargs):
+        super(LicencePayload, self).save(*args, **kwargs)
+        LicenceIdMapping.objects.get_or_create(lite_id=self.lite_id, reference=self.reference)
+
+
+class LicenceIdMapping(models.Model):
+    lite_id = models.UUIDField(primary_key=True, null=False, blank=False)
+    reference = models.CharField(null=False, blank=False, max_length=35, unique=True)
+
 
 class OrganisationIdMapping(models.Model):
-    lite_id = models.CharField(unique=True, null=False, blank=False, max_length=36)
+    lite_id = models.UUIDField(null=False, blank=False)
     rpa_trader_id = models.AutoField(primary_key=True)
 
 
 class GoodIdMapping(models.Model):
-    lite_id = models.CharField(null=False, blank=False, max_length=36)
-    licence_reference = models.CharField(null=False, blank=False, max_length=35)
+    lite_id = models.UUIDField(primary_key=False, null=False, blank=False, unique=False)
+    licence_reference = models.CharField(null=False, blank=False, max_length=35, unique=False)
     line_number = models.PositiveIntegerField()
 
     class Meta:
         unique_together = [["lite_id", "licence_reference"]]
+
+
+class TransactionMapping(models.Model):
+    licence_reference = models.CharField(null=False, blank=False, max_length=35, unique=False)
+    line_number = models.PositiveIntegerField()
+    usage_transaction = models.CharField(null=False, blank=False, max_length=35)
+    usage_update = models.ForeignKey(UsageUpdate, on_delete=models.DO_NOTHING)
+
+    class Meta:
+        unique_together = [["licence_reference", "line_number", "usage_update"]]

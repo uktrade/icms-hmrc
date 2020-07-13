@@ -24,17 +24,20 @@ def read_last_three_emails(pop3connection: POP3_SSL) -> list:
         pop3connection.retr(len(mails) - 1),
         pop3connection.retr(len(mails) - 2),
     ]
-    dtos = []
+
+    email_message_dtos = []
     for email in emails:
-        dtos.append(to_mail_message_dto(email))
+        email_message_dtos.append(to_mail_message_dto(email))
 
-    return dtos
+    return email_message_dtos
 
 
-def find_mail_of(extract_type: str, reception_status: str) -> Mail:
+def find_mail_of(extract_type: str, reception_status: str) -> Mail or None:
     try:
         mail = Mail.objects.get(status=reception_status, extract_type=extract_type)
-        logging.debug("Found mail in [%s] of extract type [%s] " % (reception_status, extract_type))
-        return mail
-    except Mail.DoesNotExist as ex:
-        raise ex("Can not find any mail in [%s] of extract type [%s]" % (reception_status, extract_type))
+    except Mail.DoesNotExist:
+        logging.warning("Can not find any mail in [%s] of extract type [%s]" % (reception_status, extract_type))
+        return
+
+    logging.info("Found mail in [%s] of extract type [%s] " % (reception_status, extract_type))
+    return mail

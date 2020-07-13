@@ -1,6 +1,6 @@
 import logging
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from rest_framework import status
 from rest_framework.views import APIView
 
@@ -12,6 +12,8 @@ from mail.serializers import (
     ForiegnTraderSerializer,
     GoodSerializer,
 )
+from mail.tasks import manage_inbox
+from rest_framework.status import HTTP_200_OK
 
 
 class UpdateLicence(APIView):
@@ -66,3 +68,10 @@ class UpdateLicence(APIView):
             return JsonResponse(
                 status=status.HTTP_201_CREATED if created else status.HTTP_200_OK, data={"licence": licence.data},
             )
+
+
+class ManageInbox(APIView):
+    def get(self, request):
+        manage_inbox.now()
+
+        return HttpResponse(status=HTTP_200_OK)

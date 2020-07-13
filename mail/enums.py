@@ -1,10 +1,12 @@
 class LicenceActionEnum:
     INSERT = "insert"
     CANCEL = "cancel"
+    UPDATE = "update"
 
     choices = [
         (INSERT, "Insert"),
         (CANCEL, "Cancel"),
+        (UPDATE, "Update"),
     ]
 
     @classmethod

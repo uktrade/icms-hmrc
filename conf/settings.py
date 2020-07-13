@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "background_task",
-    "mail.app.MailConfig",
+    "mail.apps.MailConfig",
 ]
 
 MIDDLEWARE = [
@@ -168,14 +168,18 @@ STATIC_URL = "/static/"
 HAWK_AUTHENTICATION_ENABLED = env("HAWK_AUTHENTICATION_ENABLED")
 HAWK_RECEIVER_NONCE_EXPIRY_SECONDS = 60
 HAWK_ALGORITHM = "sha256"
+HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS = "hmrc-integration"
 HAWK_CREDENTIALS = {
-    "hmrc-integration": {
-        "id": "hmrc-integration",
+    HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS: {
+        "id": HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
         "key": env("LITE_HMRC_INTEGRATION_HAWK_KEY"),
         "algorithm": HAWK_ALGORITHM,
     },
     "lite-api": {"id": "lite-api", "key": env("LITE_API_HAWK_KEY"), "algorithm": HAWK_ALGORITHM},
 }
+
+LITE_API_URL = env("LITE_API_URL")
+LITE_API_REQUEST_TIMEOUT = 60  # Maximum time, in seconds, to wait between bytes of a response
 
 # Background Tasks
 BACKGROUND_TASK_ENABLED = env("BACKGROUND_TASK_ENABLED")

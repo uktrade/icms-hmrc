@@ -5,6 +5,7 @@ from django.test import testcases
 from django.utils import timezone
 
 from conf import settings
+from mail.enums import LicenceActionEnum
 from mail.libraries.helpers import read_file
 from mail.libraries.helpers import to_smart_text
 from mail.models import LicencePayload
@@ -47,6 +48,7 @@ class LiteHMRCTestClient(testcases.TestCase):
             lite_id=self.licence_payload_json["licence"]["id"],
             reference=self.licence_payload_json["licence"]["reference"],
             data=self.licence_payload_json["licence"],
+            action=LicenceActionEnum.INSERT,
         )
 
     def tearDown(self):

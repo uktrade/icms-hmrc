@@ -68,7 +68,7 @@ class HealthCheck(APIView):
 
     @staticmethod
     def _get_pending_mail() -> []:
-        return (
+        return list(
             Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT)
             .filter(sent_at__lte=timezone.now() - datetime.timedelta(seconds=EMAIL_AWAITING_REPLY_TIME))
             .values_list("id", flat=True)
@@ -76,11 +76,13 @@ class HealthCheck(APIView):
 
     @staticmethod
     def _get_rejected_mail() -> []:
-        return Mail.objects.filter(
-            status=ReceptionStatusEnum.REPLY_SENT,
-            response_data__icontains=ReplyStatusEnum.REJECTED,
-            sent_at__lte=timezone.now() - datetime.timedelta(seconds=EMAIL_AWAITING_CORRECTIONS_TIME),
-        ).values_list("id", flat=True)
+        return list(
+            Mail.objects.filter(
+                status=ReceptionStatusEnum.REPLY_SENT,
+                response_data__icontains=ReplyStatusEnum.REJECTED,
+                sent_at__lte=timezone.now() - datetime.timedelta(seconds=EMAIL_AWAITING_CORRECTIONS_TIME),
+            ).values_list("id", flat=True)
+        )
 
     @staticmethod
     def _build_response(status, message, start_time):

@@ -9,7 +9,7 @@ from django.utils.encoding import smart_text
 from conf.settings import SPIRE_ADDRESS, HMRC_ADDRESS
 from mail.enums import SourceEnum, ExtractTypeEnum, UnitMapping, ReceptionStatusEnum
 from mail.libraries.email_message_dto import EmailMessageDto
-from mail.models import LicenceUpdate, UsageUpdate, Mail
+from mail.models import LicenceUpdate, UsageUpdate, Mail, GoodIdMapping, LicenceIdMapping
 
 ALLOWED_FILE_MIMETYPES = ["application/octet-stream", "text/plain"]
 
@@ -204,15 +204,51 @@ def map_unit(data: dict, g: int) -> dict:
 
 
 def select_email_for_sending() -> Mail or None:
-    if not Mail.objects.filter(status=ReceptionStatusEnum.REPLY_PENDING):
-        reply_received = Mail.objects.filter(status=ReceptionStatusEnum.REPLY_RECEIVED).first()
-        if reply_received:
-            return reply_received
+    logging.info("Selecting email to send")
 
-        pending = Mail.objects.filter(status=ReceptionStatusEnum.PENDING).first()
-        if pending:
-            return pending
+    reply_received = Mail.objects.filter(status=ReceptionStatusEnum.REPLY_RECEIVED).first()
+    if reply_received:
+        if reply_received.extract_type == ExtractTypeEnum.USAGE_UPDATE:
+            usage_update = UsageUpdate.objects.get(mail=reply_received)
+            if usage_update.has_lite_data and not usage_update.lite_sent_at:
+                return
+        return reply_received
 
-        logging.info("No emails to send")
+    reply_pending = Mail.objects.filter(status=ReceptionStatusEnum.REPLY_PENDING).first()
+    if reply_pending:
+        if reply_pending.extract_type == ExtractTypeEnum.USAGE_UPDATE:
+            usage_update = UsageUpdate.objects.get(mail=reply_pending)
+            if not usage_update.has_spire_data:
+                return reply_pending
+        logging.info("Email currently in flight")
         return
-    logging.info("Email currently in flight")
+
+    pending = Mail.objects.filter(status=ReceptionStatusEnum.PENDING).first()
+    if pending:
+        return pending
+
+    logging.info("No emails to send")
+    return
+
+
+def get_good_id(line_number, licence_reference):
+    try:
+        return str(GoodIdMapping.objects.get(line_number=line_number, licence_reference=licence_reference).lite_id)
+    except Exception as exc:  # noqa
+        return
+
+
+def get_licence_id(licence_reference):
+    try:
+        return str(LicenceIdMapping.objects.get(reference=licence_reference).lite_id)
+    except Exception as exc:  # noqa
+        return
+
+
+def get_previous_licence_reference(reference):
+    if ord(reference[-1]) == 97:
+        if len(reference) >= 2 and reference[-2] == "/":
+            return reference[0:-2]
+        return reference[0:-1]
+    else:
+        return reference[0:-1] + chr(ord(reference[-1]) - 1)

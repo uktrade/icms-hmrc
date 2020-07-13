@@ -1,5 +1,3 @@
-import base64
-
 from django.test import tag
 
 from conf.settings import HMRC_ADDRESS, SPIRE_ADDRESS, EMAIL_USER
@@ -85,3 +83,17 @@ class MultipleEmailRetrievalTests(LiteHMRCTestClient):
         mail = select_email_for_sending()
 
         self.assertEqual(mail_lite, mail)
+
+    @tag("retry")
+    def test_retry(self):
+        serialize_email_message(self.dto_2)
+        mail_count = Mail.objects.count()
+        licence_update_count = LicenceUpdate.objects.count()
+        mail = serialize_email_message(self.dto_2)
+        mail.response_data = "rejected"
+        mail.save()
+
+        serialize_email_message(self.dto_2)
+
+        self.assertEqual(Mail.objects.count(), mail_count + 1)
+        self.assertEqual(LicenceUpdate.objects.count(), licence_update_count + 1)

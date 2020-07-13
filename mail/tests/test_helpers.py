@@ -11,6 +11,7 @@ from mail.libraries.helpers import (
     new_hmrc_run_number,
     get_run_number,
     map_unit,
+    get_previous_licence_reference,
 )
 from mail.models import LicenceUpdate, Mail
 from mail.tests.libraries.client import LiteHMRCTestClient
@@ -68,18 +69,6 @@ class HelpersTests(LiteHMRCTestClient):
             edi_filename="blank",
         )
 
-
-def print_all_mails():
-    all_mails = Mail.objects.all()
-    for mail in all_mails:
-        rec = {
-            "id": mail.id,
-            "edi_filename": mail.edi_filename,
-            "status": mail.status,
-            "extract_type": mail.extract_type,
-        }
-        logging.debug("Mail -> {}".format(rec))
-
     @parameterized.expand(
         [("NAR", 30), ("GRM", 21), ("KGM", 23), ("MTK", 45), ("MTR", 57), ("LTR", 94), ("MTQ", 2), ("ITG", 30),]
     )
@@ -94,3 +83,20 @@ def print_all_mails():
     def test_mapping(self, lite_input, output):
         data = {"goods": [{"unit": lite_input}]}
         self.assertEqual(output, map_unit(data, 0)["goods"][0]["unit"])
+
+    @parameterized.expand([("a", ""), ("b", "a"), ("GBSIE/a", "GBSIE"), ("GBSIE/b", "GBSIE/a")])
+    @tag("1917", "old-ref")
+    def test_get_previous_licence_reference(self, current, old):
+        self.assertEqual(get_previous_licence_reference(current), old)
+
+
+def print_all_mails():
+    all_mails = Mail.objects.all()
+    for mail in all_mails:
+        rec = {
+            "id": mail.id,
+            "edi_filename": mail.edi_filename,
+            "status": mail.status,
+            "extract_type": mail.extract_type,
+        }
+        logging.debug("Mail -> {}".format(rec))
