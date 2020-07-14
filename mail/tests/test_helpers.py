@@ -13,6 +13,7 @@ from mail.libraries.helpers import (
     map_unit,
     get_previous_licence_reference,
 )
+from mail.libraries.lite_to_edifact_converter import get_transaction_reference
 from mail.models import LicenceUpdate, Mail
 from mail.tests.libraries.client import LiteHMRCTestClient
 
@@ -88,6 +89,11 @@ class HelpersTests(LiteHMRCTestClient):
     @tag("1917", "old-ref")
     def test_get_previous_licence_reference(self, current, old):
         self.assertEqual(get_previous_licence_reference(current), old)
+
+    @parameterized.expand([("GB/00001/P", "00001P"), ("GB/001/P/A", "001PA"), ("GB/0/01/P/a", "001Pa")])
+    @tag("1917", "transaction-ref")
+    def test_transaction_reference_for_licence_update(self, reference, transaction_reference):
+        self.assertEqual(get_transaction_reference(reference), transaction_reference)
 
 
 def print_all_mails():

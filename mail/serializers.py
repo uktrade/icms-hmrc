@@ -3,6 +3,7 @@ import logging
 
 from rest_framework import serializers
 
+from mail.enums import LicenceActionEnum
 from mail.models import Mail, LicenceUpdate, UsageUpdate, LicenceIdMapping
 
 
@@ -166,3 +167,18 @@ class LiteLicenceUpdateSerializer(serializers.Serializer):
     start_date = serializers.DateField()
     end_date = serializers.DateField()
     action = serializers.CharField()
+
+    old_id = serializers.CharField(required=False)
+
+    def validate(self, attrs):
+        if self.initial_data.get("action") == LicenceActionEnum.UPDATE and not attrs.get("old_id"):
+            raise serializers.ValidationError("old_id is a required field for action - update")
+        return attrs
+
+    def validate_old_id(self, value):
+        if (
+            self.initial_data.get("action") == LicenceActionEnum.UPDATE
+            and not LicenceIdMapping.objects.filter(lite_id=value).exists()
+        ):
+            raise serializers.ValidationError("This licence does not exist in HMRC integration records")
+        return value

@@ -1,10 +1,7 @@
-import string
-
 from django.db.models import QuerySet
 from django.utils import timezone
 
 from mail.enums import UnitMapping, LicenceActionEnum
-from mail.libraries.helpers import get_previous_licence_reference
 from mail.models import OrganisationIdMapping, GoodIdMapping, LicencePayload
 
 
@@ -18,7 +15,7 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
         start_line = i
         i += 1
         if licence.action == LicenceActionEnum.UPDATE:
-            old_reference = get_previous_licence_reference(licence_payload.get("reference"))
+            old_reference = licence.old_reference
             old_payload = LicencePayload.objects.get(reference=old_reference).data
             edifact_file += "\n{}\\licence\\{}\\{}\\{}\\{}\\{}\\{}\\{}".format(
                 i,
@@ -36,9 +33,9 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
             i += 1
             edifact_file += "\n{}\\licence\\{}\\{}\\{}\\{}\\{}\\{}\\{}".format(
                 i,
-                get_transaction_reference(licence_payload.get("reference")),  # transaction_reference
+                get_transaction_reference(licence.reference),  # transaction_reference
                 "insert",
-                licence_payload.get("reference"),
+                licence.reference,
                 licence_payload.get("type"),
                 "E",
                 licence_payload.get("start_date").replace("-", ""),
@@ -47,9 +44,9 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
         else:
             edifact_file += "\n{}\\licence\\{}\\{}\\{}\\{}\\{}\\{}\\{}".format(
                 i,
-                get_transaction_reference(licence_payload.get("reference")),  # transaction_reference
+                get_transaction_reference(licence.reference),  # transaction_reference
                 licence.action,
-                licence_payload.get("reference"),
+                licence.reference,
                 licence_payload.get("type"),
                 "E",
                 licence_payload.get("start_date").replace("-", ""),
@@ -130,7 +127,5 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
 
 
 def get_transaction_reference(licence_reference: str):
-    if licence_reference[-1] in string.ascii_lowercase:
-        split = licence_reference.rsplit("/", 1)
-        return split[0][2:-1].replace("/", "") + split[1]
-    return licence_reference[2:-1].replace("/", "")
+    licence_reference = licence_reference.split("/", 1)[1]
+    return licence_reference.replace("/", "")

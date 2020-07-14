@@ -39,7 +39,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             + "\\1234"
-            + "\n2\\licence\\SIEL20200000001\\insert\\GBSIEL/2020/0000001/P\\siel\\E\\20200602\\20220602"
+            + "\n2\\licence\\20200000001P\\insert\\GBSIEL/2020/0000001/P\\siel\\E\\20200602\\20220602"
             + f"\n3\\trader\\\\{org_mapping.rpa_trader_id}\\20200602\\20220602\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Tennessee\\99580"
             + "\n4\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
             + "\n5\\restrictions\\Provisos may apply please see licence"
@@ -62,7 +62,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
 
     @tag("ref")
     def test_ref(self):
-        self.assertEqual(get_transaction_reference("GBSIEL/2020/0000001/P"), "SIEL20200000001")
+        self.assertEqual(get_transaction_reference("GBSIEL/2020/0000001/P"), "20200000001P")
 
     @tag("update")
     def test_update_edifact_file(self):
@@ -78,6 +78,8 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             data=payload["licence"],
             action=LicenceActionEnum.UPDATE,
             lite_id="00000000-0000-0000-0000-9792333e8cc8",
+            old_lite_id=lp.lite_id,
+            old_reference=lp.reference,
         )
         licences = LicencePayload.objects.filter(is_processed=False)
         result = licences_to_edifact(licences, 1234)
@@ -91,9 +93,9 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             + "\\1234"
-            + "\n2\\licence\\SIEL20200000001\\cancel\\GBSIEL/2020/0000001/P\\siel\\E\\20200602\\20220602"
+            + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\siel\\E\\20200602\\20220602"
             + "\n3\\end\\licence\\2"
-            + "\n4\\licence\\SIEL20200000001a\\insert\\GBSIEL/2020/0000001/P/a\\siel\\E\\20200602\\20220703"
+            + "\n4\\licence\\20200000001Pa\\insert\\GBSIEL/2020/0000001/P/a\\siel\\E\\20200602\\20220703"
             + f"\n5\\trader\\\\{org_mapping.rpa_trader_id}\\20200602\\20220703\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Tennessee\\99580"
             + "\n6\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
             + "\n7\\restrictions\\Provisos may apply please see licence"
@@ -118,7 +120,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             + "\\1234"
-            + "\n2\\licence\\SIEL20200000001\\cancel\\GBSIEL/2020/0000001/P\\siel\\E\\20200602\\20220602"
+            + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\siel\\E\\20200602\\20220602"
             + "\n3\\end\\licence\\2"
             + "\n4\\fileTrailer\\1"
         )

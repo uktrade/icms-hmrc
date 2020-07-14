@@ -76,6 +76,8 @@ def _collect_and_send(mail: Mail):
             logging.info(
                 f"Mail [{mail.id}] routed from [{message_to_send_dto.sender}] to [{message_to_send_dto.receiver}]"
             )
+        else:
+            update_mail(mail, message_to_send_dto)
 
         if message_to_send_dto.receiver == SPIRE_ADDRESS and mail.extract_type == ExtractTypeEnum.LICENCE_UPDATE:
             # Pick up any LITE licence updates once we send a licence update reply email to SPIRE

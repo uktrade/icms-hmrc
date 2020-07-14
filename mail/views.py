@@ -5,14 +5,14 @@ from rest_framework import status
 from rest_framework.views import APIView
 
 from conf.authentication import HawkOnlyAuthentication
-from mail.enums import LicenceTypeEnum
-from mail.models import LicencePayload
+from mail.enums import LicenceTypeEnum, LicenceActionEnum
+from mail.models import LicencePayload, LicenceIdMapping
 from mail.serializers import (
     LiteLicenceUpdateSerializer,
     ForiegnTraderSerializer,
     GoodSerializer,
 )
-from mail.tasks import manage_inbox
+from mail.tasks import manage_inbox, send_licence_updates_to_hmrc
 from rest_framework.status import HTTP_200_OK
 
 
@@ -23,12 +23,18 @@ class UpdateLicence(APIView):
         errors = []
 
         licence = request.data.get("licence")
+
         if not licence:
             errors.append({"licence": "This field is required."})
         else:
             serializer = LiteLicenceUpdateSerializer(data=licence)
             if not serializer.is_valid():
                 errors.append({"licence": serializer.errors})
+            else:
+                if licence.get("action") == LicenceActionEnum.UPDATE:
+                    licence["old_reference"] = LicenceIdMapping.objects.get(lite_id=licence["old_id"]).reference
+                else:
+                    licence.pop("old_id", None)
 
             if licence.get("type") in LicenceTypeEnum.OPEN_LICENCES:
                 countries = licence.get("countries")
@@ -60,10 +66,18 @@ class UpdateLicence(APIView):
                 lite_id=licence["id"],
                 reference=licence["reference"],
                 action=licence["action"],
-                defaults=dict(lite_id=licence["id"], reference=licence["reference"], data=licence),
+                old_lite_id=licence.get("old_id"),
+                old_reference=licence.get("old_reference"),
+                defaults=dict(
+                    lite_id=licence["id"],
+                    reference=licence["reference"],
+                    data=licence,
+                    old_lite_id=licence.get("old_id"),
+                    old_reference=licence.get("old_reference"),
+                ),
             )
 
-            logging.info(f"Created LicencePayload [{licence.lite_id}, {licence.reference}]")
+            logging.info(f"Created LicencePayload [{licence.lite_id}, {licence.reference}, {licence.action}]")
 
             return JsonResponse(
                 status=status.HTTP_201_CREATED if created else status.HTTP_200_OK, data={"licence": licence.data},
@@ -73,5 +87,12 @@ class UpdateLicence(APIView):
 class ManageInbox(APIView):
     def get(self, request):
         manage_inbox.now()
+
+        return HttpResponse(status=HTTP_200_OK)
+
+
+class SendLicenceUpdatesToHmrc(APIView):
+    def get(self, request):
+        send_licence_updates_to_hmrc.now()
 
         return HttpResponse(status=HTTP_200_OK)

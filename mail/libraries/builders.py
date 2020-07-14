@@ -121,7 +121,7 @@ def build_update_mail(licences) -> Mail:
 
 def build_licence_updates_file(licences, run_number) -> (str, str):
     now = timezone.now()
-    file_name = "ILBDOTI_live_CHIEF_licenceUpdate_{}_{:04d}{:02d}{:02d}{:02d}{:02d}".format(
+    file_name = "SPIRE_live_CHIEF_licenceUpdate_{}_{:04d}{:02d}{:02d}{:02d}{:02d}".format(
         run_number, now.year, now.month, now.day, now.hour, now.minute
     )
 
