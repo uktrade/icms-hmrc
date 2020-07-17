@@ -70,7 +70,6 @@ def convert_dto_data_for_serialization(dto: EmailMessageDto, extract_type) -> di
     elif extract_type == ExtractTypeEnum.USAGE_REPLY:
         data = convert_data_for_usage_update_reply(dto)
     else:
-        # todo raise ValueError here
         filename, filedata = process_attachment(dto.attachment)
         data = {
             "edi_filename": filename,

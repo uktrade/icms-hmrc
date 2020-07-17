@@ -63,7 +63,7 @@ class Mail(models.Model):
     def notify_users(id, response_date):
         from mail.tasks import notify_users_of_rejected_mail
 
-        notify_users_of_rejected_mail(str(id), response_date)
+        notify_users_of_rejected_mail(str(id), str(response_date))
 
 
 class LicenceUpdate(models.Model):
@@ -72,6 +72,9 @@ class LicenceUpdate(models.Model):
     source_run_number = models.IntegerField(null=True)
     source = models.CharField(choices=SourceEnum.choices, max_length=10)
     mail = models.ForeignKey(Mail, on_delete=models.DO_NOTHING)
+
+    class Meta:
+        ordering = ["mail__created_at"]
 
     def set_licence_ids(self, data: List):
         self.licence_ids = json.dumps(data)
@@ -154,7 +157,7 @@ class GoodIdMapping(models.Model):
 
 class TransactionMapping(models.Model):
     licence_reference = models.CharField(null=False, blank=False, max_length=35, unique=False)
-    line_number = models.PositiveIntegerField()
+    line_number = models.PositiveIntegerField(null=True, blank=True)
     usage_transaction = models.CharField(null=False, blank=False, max_length=35)
     usage_update = models.ForeignKey(UsageUpdate, on_delete=models.DO_NOTHING)
 

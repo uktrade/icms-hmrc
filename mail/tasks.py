@@ -165,8 +165,7 @@ def schedule_max_tried_task_as_new_task(lite_usage_update_id):
 
 
 def _handle_exception(message, lite_usage_update_id):
-    logging.warning(message)
-    error_message = f"Failed to send LITE UsageUpdate [{lite_usage_update_id}] to LITE API"
+    error_message = f"Failed to send LITE UsageUpdate [{lite_usage_update_id}] to LITE API -> {message} "
 
     try:
         task = Task.objects.get(queue=USAGE_FIGURES_QUEUE, task_params=f'[["{lite_usage_update_id}"], {{}}]')

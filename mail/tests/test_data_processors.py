@@ -95,8 +95,7 @@ class TestDataProcessors(LiteHMRCTestClient):
         self.assertEqual(self.mail.status, ReceptionStatusEnum.REPLY_RECEIVED)
         self.assertIsNotNone(self.mail.response_date)
 
-    # TODO - Usage Updates
-    def usage_update_reply_is_saved(self):
+    def test_usage_update_reply_is_saved(self):
         self.mail.status = ReceptionStatusEnum.REPLY_PENDING
         self.mail.save()
         email_message_dto = EmailMessageDto(
@@ -105,7 +104,7 @@ class TestDataProcessors(LiteHMRCTestClient):
             receiver=HMRC_ADDRESS,
             body="body",
             subject=self.usage_update_reply_name,
-            attachment=[self.usage_update_reply_name, self.usage_update_reply_body,],
+            attachment=[self.usage_update_reply_name, self.usage_update_reply_body],
             raw_data="qwerty",
         )
 
@@ -116,7 +115,7 @@ class TestDataProcessors(LiteHMRCTestClient):
         self.assertIsNotNone(self.mail.response_date)
 
         self.assertIn(
-            self.mail.response_data, self.usage_update_reply_body,
+            self.mail.response_data, self.usage_update_reply_body.decode("utf-8"),
         )
 
     @tag("serialize")

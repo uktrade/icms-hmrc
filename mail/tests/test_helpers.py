@@ -11,7 +11,8 @@ from mail.libraries.helpers import (
     new_hmrc_run_number,
     get_run_number,
     map_unit,
-    get_previous_licence_reference,
+    get_action,
+    process_attachment,
 )
 from mail.libraries.lite_to_edifact_converter import get_transaction_reference
 from mail.models import LicenceUpdate, Mail
@@ -39,22 +40,19 @@ class HelpersTests(LiteHMRCTestClient):
         [[["name", b"data"], "name", "data"], [[], "", ""], [["something"], "", ""], ["something", "", ""],]
     )
     def test_process_attachment(self, attachment, attachment_name, attachment_data):
-        # todo
-        pass
+        self.assertEqual((attachment_name, attachment_data), process_attachment(attachment))
 
     def test_get_run_number_from_subject(self):
         subject = "ILBDOTI_live_CHIEF_usageData_9876_201901130300"
         run_number = get_run_number(subject)
         self.assertEqual(run_number, 9876)
 
-    # TODO - Value errors
     def value_error_thrown_cannot_find_run_number(self):
         subject = "usageData_9876_201901130300"
         with self.assertRaises(ValueError) as context:
             get_run_number(subject)
         self.assertEqual("Can not find valid run-number", str(context.exception))
 
-    # TODO - Value errors
     def value_error_thrown_run_number_wrong_format(self):
         subject = "abc_xyz_nnn_yyy_a1b34_datetime"
         with self.assertRaises(ValueError) as context:
@@ -85,15 +83,15 @@ class HelpersTests(LiteHMRCTestClient):
         data = {"goods": [{"unit": lite_input}]}
         self.assertEqual(output, map_unit(data, 0)["goods"][0]["unit"])
 
-    @parameterized.expand([("a", ""), ("b", "a"), ("GBSIE/a", "GBSIE"), ("GBSIE/b", "GBSIE/a")])
-    @tag("1917", "old-ref")
-    def test_get_previous_licence_reference(self, current, old):
-        self.assertEqual(get_previous_licence_reference(current), old)
-
     @parameterized.expand([("GB/00001/P", "00001P"), ("GB/001/P/A", "001PA"), ("GB/0/01/P/a", "001Pa")])
     @tag("1917", "transaction-ref")
     def test_transaction_reference_for_licence_update(self, reference, transaction_reference):
         self.assertEqual(get_transaction_reference(reference), transaction_reference)
+
+    @parameterized.expand([("O", "open"), ("E", "exhaust"), ("D", "expire"), ("S", "surrender"), ("C", "cancel")])
+    @tag("1917", "action-ref")
+    def test_action_reference_for_usage(self, reference, action):
+        self.assertEqual(get_action(reference), action)
 
 
 def print_all_mails():

@@ -3,7 +3,7 @@ from django.utils import timezone
 from mail.models import UsageUpdate, LicenceIdMapping, GoodIdMapping, TransactionMapping
 
 
-def combine_lite_and_spire_usage_responses(mail):  # noqa
+def combine_lite_and_spire_usage_responses(mail) -> str:  # noqa
     usage_update = UsageUpdate.objects.get(mail=mail)
     lite_response = usage_update.lite_response
     spire_response = mail.response_data
@@ -30,17 +30,27 @@ def combine_lite_and_spire_usage_responses(mail):  # noqa
     if lite_response:
         if lite_response.get("licences").get("accepted"):
             for licence in lite_response.get("licences").get("accepted"):
-                for good in licence.get("goods"):
+                if licence.get("goods"):
+                    for good in licence.get("goods"):
+                        licence_reference = LicenceIdMapping.objects.get(lite_id=licence["id"]).reference
+                        good_mapping = GoodIdMapping.objects.get(
+                            licence_reference=licence_reference, lite_id=good["id"]
+                        )
+                        transaction_id = TransactionMapping.objects.get(
+                            licence_reference=licence_reference,
+                            line_number=good_mapping.line_number,
+                            usage_update=usage_update,
+                        ).usage_transaction
+                        edifact_file += "{}\\accepted\\{}\n".format(i, transaction_id)
+                        i += 1
+                        break
+                else:
                     licence_reference = LicenceIdMapping.objects.get(lite_id=licence["id"]).reference
-                    good_mapping = GoodIdMapping.objects.get(licence_reference=licence_reference, lite_id=good["id"])
                     transaction_id = TransactionMapping.objects.get(
-                        licence_reference=licence_reference,
-                        line_number=good_mapping.line_number,
-                        usage_update=usage_update,
+                        licence_reference=licence_reference, line_number=None, usage_update=usage_update,
                     ).usage_transaction
                     edifact_file += "{}\\accepted\\{}\n".format(i, transaction_id)
                     i += 1
-                    break
 
         if lite_response.get("licences").get("rejected"):
             for licence in lite_response.get("licences").get("rejected"):

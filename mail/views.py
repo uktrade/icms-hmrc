@@ -6,13 +6,13 @@ from rest_framework.views import APIView
 
 from conf.authentication import HawkOnlyAuthentication
 from mail.enums import LicenceTypeEnum, LicenceActionEnum
-from mail.models import LicencePayload, LicenceIdMapping
+from mail.models import LicencePayload, LicenceIdMapping, UsageUpdate
 from mail.serializers import (
     LiteLicenceUpdateSerializer,
     ForiegnTraderSerializer,
     GoodSerializer,
 )
-from mail.tasks import manage_inbox, send_licence_updates_to_hmrc
+from mail.tasks import manage_inbox, send_licence_updates_to_hmrc, send_licence_usage_figures_to_lite_api
 from rest_framework.status import HTTP_200_OK
 
 
@@ -36,7 +36,7 @@ class UpdateLicence(APIView):
                 else:
                     licence.pop("old_id", None)
 
-            if licence.get("type") in LicenceTypeEnum.OPEN_LICENCES:
+            if licence.get("type") in LicenceTypeEnum.OPEN_LICENCES + LicenceTypeEnum.OPEN_GENERAL_LICENCES:
                 countries = licence.get("countries")
                 if not countries:
                     errors.append({"countries": "This field is required."})
@@ -94,5 +94,13 @@ class ManageInbox(APIView):
 class SendLicenceUpdatesToHmrc(APIView):
     def get(self, request):
         send_licence_updates_to_hmrc.now()
+
+        return HttpResponse(status=HTTP_200_OK)
+
+
+class SendUsageUpdatesToLiteApi(APIView):
+    def get(self, request):
+        usage_update = UsageUpdate.objects.last()
+        send_licence_usage_figures_to_lite_api.now(str(usage_update.id))
 
         return HttpResponse(status=HTTP_200_OK)

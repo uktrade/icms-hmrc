@@ -1,7 +1,7 @@
 from django.db.models import QuerySet
 from django.utils import timezone
 
-from mail.enums import UnitMapping, LicenceActionEnum
+from mail.enums import UnitMapping, LicenceActionEnum, LicenceTypeEnum
 from mail.models import OrganisationIdMapping, GoodIdMapping, LicencePayload
 
 
@@ -98,11 +98,11 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
             i += 1
             edifact_file += "\n{}\\restrictions\\{}".format(i, "Provisos may apply please see licence")
             g = 0
-            if licence_payload.get("goods") and licence_payload.get("type") == "siel":
+            if licence_payload.get("goods") and licence_payload.get("type") in LicenceTypeEnum.STANDARD_LICENCES:
                 for commodity in licence_payload.get("goods"):
                     i += 1
                     g += 1
-                    GoodIdMapping.objects.create(
+                    GoodIdMapping.objects.get_or_create(
                         lite_id=commodity["id"], licence_reference=licence.reference, line_number=g
                     )
                     edifact_file += "\n{}\\line\\{}\\\\\\\\\\{}\\Q\\{}\\{}".format(
@@ -112,7 +112,7 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
                         UnitMapping.convert(commodity.get("unit")),
                         int(commodity.get("quantity")) if commodity.get("unit") == "NAR" else commodity.get("quantity"),
                     )
-            if licence_payload.get("type") == "oiel":
+            if licence_payload.get("type") in LicenceTypeEnum.OPEN_LICENCES:
                 i += 1
                 edifact_file += "\n{}\\line\\1\\\\\\\\\\Open Licence goods - see actual licence for information\\".format(
                     i
@@ -126,6 +126,6 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
     return edifact_file
 
 
-def get_transaction_reference(licence_reference: str):
+def get_transaction_reference(licence_reference: str) -> str:
     licence_reference = licence_reference.split("/", 1)[1]
     return licence_reference.replace("/", "")

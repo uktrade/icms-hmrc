@@ -52,7 +52,8 @@ class LicenceTypeEnum:
         return [{"status": choice[0]} for choice in cls.choices]
 
     STANDARD_LICENCES = [SIEL, SICL, SITL]
-    OPEN_LICENCES = [OIEL, OICL, OGEL, OGCL, OGTL]
+    OPEN_LICENCES = [OIEL, OICL]
+    OPEN_GENERAL_LICENCES = [OGEL, OGCL, OGTL]
 
 
 class ReplyStatusEnum:

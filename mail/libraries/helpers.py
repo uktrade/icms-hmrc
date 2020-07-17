@@ -4,8 +4,6 @@ import logging
 from email.message import Message
 from email.parser import Parser
 
-from django.utils.encoding import smart_text
-
 from conf.settings import SPIRE_ADDRESS, HMRC_ADDRESS
 from mail.enums import SourceEnum, ExtractTypeEnum, UnitMapping, ReceptionStatusEnum
 from mail.libraries.email_message_dto import EmailMessageDto
@@ -14,7 +12,7 @@ from mail.models import LicenceUpdate, UsageUpdate, Mail, GoodIdMapping, Licence
 ALLOWED_FILE_MIMETYPES = ["application/octet-stream", "text/plain"]
 
 
-def guess_charset(msg: Message):
+def guess_charset(msg: Message) -> str:
     """
     Guest charset of given
     :param msg:
@@ -136,7 +134,7 @@ def process_attachment(attachment):
     return file_name, file_data
 
 
-def new_hmrc_run_number(dto_run_number: int):
+def new_hmrc_run_number(dto_run_number: int) -> int:
     last_licence_update = LicenceUpdate.objects.last()
     if last_licence_update:
         dto_run_number = dto_run_number % 100000
@@ -147,7 +145,7 @@ def new_hmrc_run_number(dto_run_number: int):
     return dto_run_number
 
 
-def new_spire_run_number(dto_run_number: int):
+def new_spire_run_number(dto_run_number: int) -> int:
     last_usage_update = UsageUpdate.objects.last()
     if last_usage_update:
         dto_run_number = dto_run_number % 100000
@@ -183,10 +181,6 @@ def read_file(file_path: str, mode: str = "r", encoding: str = None):
 
 def decode(data, char_set: str):
     return data.decode(char_set) if isinstance(data, bytes) else data
-
-
-def to_smart_text(byte_str: str, encoding="ASCII"):
-    return smart_text(byte_str, encoding=encoding)
 
 
 def b64encode(byte_text: str):
@@ -231,24 +225,31 @@ def select_email_for_sending() -> Mail or None:
     return
 
 
-def get_good_id(line_number, licence_reference):
+def get_good_id(line_number, licence_reference) -> str or None:
+    """
+    Returns the LITE API Good ID or None (Good IDs for Open Licences are not mapped as they are not needed)
+    """
     try:
         return str(GoodIdMapping.objects.get(line_number=line_number, licence_reference=licence_reference).lite_id)
     except Exception as exc:  # noqa
         return
 
 
-def get_licence_id(licence_reference):
+def get_licence_id(licence_reference) -> str or None:
     try:
         return str(LicenceIdMapping.objects.get(reference=licence_reference).lite_id)
     except Exception as exc:  # noqa
         return
 
 
-def get_previous_licence_reference(reference):
-    if ord(reference[-1]) == 97:
-        if len(reference) >= 2 and reference[-2] == "/":
-            return reference[0:-2]
-        return reference[0:-1]
-    else:
-        return reference[0:-1] + chr(ord(reference[-1]) - 1)
+def get_action(reference) -> str:
+    if reference == "O":
+        return "open"
+    elif reference == "E":
+        return "exhaust"
+    elif reference == "S":
+        return "surrender"
+    elif reference == "D":
+        return "expire"
+    elif reference == "C":
+        return "cancel"

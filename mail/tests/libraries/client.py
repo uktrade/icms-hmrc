@@ -7,7 +7,6 @@ from django.utils import timezone
 from conf import settings
 from mail.enums import LicenceActionEnum
 from mail.libraries.helpers import read_file
-from mail.libraries.helpers import to_smart_text
 from mail.models import LicencePayload
 from mail.tests.libraries import colours
 
@@ -31,7 +30,6 @@ class LiteHMRCTestClient(testcases.TestCase):
             b"yXGFjY2VwdGVkXEdCU0lFTC8yMDIwLzAwMDAwMDEvUAozXGFjY2VwdGVkXEdCU0lFTC8yMDIwLz"
             b"AwMDAwMDEvUAo0XGZpbGVUcmFpbGVyXDJcMFww"
         )
-        # todo need to see a real example
         self.usage_update_reply_body = read_file("mail/tests/files/usage_update_reply_file", mode="rb")
         logging.debug("licence_update_reply_body: \n{}".format(self.licence_update_reply_body))
         self.licence_update_reply_name = "ILBDOTI_live_CHIEF_licenceReply_49543_201902080025"
