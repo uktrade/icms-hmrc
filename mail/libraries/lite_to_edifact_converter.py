@@ -2,6 +2,7 @@ from django.db.models import QuerySet
 from django.utils import timezone
 
 from mail.enums import UnitMapping, LicenceActionEnum, LicenceTypeEnum
+from mail.libraries.helpers import get_country_id
 from mail.models import OrganisationIdMapping, GoodIdMapping, LicencePayload
 
 
@@ -72,15 +73,15 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
                 trader.get("address").get("line_5", ""),
                 trader.get("address").get("postcode"),
             )
+            # Uses "D" for licence use because lite only sends allowed countries, to use E would require changes on the API
             if licence_payload.get("country_group"):
                 i += 1
-                edifact_file += "\n{}\\country\\\\{}\\{}".format(
-                    i, licence_payload.get("country_group"), licence_payload.get("use")
-                )
+                edifact_file += "\n{}\\country\\\\{}\\{}".format(i, licence_payload.get("country_group"), "D")
             elif licence_payload.get("countries"):
                 for country in licence_payload.get("countries"):
+                    country_id = get_country_id(country)
                     i += 1
-                    edifact_file += "\n{}\\country\\{}\\\\{}".format(i, country, licence_payload.get("use"))
+                    edifact_file += "\n{}\\country\\{}\\\\{}".format(i, country_id, "D")
             if licence_payload.get("end_user"):
                 trader = licence_payload.get("end_user")
                 i += 1

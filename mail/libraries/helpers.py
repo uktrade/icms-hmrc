@@ -3,6 +3,7 @@ import json
 import logging
 from email.message import Message
 from email.parser import Parser
+from json.decoder import JSONDecodeError
 
 from conf.settings import SPIRE_ADDRESS, HMRC_ADDRESS
 from mail.enums import SourceEnum, ExtractTypeEnum, UnitMapping, ReceptionStatusEnum
@@ -253,3 +254,13 @@ def get_action(reference) -> str:
         return "expire"
     elif reference == "C":
         return "cancel"
+
+
+def get_country_id(country):
+    try:
+        if type(country) == dict:
+            return country["id"]
+        else:
+            return json.loads(country)["id"]
+    except (TypeError, JSONDecodeError):
+        return country

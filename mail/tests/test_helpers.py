@@ -13,6 +13,7 @@ from mail.libraries.helpers import (
     map_unit,
     get_action,
     process_attachment,
+    get_country_id,
 )
 from mail.libraries.lite_to_edifact_converter import get_transaction_reference
 from mail.models import LicenceUpdate, Mail
@@ -92,6 +93,11 @@ class HelpersTests(LiteHMRCTestClient):
     @tag("1917", "action-ref")
     def test_action_reference_for_usage(self, reference, action):
         self.assertEqual(get_action(reference), action)
+
+    @parameterized.expand([("GB", "GB"), ('{"id": "GB"}', "GB"), ({"id": "GB"}, "GB")])
+    @tag("country-id")
+    def test_get_country_id(self, country, id):
+        self.assertEqual(get_country_id(country), id)
 
 
 def print_all_mails():
