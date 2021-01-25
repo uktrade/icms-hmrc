@@ -35,10 +35,10 @@ services:
     container_name: "lite-hmrc-ditmail"
     build: ../mailserver
     ports:
-      - "25:25"
-      - "587:587"
-      - "995:995"
-      - "80:80"
+      - "2525:25"
+      - "25587:587"
+      - "25995:995"
+      - "2580:80"
     volumes:
        - ./mailserver/maildata:/var/vmail
     environment:

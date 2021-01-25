@@ -70,7 +70,6 @@ jobs:
       - run:
           name: Run Bandit tests
           command: |
-            pipenv install bandit
             pipenv run bandit -r .
   linting:
     docker:

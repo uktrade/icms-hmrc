@@ -6,7 +6,7 @@ HAWK signs requests and verifies responses.
 from json import dumps as serialize
 import logging
 
-import requests
+import requests  # noqa
 from django.core.cache import cache
 from mohawk import Sender
 from mohawk.exc import AlreadyProcessed
