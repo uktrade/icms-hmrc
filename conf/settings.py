@@ -16,6 +16,9 @@ import uuid
 
 from environ import Env
 
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -186,3 +189,12 @@ BACKGROUND_TASK_ENABLED = env("BACKGROUND_TASK_ENABLED")
 BACKGROUND_TASK_RUN_ASYNC = True
 # Number of times a task is retried given a failure occurs with exponential back-off = ((current_attempt ** 4) + 5)
 MAX_ATTEMPTS = 7  # e.g. 7th attempt occurs approx 40 minutes after 1st attempt (assuming instantaneous failures)
+
+# Sentry
+if env.str("SENTRY_DSN", ""):
+    sentry_sdk.init(
+        dsn=env.str("SENTRY_DSN"),
+        environment=env.str("SENTRY_ENVIRONMENT"),
+        integrations=[DjangoIntegration()],
+        send_default_pii=True,
+    )
