@@ -12,18 +12,32 @@ def send_email(smtp_connection: SMTP, message: Message):
     smtp_connection.send_message(message)
 
 
+def get_message_id(listing_msg: bytes) -> bytes:
+    """
+    Takes a single line from pop3 LIST command and extracts
+    the message id
+    :param listing_msg: a line returned from the pop3.list command, e.g. b"2 5353"
+    :return: the message id extracted from the input, for the above example: b"2"
+    """
+    message_id = listing_msg.split()[0]
+    return message_id
+
+
 def read_last_message(pop3_connection: POP3_SSL) -> EmailMessageDto:
     _, mails, _ = pop3_connection.list()
-    return to_mail_message_dto(pop3_connection.retr(len(mails)))
+    message_id = get_message_id(mails[-1])
+    return to_mail_message_dto(pop3_connection.retr(message_id))
 
 
 def read_last_three_emails(pop3connection: POP3_SSL) -> list:
     _, mails, _ = pop3connection.list()
-    emails = [
-        pop3connection.retr(len(mails)),
-        pop3connection.retr(len(mails) - 1),
-        pop3connection.retr(len(mails) - 2),
-    ]
+
+    reversed_mails = list(reversed(mails))
+    last_three_mails = reversed_mails[:3]
+
+    message_ids = [get_message_id(line) for line in last_three_mails]
+
+    emails = [pop3connection.retr(message_id) for message_id in message_ids]
 
     email_message_dtos = []
     for email in emails:
