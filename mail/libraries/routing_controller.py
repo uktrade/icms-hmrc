@@ -1,10 +1,7 @@
-import base64
 import logging
 
 from django.conf import settings
 from django.utils import timezone
-from email.mime.application import MIMEApplication
-from email.mime.multipart import MIMEMultipart
 
 from conf.settings import SPIRE_ADDRESS
 from mail.enums import ReceptionStatusEnum, SourceEnum, ExtractTypeEnum
@@ -20,6 +17,7 @@ from mail.libraries.mailbox_service import read_last_three_emails, send_email
 from mail.models import Mail
 from mail.servers import MailServer
 
+
 def get_incoming_mailserver():
     return MailServer(
         hostname=settings.INCOMING_EMAIL_HOSTNAME,
@@ -28,6 +26,7 @@ def get_incoming_mailserver():
         pop3_port=settings.INCOMING_EMAIL_POP3_PORT,
         smtp_port=settings.INCOMING_EMAIL_SMTP_PORT,
     )
+
 
 def get_outgoing_mailserver():
     return MailServer(
@@ -41,7 +40,8 @@ def get_outgoing_mailserver():
 
 def check_and_route_emails():
     logging.info("Checking for emails")
-    email_message_dtos = _get_email_message_dtos()
+    server = get_incoming_mailserver()
+    email_message_dtos = _get_email_message_dtos(server)
     if not email_message_dtos:
         logging.info("Emails considered invalid")
         return
@@ -54,58 +54,6 @@ def check_and_route_emails():
     mail = select_email_for_sending()  # Can return None in the event of in flight or no pending or no reply_received
     if mail:
         _collect_and_send(mail)
-
-
-def check_and_send_emails():
-    logging.info("Checking for emails")
-    server = get_incoming_mailserver()
-    email_message_dtos = _get_email_message_dtos(server)
-    if not email_message_dtos:
-        logging.info("Emails considered invalid")
-        return
-
-
-    # test outgoing
-    test_send_outgoing()
-
-    # for email in email_message_dtos:
-    #     serialize_email_message(email)
-
-    # logging.info("Finished checking for emails")
-
-    # mail = select_email_for_sending()  # Can return None in the event of in flight or no pending or no reply_received
-    # if mail:
-    #     _collect_and_send(mail)
-
-
-def test_send_outgoing():
-    import pdb; pdb.set_trace()
-    server = get_incoming_mailserver()
-    smtp_connection = server.connect_to_smtp()
-
-    # build test message
-    file = base64.b64encode(bytes("This is a test message from lite-hmrc service", "ASCII"))
-
-    multipart_msg = MIMEMultipart()
-    multipart_msg["From"] = "hmrc@mailgate.trade.gov.uk"
-    multipart_msg["To"] = "hmrc-parallel-run@digital.trade.gov.uk"
-    multipart_msg["Subject"] = "Test email from lite-hmrc service"
-    payload = MIMEApplication(file)
-    payload.set_payload(file)
-    payload.add_header(
-        "Content-Disposition", "attachment; filename= testfile.pdf"
-    )
-    multipart_msg.attach(payload)
-
-    smtp_connection.send_message(multipart_msg)
-    server.quit_smtp_connection()
-
-    # try to read the message back
-    server = get_outgoing_mailserver()
-    pop3_connection = server.connect_to_pop3()
-    _, mails, _ = pop3_connection.list()
-    server.quit_pop3_connection()
-
 
 
 def update_mail(mail: Mail, mail_dto: EmailMessageDto):
@@ -124,8 +72,7 @@ def update_mail(mail: Mail, mail_dto: EmailMessageDto):
     mail.save()
 
 
-def send(email_message_dto: EmailMessageDto):
-    server = MailServer()
+def send(server: MailServer, email_message_dto: EmailMessageDto):
     smtp_connection = server.connect_to_smtp()
     send_email(smtp_connection, build_email_message(email_message_dto))
     server.quit_smtp_connection()
@@ -144,7 +91,8 @@ def _collect_and_send(mail: Mail):
 
     if message_to_send_dto:
         if message_to_send_dto.receiver != SourceEnum.LITE and message_to_send_dto.subject:
-            send(message_to_send_dto)
+            server = get_incoming_mailserver()
+            send(server, message_to_send_dto)
             update_mail(mail, message_to_send_dto)
 
             logging.info(

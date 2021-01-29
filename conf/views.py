@@ -50,7 +50,7 @@ class HealthCheck(APIView):
             )
             return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
 
-        logging.info(f"All services are responsive")
+        logging.info("All services are responsive")
         return self._build_response(HTTP_200_OK, "OK", start_time)
 
     @staticmethod

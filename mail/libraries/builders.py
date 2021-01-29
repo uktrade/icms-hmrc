@@ -1,18 +1,18 @@
 import json
 import base64
 
+from django.conf import settings
 from django.utils import timezone
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 
-from conf.settings import HMRC_ADDRESS, SPIRE_ADDRESS, EMAIL_USER
 from mail.enums import SourceEnum, ExtractTypeEnum
 from mail.libraries.combine_usage_replies import combine_lite_and_spire_usage_responses
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import convert_source_to_sender
 from mail.libraries.lite_to_edifact_converter import licences_to_edifact
 from mail.libraries.usage_data_decomposition import split_edi_data_by_id, build_edifact_file_from_data_blocks
-from mail.models import LicenceUpdate, Mail, UsageUpdate
+from mail.models import LicenceData, LicenceUpdate, Mail, UsageUpdate
 
 
 def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
@@ -21,9 +21,18 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
     attachment = [None, None]
     run_number = 0
 
-    if mail.extract_type == ExtractTypeEnum.LICENCE_UPDATE:
-        sender = EMAIL_USER
-        receiver = HMRC_ADDRESS
+    if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
+        sender = settings.INCOMING_EMAIL_USER
+        receiver = settings.OUTGOING_EMAIL_USER
+        licence_data = LicenceData.objects.get(mail=mail)
+        run_number = licence_data.hmrc_run_number
+        attachment = [
+            build_sent_filename(mail.edi_filename, run_number),
+            build_sent_file_data(mail.edi_data, run_number),
+        ]
+    elif mail.extract_type == ExtractTypeEnum.LICENCE_UPDATE:
+        sender = settings.EMAIL_USER
+        receiver = settings.HMRC_ADDRESS
         licence_update = LicenceUpdate.objects.get(mail=mail)
         run_number = licence_update.hmrc_run_number
         attachment = [
@@ -31,8 +40,8 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
             build_sent_file_data(mail.edi_data, run_number),
         ]
     elif mail.extract_type == ExtractTypeEnum.USAGE_UPDATE:
-        sender = HMRC_ADDRESS
-        receiver = SPIRE_ADDRESS
+        sender = settings.HMRC_ADDRESS
+        receiver = settings.SPIRE_ADDRESS
         update = UsageUpdate.objects.get(mail=mail)
         run_number = update.spire_run_number
         spire_data, _ = split_edi_data_by_id(mail.edi_data)
@@ -72,8 +81,8 @@ def build_sent_file_data(file_data: str, run_number: int) -> str:
 
 
 def build_reply_mail_message_dto(mail) -> EmailMessageDto:
-    sender = HMRC_ADDRESS
-    receiver = SPIRE_ADDRESS
+    sender = settings.HMRC_ADDRESS
+    receiver = settings.SPIRE_ADDRESS
     run_number = None
 
     if mail.extract_type == ExtractTypeEnum.LICENCE_UPDATE:
@@ -83,8 +92,8 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
     elif mail.extract_type == ExtractTypeEnum.USAGE_UPDATE:
         usage_update = UsageUpdate.objects.get(mail=mail)
         run_number = usage_update.hmrc_run_number
-        sender = SPIRE_ADDRESS
-        receiver = HMRC_ADDRESS
+        sender = settings.SPIRE_ADDRESS
+        receiver = settings.HMRC_ADDRESS
         mail.response_data = combine_lite_and_spire_usage_responses(mail)
 
     attachment = [
@@ -140,7 +149,7 @@ def build_email_message(email_message_dto: EmailMessageDto) -> MIMEMultipart:
     file = base64.b64encode(bytes(email_message_dto.attachment[1], "ASCII"))
 
     multipart_msg = MIMEMultipart()
-    multipart_msg["From"] = EMAIL_USER
+    multipart_msg["From"] = email_message_dto.sender
     multipart_msg["To"] = email_message_dto.receiver
     multipart_msg["Subject"] = email_message_dto.subject
     payload = MIMEApplication(file)

@@ -66,6 +66,23 @@ class Mail(models.Model):
         notify_users_of_rejected_mail(str(id), str(response_date))
 
 
+class LicenceData(models.Model):
+    licence_ids = models.TextField()
+    hmrc_run_number = models.IntegerField()
+    source_run_number = models.IntegerField(null=True)
+    source = models.CharField(choices=SourceEnum.choices, max_length=10)
+    mail = models.ForeignKey(Mail, on_delete=models.DO_NOTHING)
+
+    class Meta:
+        ordering = ["mail__created_at"]
+
+    def set_licence_ids(self, data: List):
+        self.licence_ids = json.dumps(data)
+
+    def get_licence_ids(self):
+        return json.loads(self.licence_ids)
+
+
 class LicenceUpdate(models.Model):
     licence_ids = models.TextField()
     hmrc_run_number = models.IntegerField()

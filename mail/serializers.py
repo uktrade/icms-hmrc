@@ -4,7 +4,49 @@ import logging
 from rest_framework import serializers
 
 from mail.enums import LicenceActionEnum
-from mail.models import Mail, LicenceUpdate, UsageUpdate, LicenceIdMapping
+from mail.models import Mail, LicenceData, LicenceUpdate, UsageUpdate, LicenceIdMapping
+
+
+class LicenceDataSerializer(serializers.ModelSerializer):
+    mail = serializers.PrimaryKeyRelatedField(queryset=Mail.objects.all(), required=False)
+
+    class Meta:
+        model = LicenceData
+        fields = "__all__"
+
+    def create(self, validated_data):
+        instance, _ = LicenceData.objects.get_or_create(**validated_data)
+        return instance
+
+
+class LicenceDataMailSerializer(serializers.ModelSerializer):
+    licence_data = LicenceDataSerializer(write_only=True)
+
+    class Meta:
+        model = Mail
+        fields = [
+            "id",
+            "edi_filename",
+            "edi_data",
+            "extract_type",
+            "raw_data",
+            "licence_data",
+        ]
+
+    def create(self, validated_data):
+        licence_data = validated_data.pop("licence_data")
+        # Mail object should not exist for licence_data, so we can create it here safely
+        mail, _ = Mail.objects.get_or_create(**validated_data)
+        licence_data["mail"] = mail.id
+
+        licence_data_serializer = LicenceDataSerializer(data=licence_data)
+        if licence_data_serializer.is_valid():
+            licence_data_serializer.save()
+        else:
+            logging.error(licence_data_serializer.errors)
+            raise serializers.ValidationError(licence_data_serializer.errors)
+
+        return mail
 
 
 class LicenceUpdateSerializer(serializers.ModelSerializer):

@@ -1,11 +1,12 @@
 import base64
 import json
 import logging
+
+from django.conf import settings
 from email.message import Message
 from email.parser import Parser
 from json.decoder import JSONDecodeError
 
-from conf.settings import SPIRE_ADDRESS, HMRC_ADDRESS
 from mail.enums import SourceEnum, ExtractTypeEnum, UnitMapping, ReceptionStatusEnum
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.models import LicenceUpdate, UsageUpdate, Mail, GoodIdMapping, LicenceIdMapping
@@ -105,18 +106,21 @@ def get_run_number(patterned_text: str) -> int:
 def convert_sender_to_source(sender: str) -> str:
     if "<" in sender and ">" in sender:
         sender = sender.split("<")[1].split(">")[0]
-    if sender == SPIRE_ADDRESS:
+    if sender == settings.SPIRE_ADDRESS:
         return SourceEnum.SPIRE
     elif sender == SourceEnum.LITE:
         return SourceEnum.LITE
-    elif sender == HMRC_ADDRESS:
+    elif sender == settings.HMRC_ADDRESS:
         return SourceEnum.HMRC
+    if sender == settings.SPIRE_ADDRESS_PARALLEL_RUN:
+        return SourceEnum.SPIRE
+
     return sender
 
 
 def convert_source_to_sender(source) -> str:
     if source == SourceEnum.SPIRE:
-        return SPIRE_ADDRESS
+        return settings.SPIRE_ADDRESS
     elif source == SourceEnum.LITE:
         return SourceEnum.LITE
     return source

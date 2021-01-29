@@ -16,7 +16,6 @@ from mail.tasks import (
     manage_inbox,
     send_licence_updates_to_hmrc,
     send_licence_usage_figures_to_lite_api,
-    parallel_run_outgoing,
 )
 from rest_framework.status import HTTP_200_OK
 
@@ -85,8 +84,7 @@ class UpdateLicence(APIView):
             logging.info(f"Created LicencePayload [{licence.lite_id}, {licence.reference}, {licence.action}]")
 
             return JsonResponse(
-                status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
-                data={"licence": licence.data},
+                status=status.HTTP_201_CREATED if created else status.HTTP_200_OK, data={"licence": licence.data},
             )
 
 
@@ -108,12 +106,5 @@ class SendUsageUpdatesToLiteApi(APIView):
     def get(self, request):
         usage_update = UsageUpdate.objects.last()
         send_licence_usage_figures_to_lite_api.now(str(usage_update.id))
-
-        return HttpResponse(status=HTTP_200_OK)
-
-
-class TestParallelRunOutgoing(APIView):
-    def get(self, request):
-        parallel_run_outgoing.now()
 
         return HttpResponse(status=HTTP_200_OK)
