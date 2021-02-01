@@ -26,7 +26,10 @@ def convert_data_for_licence_data(dto: EmailMessageDto) -> dict:
         data["edi_filename"] = dto.attachment[0]
         data["edi_data"] = dto.attachment[1]
 
-    data["licence_data"]["licence_ids"] = get_licence_ids(data["edi_data"])
+    edi_data = data["edi_data"]
+    if isinstance(edi_data, bytes):
+        edi_data = edi_data.decode("utf-8")
+    data["licence_data"]["licence_ids"] = get_licence_ids(edi_data)
     _log_result(data)
     return data
 
