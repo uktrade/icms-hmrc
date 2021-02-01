@@ -35,7 +35,7 @@ def read_last_three_emails(pop3connection: POP3_SSL) -> list:
     reversed_mails = list(reversed(mails))
     last_three_mails = reversed_mails[:3]
 
-    message_ids = [get_message_id(line) for line in last_three_mails]
+    message_ids = [get_message_id(line.decode("utf-8")) for line in last_three_mails]
 
     emails = [pop3connection.retr(message_id) for message_id in message_ids]
 

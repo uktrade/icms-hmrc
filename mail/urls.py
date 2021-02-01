@@ -1,6 +1,6 @@
 from django.urls import path
 
-from mail.views import UpdateLicence  # ManageInbox, SendLicenceUpdatesToHmrc, SendUsageUpdatesToLiteApi
+from mail.views import UpdateLicence
 
 app_name = "mail"
 

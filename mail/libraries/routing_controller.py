@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.utils import timezone
 
 from conf.settings import SPIRE_ADDRESS
@@ -17,9 +18,30 @@ from mail.models import Mail
 from mail.servers import MailServer
 
 
+def get_incoming_mailserver():
+    return MailServer(
+        hostname=settings.INCOMING_EMAIL_HOSTNAME,
+        user=settings.INCOMING_EMAIL_USER,
+        password=settings.INCOMING_EMAIL_PASSWORD,
+        pop3_port=settings.INCOMING_EMAIL_POP3_PORT,
+        smtp_port=settings.INCOMING_EMAIL_SMTP_PORT,
+    )
+
+
+def get_outgoing_mailserver():
+    return MailServer(
+        hostname=settings.OUTGOING_EMAIL_HOSTNAME,
+        user=settings.OUTGOING_EMAIL_USER,
+        password=settings.OUTGOING_EMAIL_PASSWORD,
+        pop3_port=settings.OUTGOING_EMAIL_POP3_PORT,
+        smtp_port=settings.OUTGOING_EMAIL_SMTP_PORT,
+    )
+
+
 def check_and_route_emails():
     logging.info("Checking for emails")
-    email_message_dtos = _get_email_message_dtos()
+    server = get_incoming_mailserver()
+    email_message_dtos = _get_email_message_dtos(server)
     if not email_message_dtos:
         logging.info("Emails considered invalid")
         return
@@ -50,8 +72,7 @@ def update_mail(mail: Mail, mail_dto: EmailMessageDto):
     mail.save()
 
 
-def send(email_message_dto: EmailMessageDto):
-    server = MailServer()
+def send(server: MailServer, email_message_dto: EmailMessageDto):
     smtp_connection = server.connect_to_smtp()
     send_email(smtp_connection, build_email_message(email_message_dto))
     server.quit_smtp_connection()
@@ -70,7 +91,8 @@ def _collect_and_send(mail: Mail):
 
     if message_to_send_dto:
         if message_to_send_dto.receiver != SourceEnum.LITE and message_to_send_dto.subject:
-            send(message_to_send_dto)
+            server = get_incoming_mailserver()
+            send(server, message_to_send_dto)
             update_mail(mail, message_to_send_dto)
 
             logging.info(
@@ -85,8 +107,7 @@ def _collect_and_send(mail: Mail):
             send_licence_updates_to_hmrc(schedule=0)  # noqa
 
 
-def _get_email_message_dtos() -> list:
-    server = MailServer()
+def _get_email_message_dtos(server) -> list:
     pop3_connection = server.connect_to_pop3()
     emails = read_last_three_emails(pop3_connection)
     server.quit_pop3_connection()

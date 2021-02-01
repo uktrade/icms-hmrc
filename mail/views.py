@@ -12,7 +12,11 @@ from mail.serializers import (
     ForiegnTraderSerializer,
     GoodSerializer,
 )
-from mail.tasks import manage_inbox, send_licence_updates_to_hmrc, send_licence_usage_figures_to_lite_api
+from mail.tasks import (
+    manage_inbox,
+    send_licence_updates_to_hmrc,
+    send_licence_usage_figures_to_lite_api,
+)
 from rest_framework.status import HTTP_200_OK
 
 

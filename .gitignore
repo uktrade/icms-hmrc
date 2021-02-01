@@ -73,3 +73,5 @@ target/
 
 # Test data
 mailserver/*
+
+.vscode/

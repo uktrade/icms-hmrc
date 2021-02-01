@@ -12,6 +12,25 @@ from mail.libraries.helpers import (
 )
 
 
+def convert_data_for_licence_data(dto: EmailMessageDto) -> dict:
+    source = convert_sender_to_source(dto.sender)
+    data = {"licence_data": {}}
+    data["licence_data"]["source"] = source
+    data["licence_data"]["hmrc_run_number"] = (
+        new_hmrc_run_number(int(dto.run_number)) if convert_sender_to_source(dto.sender) in VALID_SENDERS else None
+    )
+    data["licence_data"]["source_run_number"] = dto.run_number
+    if source == SourceEnum.SPIRE:
+        data["edi_filename"], data["edi_data"] = process_attachment(dto.attachment)
+    else:
+        data["edi_filename"] = dto.attachment[0]
+        data["edi_data"] = dto.attachment[1]
+
+    data["licence_data"]["licence_ids"] = get_licence_ids(data["edi_data"])
+    _log_result(data)
+    return data
+
+
 def convert_data_for_licence_update(dto: EmailMessageDto) -> dict:
     source = convert_sender_to_source(dto.sender)
     data = {"licence_update": {}}

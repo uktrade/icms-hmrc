@@ -8,6 +8,7 @@ from conf.settings import SYSTEM_INSTANCE_UUID, LOCK_INTERVAL
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
 from mail.libraries.builders import build_request_mail_message_dto, build_reply_mail_message_dto
 from mail.libraries.data_converters import (
+    convert_data_for_licence_data,
     convert_data_for_licence_update,
     convert_data_for_licence_update_reply,
     convert_data_for_usage_update,
@@ -21,6 +22,7 @@ from mail.libraries.helpers import (
 from mail.libraries.mailbox_service import find_mail_of
 from mail.models import LicenceUpdate, Mail, UsageUpdate
 from mail.serializers import (
+    LicenceDataMailSerializer,
     LicenceUpdateMailSerializer,
     UpdateResponseSerializer,
     UsageUpdateMailSerializer,
@@ -30,6 +32,7 @@ from mail.serializers import (
 def serialize_email_message(dto: EmailMessageDto) -> Mail or None:
     extract_type = get_extract_type(dto.subject)
     if not extract_type:
+        logging.info(f"Extract type not supported ({dto.subject}), skipping")
         return
 
     instance = get_mail_instance(extract_type, dto.run_number)
@@ -61,7 +64,9 @@ def convert_dto_data_for_serialization(dto: EmailMessageDto, extract_type) -> di
     :return: new dto for different extract type; corresponding Serializer;
             and existing mail if extract type is of reply. Both serializer and mail could be None
     """
-    if extract_type == ExtractTypeEnum.LICENCE_UPDATE:
+    if extract_type == ExtractTypeEnum.LICENCE_DATA:
+        data = convert_data_for_licence_data(dto)
+    elif extract_type == ExtractTypeEnum.LICENCE_UPDATE:
         data = convert_data_for_licence_update(dto)
     elif extract_type == ExtractTypeEnum.LICENCE_REPLY:
         data = convert_data_for_licence_update_reply(dto)
@@ -84,7 +89,9 @@ def convert_dto_data_for_serialization(dto: EmailMessageDto, extract_type) -> di
 
 def get_serializer_for_dto(extract_type):
     serializer = None
-    if extract_type == ExtractTypeEnum.LICENCE_UPDATE:
+    if extract_type == ExtractTypeEnum.LICENCE_DATA:
+        serializer = LicenceDataMailSerializer
+    elif extract_type == ExtractTypeEnum.LICENCE_UPDATE:
         serializer = LicenceUpdateMailSerializer
     elif extract_type == ExtractTypeEnum.LICENCE_REPLY:
         serializer = UpdateResponseSerializer
