@@ -3,14 +3,14 @@ import logging
 from mail.libraries.helpers import to_hmrc_mail_message_dto
 from mail.libraries.routing_controller import get_mock_hmrc_mailserver
 from mail.libraries.mailbox_service import get_message_id
-from mock_hmrc import models
-from mock_hmrc.data_processors import save_hmrc_email_message_data
+from mock_hmrc import enums, models
+from mock_hmrc.data_processors import save_hmrc_email_message_data, send_reply
 
 
 def get_hmrc_email_message_dto(server):
     conn = server.connect_to_pop3()
     _, mails, _ = conn.list()
-    message_ids = [get_message_id(line.decode("utf-8")) for line in mails]
+    message_ids = [get_message_id(line.decode("iso-8859-1")) for line in mails]
 
     if models.RetrievedMail.objects.count():
         recent_mail = models.RetrievedMail.objects.all().order_by("message_id").last()
@@ -32,11 +32,21 @@ def get_hmrc_email_message_dto(server):
     return dto
 
 
+def select_email_to_reply():
+    return models.HmrcMail.objects.filter(status=enums.HmrcMailStatusEnum.ACCEPTED).order_by("created_at").first()
+
+
 def parse_and_reply_emails():
     server = get_mock_hmrc_mailserver()
     email_dto = get_hmrc_email_message_dto(server)
-    if not email_dto:
+    if email_dto:
+        email_instance = save_hmrc_email_message_data(email_dto)
+        if email_instance:
+            send_reply(email_instance)
+    else:
         logging.info("No emails to process or invalid")
-        return
 
-    save_hmrc_email_message_data(email_dto)
+    # If no new emails, check if there are any pending replies
+    email = select_email_to_reply()
+    if email:
+        send_reply(email)
