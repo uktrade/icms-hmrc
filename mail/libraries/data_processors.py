@@ -3,6 +3,7 @@ import threading
 
 from django.db import transaction
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 from conf.settings import SYSTEM_INSTANCE_UUID, LOCK_INTERVAL
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
@@ -46,7 +47,7 @@ def serialize_email_message(dto: EmailMessageDto) -> Mail or None:
 
     if not serializer.is_valid():
         logging.error(f"Failed to serialize email -> {serializer.errors}")
-        return
+        raise ValidationError(serializer.errors)
 
     _mail = serializer.save()
     if data["extract_type"] in ["licence_reply", "usage_reply"]:

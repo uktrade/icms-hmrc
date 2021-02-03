@@ -178,3 +178,11 @@ class UnitMapping:
         for k, v in cls.choices:
             if unit == v:
                 return k
+
+
+class MailReadStatuses:
+    READ = "READ"
+    UNREAD = "UNREAD"
+    UNPROCESSABLE = "UNPROCESSABLE"
+
+    choices = [(READ, "Read"), (UNREAD, "Unread"), (UNPROCESSABLE, "Unprocessable")]

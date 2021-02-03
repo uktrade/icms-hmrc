@@ -1,10 +1,15 @@
+from rest_framework.exceptions import ValidationError
+from typing import Callable, List, Tuple
+
 import logging
+from itertools import islice
 
 from django.conf import settings
 from django.utils import timezone
 
 from conf.settings import SPIRE_ADDRESS
-from mail.enums import ReceptionStatusEnum, SourceEnum, ExtractTypeEnum
+from mail.enums import ReceptionStatusEnum, SourceEnum, ExtractTypeEnum, \
+    MailReadStatuses
 from mail.libraries.builders import build_email_message
 from mail.libraries.data_processors import (
     serialize_email_message,
@@ -13,12 +18,12 @@ from mail.libraries.data_processors import (
 )
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import select_email_for_sending
-from mail.libraries.mailbox_service import read_last_three_emails, send_email
+from mail.libraries.mailbox_service import read_last_three_emails, send_email, get_message_iterator
 from mail.models import Mail
 from mail.servers import MailServer
 
 
-def get_incoming_mailserver():
+def get_incoming_mailserver() -> MailServer:
     return MailServer(
         hostname=settings.INCOMING_EMAIL_HOSTNAME,
         user=settings.INCOMING_EMAIL_USER,
@@ -28,7 +33,7 @@ def get_incoming_mailserver():
     )
 
 
-def get_mock_hmrc_mailserver():
+def get_mock_hmrc_mailserver() -> MailServer:
     return MailServer(
         hostname=settings.MOCK_HMRC_EMAIL_HOSTNAME,
         user=settings.MOCK_HMRC_EMAIL_USER,
@@ -38,7 +43,7 @@ def get_mock_hmrc_mailserver():
     )
 
 
-def get_spire_standin_mailserver():
+def get_spire_standin_mailserver() -> MailServer:
     return MailServer(
         hostname=settings.SPIRE_STANDIN_EMAIL_HOSTNAME,
         user=settings.SPIRE_STANDIN_EMAIL_USER,
@@ -56,8 +61,12 @@ def check_and_route_emails():
         logging.info("Emails considered invalid")
         return
 
-    for email in email_message_dtos:
-        serialize_email_message(email)
+    for email, mark_status in email_message_dtos:
+        try:
+            serialize_email_message(email)
+            mark_status(MailReadStatuses.READ)
+        except ValidationError as ve:
+            mark_status(MailReadStatuses.UNPROCESSABLE)
 
     logging.info("Finished checking for emails")
 
@@ -117,8 +126,10 @@ def _collect_and_send(mail: Mail):
             send_licence_updates_to_hmrc(schedule=0)  # noqa
 
 
-def _get_email_message_dtos(server) -> list:
+def _get_email_message_dtos(server: MailServer, number=3) -> List[Tuple[EmailMessageDto, Callable]]:
     pop3_connection = server.connect_to_pop3()
-    emails = read_last_three_emails(pop3_connection)
+    emails_iter = get_message_iterator(pop3_connection, server.user)
+    emails = list(islice(emails_iter, number))
+    # emails = read_last_three_emails(pop3_connection)
     server.quit_pop3_connection()
     return emails

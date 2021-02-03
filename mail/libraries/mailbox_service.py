@@ -2,10 +2,12 @@ import logging
 from email.message import Message
 from poplib import POP3_SSL
 from smtplib import SMTP
+from typing import Callable, Iterator, Tuple
 
+from mail.enums import MailReadStatuses
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import to_mail_message_dto
-from mail.models import Mail
+from mail.models import Mail, MailboxConfig, MailReadStatus
 
 
 def send_email(smtp_connection: SMTP, message: Message):
@@ -21,6 +23,39 @@ def get_message_id(listing_msg: bytes) -> bytes:
     """
     message_id = listing_msg.split()[0]
     return message_id
+
+
+def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[Tuple[EmailMessageDto, Callable]]:
+    mails: list
+    _, mails, _ = pop3_connection.list()
+    mailbox_config, _ = MailboxConfig.objects.get_or_create(username=username)
+
+    mail_message_ids = [get_message_id(m.decode("utf-8")) for m in mails]
+
+    # if there is a start_message_id then remove any messages before that
+    if mailbox_config.start_message_id:
+        mail_message_ids = mail_message_ids[mail_message_ids.index(mailbox_config.start_message_id) :]
+
+    # these are mailbox message ids we've seen before
+    read_messages = set(
+        MailReadStatus.objects.filter(mailbox=mailbox_config, status__in=[MailReadStatuses.READ, MailReadStatuses.UNPROCESSABLE]).values_list(
+            "message_id", flat=True
+        )
+    )
+
+    for message_id in mail_message_ids:
+        # only return messages we haven't seen before
+        if message_id not in read_messages:
+            read_status, _ = MailReadStatus.objects.get_or_create(message_id=message_id, mailbox=mailbox_config)
+
+            def mark_status(status):
+                """
+                :param status: A choice from `MailReadStatuses.choices`
+                """
+                read_status.status = status
+                read_status.save()
+
+            yield to_mail_message_dto(pop3_connection.retr(message_id)), mark_status
 
 
 def read_last_message(pop3_connection: POP3_SSL) -> EmailMessageDto:

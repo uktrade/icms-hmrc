@@ -1,6 +1,7 @@
 import logging
 
 from django.test import tag
+from rest_framework.exceptions import ValidationError
 
 from conf.settings import SPIRE_ADDRESS, HMRC_ADDRESS, EMAIL_USER
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
@@ -48,8 +49,7 @@ class TestDataProcessors(LiteHMRCTestClient):
             attachment=[self.licence_usage_file_name, self.licence_usage_file_body],
             raw_data="",
         )
-
-        serialize_email_message(email_message_dto)
+        self.assertRaises(ValidationError, serialize_email_message, email_message_dto)
 
         email = Mail.objects.last()
         usage_update = UsageUpdate.objects.get(mail=email)
