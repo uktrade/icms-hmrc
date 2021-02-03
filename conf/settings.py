@@ -222,3 +222,14 @@ if env.str("SENTRY_DSN", ""):
         integrations=[DjangoIntegration()],
         send_default_pii=True,
     )
+
+# Application Performance Monitoring
+if env.str("ELASTIC_APM_SERVER_URL", ""):
+    ELASTIC_APM = {
+        "SERVICE_NAME": env.str("ELASTIC_APM_SERVICE_NAME", "lite-hmrc"),
+        "SECRET_TOKEN": env.str("ELASTIC_APM_SECRET_TOKEN"),
+        "SERVER_URL": env.str("ELASTIC_APM_SERVER_URL"),
+        "ENVIRONMENT": env.str("SENTRY_ENVIRONMENT"),
+        "DEBUG": DEBUG,
+    }
+    INSTALLED_APPS.append("elasticapm.contrib.django")
