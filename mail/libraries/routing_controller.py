@@ -28,13 +28,23 @@ def get_incoming_mailserver():
     )
 
 
-def get_outgoing_mailserver():
+def get_mock_hmrc_mailserver():
     return MailServer(
-        hostname=settings.OUTGOING_EMAIL_HOSTNAME,
-        user=settings.OUTGOING_EMAIL_USER,
-        password=settings.OUTGOING_EMAIL_PASSWORD,
-        pop3_port=settings.OUTGOING_EMAIL_POP3_PORT,
-        smtp_port=settings.OUTGOING_EMAIL_SMTP_PORT,
+        hostname=settings.MOCK_HMRC_EMAIL_HOSTNAME,
+        user=settings.MOCK_HMRC_EMAIL_USER,
+        password=settings.MOCK_HMRC_EMAIL_PASSWORD,
+        pop3_port=settings.MOCK_HMRC_EMAIL_POP3_PORT,
+        smtp_port=settings.MOCK_HMRC_EMAIL_SMTP_PORT,
+    )
+
+
+def get_spire_standin_mailserver():
+    return MailServer(
+        hostname=settings.SPIRE_STANDIN_EMAIL_HOSTNAME,
+        user=settings.SPIRE_STANDIN_EMAIL_USER,
+        password=settings.SPIRE_STANDIN_EMAIL_PASSWORD,
+        pop3_port=settings.SPIRE_STANDIN_EMAIL_POP3_PORT,
+        smtp_port=settings.SPIRE_STANDIN_EMAIL_SMTP_PORT,
     )
 
 

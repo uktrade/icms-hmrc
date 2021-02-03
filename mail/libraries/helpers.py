@@ -8,7 +8,7 @@ from email.parser import Parser
 from json.decoder import JSONDecodeError
 
 from mail.enums import SourceEnum, ExtractTypeEnum, UnitMapping, ReceptionStatusEnum
-from mail.libraries.email_message_dto import EmailMessageDto
+from mail.libraries.email_message_dto import EmailMessageDto, HmrcEmailMessageDto
 from mail.models import LicenceUpdate, UsageUpdate, Mail, GoodIdMapping, LicenceIdMapping
 
 ALLOWED_FILE_MIMETYPES = ["application/octet-stream", "text/plain"]
@@ -70,11 +70,29 @@ def get_attachment(msg: Message):
 
 def to_mail_message_dto(mail_data) -> EmailMessageDto:
     mail_contents = mail_data[1]
-    contents = b"\r\n".join(mail_contents).decode("utf-8")
+    contents = b"\r\n".join(mail_contents).decode("iso-8859-1")
     msg_obj = Parser().parsestr(contents)
     msg = body_contents_of(msg_obj)
     file_name, file_data = get_attachment(msg_obj)
     return EmailMessageDto(
+        subject=msg_obj.get("Subject"),
+        sender=msg_obj.get("From"),
+        receiver=msg_obj.get("To"),
+        body=msg,
+        attachment=[file_name, file_data],
+        run_number=get_run_number(msg_obj.get("Subject")),
+        raw_data=str(mail_data),
+    )
+
+
+def to_hmrc_mail_message_dto(message_id, mail_data) -> HmrcEmailMessageDto:
+    mail_contents = mail_data[1]
+    contents = b"\r\n".join(mail_contents).decode("iso-8859-1")
+    msg_obj = Parser().parsestr(contents)
+    msg = body_contents_of(msg_obj)
+    file_name, file_data = get_attachment(msg_obj)
+    return HmrcEmailMessageDto(
+        message_id=message_id,
         subject=msg_obj.get("Subject"),
         sender=msg_obj.get("From"),
         receiver=msg_obj.get("To"),
