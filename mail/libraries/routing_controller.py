@@ -8,8 +8,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from conf.settings import SPIRE_ADDRESS
-from mail.enums import ReceptionStatusEnum, SourceEnum, ExtractTypeEnum, \
-    MailReadStatuses
+from mail.enums import ReceptionStatusEnum, SourceEnum, ExtractTypeEnum, MailReadStatuses
 from mail.libraries.builders import build_email_message
 from mail.libraries.data_processors import (
     serialize_email_message,

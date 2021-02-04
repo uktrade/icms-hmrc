@@ -38,9 +38,9 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
 
     # these are mailbox message ids we've seen before
     read_messages = set(
-        MailReadStatus.objects.filter(mailbox=mailbox_config, status__in=[MailReadStatuses.READ, MailReadStatuses.UNPROCESSABLE]).values_list(
-            "message_id", flat=True
-        )
+        MailReadStatus.objects.filter(
+            mailbox=mailbox_config, status__in=[MailReadStatuses.READ, MailReadStatuses.UNPROCESSABLE]
+        ).values_list("message_id", flat=True)
     )
 
     for message_id in mail_message_ids:
