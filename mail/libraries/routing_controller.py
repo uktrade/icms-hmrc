@@ -17,9 +17,11 @@ from mail.libraries.data_processors import (
 )
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import select_email_for_sending
-from mail.libraries.mailbox_service import read_last_three_emails, send_email, get_message_iterator
+from mail.libraries.mailbox_service import send_email, get_message_iterator
 from mail.models import Mail
 from mail.servers import MailServer
+
+logger = logging.getLogger(__name__)
 
 
 def get_incoming_mailserver() -> MailServer:
@@ -53,11 +55,11 @@ def get_spire_standin_mailserver() -> MailServer:
 
 
 def check_and_route_emails():
-    logging.info("Checking for emails")
+    logger.info("Checking for emails")
     server = get_incoming_mailserver()
     email_message_dtos = _get_email_message_dtos(server)
     if not email_message_dtos:
-        logging.info("Emails considered invalid")
+        logger.info("Emails considered invalid")
         return
 
     for email, mark_status in email_message_dtos:
@@ -65,9 +67,10 @@ def check_and_route_emails():
             serialize_email_message(email)
             mark_status(MailReadStatuses.READ)
         except ValidationError as ve:
+            logger.info(f"Marking message {email.subject} as UNPROCESSABLE. {ve.detail}")
             mark_status(MailReadStatuses.UNPROCESSABLE)
 
-    logging.info("Finished checking for emails")
+    logger.info("Finished checking for emails")
 
     mail = select_email_for_sending()  # Can return None in the event of in flight or no pending or no reply_received
     if mail:
@@ -99,13 +102,13 @@ def send(server: MailServer, email_message_dto: EmailMessageDto):
 def _collect_and_send(mail: Mail):
     from mail.tasks import send_licence_updates_to_hmrc
 
-    logging.info(f"Sending Mail [{mail.id}]")
+    logger.info(f"Sending Mail [{mail.id}]")
 
     message_to_send_dto = to_email_message_dto_from(mail)
     is_locked_by_me = lock_db_for_sending_transaction(mail)
 
     if not is_locked_by_me:
-        logging.info(f"Mail [{mail.id}] is being sent by another thread")
+        logger.info(f"Mail [{mail.id}] is being sent by another thread")
 
     if message_to_send_dto:
         if message_to_send_dto.receiver != SourceEnum.LITE and message_to_send_dto.subject:
@@ -113,7 +116,7 @@ def _collect_and_send(mail: Mail):
             send(server, message_to_send_dto)
             update_mail(mail, message_to_send_dto)
 
-            logging.info(
+            logger.info(
                 f"Mail [{mail.id}] routed from [{message_to_send_dto.sender}] to [{message_to_send_dto.receiver}]"
             )
         else:
