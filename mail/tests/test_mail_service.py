@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from django.test import tag
 from parameterized import parameterized
 
-from mail.libraries.mailbox_service import read_last_message, read_last_three_emails
+from mail.libraries.mailbox_service import read_last_message, read_last_three_emails, get_message_iterator
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
@@ -80,3 +80,51 @@ class MailServiceTests(LiteHMRCTestClient):
         message_list_and_expected_source = zip(message_list, reversed(retr_data.values()))
         for message, retr_item in message_list_and_expected_source:
             self.assertEqual(f"Subject: {message.subject}".encode("utf-8"), retr_item[1][0])
+
+    @parameterized.expand(
+        [
+            (
+                [b"0 1234", b"1 4321"],
+                OrderedDict(
+                    {
+                        "0": [b"OK", [b"Subject: mock0", b"hello"], "\r\n.\r\n"],
+                        "1": [b"OK", [b"Subject: mock1", b"hello"], "\r\n.\r\n"],
+                    }
+                ),
+            ),
+            (
+                [b"0 1234", b"1 4321", b"4 4444"],
+                OrderedDict(
+                    {
+                        "0": [b"OK", [b"Subject: mock0", b"hello"], "\r\n.\r\n"],
+                        "1": [b"OK", [b"Subject: mock1", b"hello"], "\r\n.\r\n"],
+                        "4": [b"OK", [b"Subject: mock4", b"hello"], "\r\n.\r\n"],
+                    }
+                ),
+            ),
+            (
+                [b"2 1234", b"1 4321", b"4 4444", b"5 5555"],
+                OrderedDict(
+                    {
+                        "2": [b"OK", [b"Subject: mock2", b"hello"], "\r\n.\r\n"],
+                        "1": [b"OK", [b"Subject: mock1", b"hello"], "\r\n.\r\n"],
+                        "4": [b"OK", [b"Subject: mock4", b"hello"], "\r\n.\r\n"],
+                        "5": [b"OK", [b"Subject: mock5", b"hello"], "\r\n.\r\n"],
+                    }
+                ),
+            ),
+        ]
+    )
+    def test_get_message_iterator(self, email_list, retr_data):
+        pop3conn = MagicMock(spec=POP3_SSL)
+        pop3conn.list.return_value = (None, email_list, None)
+        pop3conn.retr = MagicMock(side_effect=retr_data.__getitem__)
+        message_list = list(get_message_iterator(pop3conn, "test"))
+
+        # check it only gets up to 3 messages
+        self.assertEqual(len(message_list), len(email_list))
+
+        # check they are the last 3 messages (reverse input order and take first 3)
+        message_list_and_expected_source = zip(message_list, retr_data.values())
+        for message, retr_item in message_list_and_expected_source:
+            self.assertEqual(f"Subject: {message[0].subject}".encode("utf-8"), retr_item[1][0])
