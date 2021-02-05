@@ -1,4 +1,5 @@
 import logging
+from django.conf import settings
 
 from mail.libraries.helpers import to_hmrc_mail_message_dto
 from mail.libraries.routing_controller import get_mock_hmrc_mailserver
@@ -10,7 +11,7 @@ from mock_hmrc.data_processors import save_hmrc_email_message_data, send_reply
 def get_hmrc_email_message_dto(server):
     conn = server.connect_to_pop3()
     _, mails, _ = conn.list()
-    message_ids = [get_message_id(line.decode("iso-8859-1")) for line in mails]
+    message_ids = [get_message_id(line.decode(settings.DEFAULT_ENCODING)) for line in mails]
 
     if models.RetrievedMail.objects.count():
         recent_mail = models.RetrievedMail.objects.all().order_by("message_id").last()

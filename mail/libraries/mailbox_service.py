@@ -1,4 +1,5 @@
 import logging
+from django.conf import settings
 from email.message import Message
 from poplib import POP3_SSL
 from smtplib import SMTP
@@ -30,7 +31,7 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
     _, mails, _ = pop3_connection.list()
     mailbox_config, _ = MailboxConfig.objects.get_or_create(username=username)
 
-    mail_message_ids = [get_message_id(m.decode("utf-8")) for m in mails]
+    mail_message_ids = [get_message_id(m.decode(settings.DEFAULT_ENCODING)) for m in mails]
 
     # if there is a start_message_id then remove any messages before that
     if mailbox_config.start_message_id:
@@ -70,7 +71,7 @@ def read_last_three_emails(pop3connection: POP3_SSL) -> list:
     reversed_mails = list(reversed(mails))
     last_three_mails = reversed_mails[:3]
 
-    message_ids = [get_message_id(line.decode("utf-8")) for line in last_three_mails]
+    message_ids = [get_message_id(line.decode(settings.DEFAULT_ENCODING)) for line in last_three_mails]
 
     emails = [pop3connection.retr(message_id) for message_id in message_ids]
 

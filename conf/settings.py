@@ -233,3 +233,5 @@ if env.str("ELASTIC_APM_SERVER_URL", ""):
         "DEBUG": DEBUG,
     }
     INSTALLED_APPS.append("elasticapm.contrib.django")
+
+DEFAULT_ENCODING = "iso-8859-1"
