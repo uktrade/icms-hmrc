@@ -298,3 +298,4 @@ def manage_inbox():
         check_and_route_emails()
     except Exception as exc:  # noqa
         logging.error(f"An unexpected error occurred when polling inbox for updates -> {type(exc).__name__}: {exc}")
+        raise exc

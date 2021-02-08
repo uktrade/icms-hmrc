@@ -70,7 +70,7 @@ def get_attachment(msg: Message):
 
 def to_mail_message_dto(mail_data) -> EmailMessageDto:
     mail_contents = mail_data[1]
-    contents = b"\r\n".join(mail_contents).decode("iso-8859-1")
+    contents = b"\r\n".join(mail_contents).decode(settings.DEFAULT_ENCODING)
     msg_obj = Parser().parsestr(contents)
     msg = body_contents_of(msg_obj)
     file_name, file_data = get_attachment(msg_obj)
@@ -87,7 +87,7 @@ def to_mail_message_dto(mail_data) -> EmailMessageDto:
 
 def to_hmrc_mail_message_dto(message_id, mail_data) -> HmrcEmailMessageDto:
     mail_contents = mail_data[1]
-    contents = b"\r\n".join(mail_contents).decode("iso-8859-1")
+    contents = b"\r\n".join(mail_contents).decode(settings.DEFAULT_ENCODING)
     msg_obj = Parser().parsestr(contents)
     msg = body_contents_of(msg_obj)
     file_name, file_data = get_attachment(msg_obj)

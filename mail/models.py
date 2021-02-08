@@ -6,8 +6,16 @@ from typing import List
 from django.db import models
 from django.utils import timezone
 from jsonfield import JSONField
+from model_utils.models import TimeStampedModel
 
-from mail.enums import ReceptionStatusEnum, ExtractTypeEnum, SourceEnum, LicenceActionEnum, ReplyStatusEnum
+from mail.enums import (
+    ReceptionStatusEnum,
+    ExtractTypeEnum,
+    SourceEnum,
+    LicenceActionEnum,
+    ReplyStatusEnum,
+    MailReadStatuses,
+)
 
 
 class Mail(models.Model):
@@ -180,3 +188,20 @@ class TransactionMapping(models.Model):
 
     class Meta:
         unique_together = [["licence_reference", "line_number", "usage_update"]]
+
+
+class MailboxConfig(TimeStampedModel):
+    username = models.TextField(null=False, blank=False, primary_key=True, help_text="Username of the POP3 mailbox")
+    start_message_id = models.TextField(
+        null=True,
+        blank=False,
+        default=None,
+        help_text="Process messages from this message ID onwards, can be Null if messages should be processed from the very first message in the mailbox",
+    )
+
+
+class MailReadStatus(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    message_id = models.TextField()
+    status = models.TextField(choices=MailReadStatuses.choices, default=MailReadStatuses.UNREAD, db_index=True)
+    mailbox = models.ForeignKey(MailboxConfig, on_delete=models.CASCADE)

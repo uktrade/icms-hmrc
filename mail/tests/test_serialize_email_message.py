@@ -1,4 +1,5 @@
 from django.test import tag
+from rest_framework.exceptions import ValidationError
 
 from conf.settings import SPIRE_ADDRESS, HMRC_ADDRESS, EMAIL_USER
 from mail.libraries.data_processors import (
@@ -44,7 +45,7 @@ class SerializeEmailMessageTests(DataProcessorsTestBase):
             raw_data="qwerty",
         )
 
-        self.assertEqual(serialize_email_message(email_message_dto), None)
+        self.assertRaises(ValidationError, serialize_email_message, email_message_dto)
 
     @tag("ser")
     def test_licence_update_dto_to_dto(self):
