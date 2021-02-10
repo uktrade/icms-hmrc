@@ -1,4 +1,5 @@
 import logging
+from django.conf import settings
 
 from mail.constants import VALID_SENDERS
 from mail.enums import ReceptionStatusEnum, SourceEnum
@@ -28,7 +29,7 @@ def convert_data_for_licence_data(dto: EmailMessageDto) -> dict:
 
     edi_data = data["edi_data"]
     if isinstance(edi_data, bytes):
-        edi_data = edi_data.decode("utf-8")
+        edi_data = edi_data.decode(settings.DEFAULT_ENCODING)
     data["licence_data"]["licence_ids"] = get_licence_ids(edi_data)
     _log_result(data)
     return data
@@ -47,6 +48,9 @@ def convert_data_for_licence_update(dto: EmailMessageDto) -> dict:
     else:
         data["edi_filename"] = dto.attachment[0]
         data["edi_data"] = dto.attachment[1]
+
+    if isinstance(data["edi_data"], bytes):
+        data["edi_data"] = data["edi_data"].decode(settings.DEFAULT_ENCODING)
 
     data["licence_update"]["licence_ids"] = get_licence_ids(data["edi_data"])
     _log_result(data)

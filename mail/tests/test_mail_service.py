@@ -2,10 +2,11 @@ from collections import OrderedDict
 from poplib import POP3_SSL
 from unittest.mock import MagicMock
 
-from django.test import tag
+from django.test import tag, SimpleTestCase
 from parameterized import parameterized
 
 from mail.libraries.mailbox_service import read_last_message, read_last_three_emails, get_message_iterator
+from mail.servers import MailServer
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
@@ -128,3 +129,20 @@ class MailServiceTests(LiteHMRCTestClient):
         message_list_and_expected_source = zip(message_list, retr_data.values())
         for message, retr_item in message_list_and_expected_source:
             self.assertEqual(f"Subject: {message[0].subject}".encode("utf-8"), retr_item[1][0])
+
+
+@tag("mail_service")
+class MailServerTests(SimpleTestCase):
+    def test_mail_server_equal(self):
+        m1 = MailServer(hostname="host", user="u", password="p", pop3_port=1, smtp_port=2)  # nosec
+
+        m2 = MailServer(hostname="host", user="u", password="p", pop3_port=1, smtp_port=2)  # nosec
+
+        self.assertEqual(m1, m2)
+
+    def test_mail_server_not_equal(self):
+        m1 = MailServer(hostname="host", user="u", password="p", pop3_port=1, smtp_port=2)  # nosec
+
+        m2 = MailServer(hostname="host", user="u", password="p", pop3_port=2, smtp_port=1)  # nosec
+
+        self.assertNotEqual(m1, m2)

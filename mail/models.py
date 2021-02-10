@@ -205,3 +205,6 @@ class MailReadStatus(TimeStampedModel):
     message_id = models.TextField()
     status = models.TextField(choices=MailReadStatuses.choices, default=MailReadStatuses.UNREAD, db_index=True)
     mailbox = models.ForeignKey(MailboxConfig, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.__class__.__name__}(message_id={self.message_id}, status={self.status})"

@@ -1,3 +1,5 @@
+from typing import MutableMapping, Tuple, List
+
 import logging
 from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
@@ -108,7 +110,7 @@ def schedule_licence_usage_figures_for_lite_api(lite_usage_update_id):
         logging.info(f"UsageUpdate '{lite_usage_update_id}' has been scheduled")
 
 
-def parse_response(response) -> (list, list):
+def parse_response(response) -> Tuple[MutableMapping, List[str], List[str]]:
     response = response.json()
     licences = response["licences"]
 
