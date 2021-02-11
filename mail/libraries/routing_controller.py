@@ -1,5 +1,5 @@
 from rest_framework.exceptions import ValidationError
-from typing import Callable, List, Tuple
+from typing import Callable, List, Tuple, Optional
 
 import logging
 from itertools import islice
@@ -24,13 +24,23 @@ from mail.servers import MailServer
 logger = logging.getLogger(__name__)
 
 
-def get_incoming_mailserver() -> MailServer:
+def get_spire_to_dit_mailserver() -> MailServer:
     return MailServer(
         hostname=settings.INCOMING_EMAIL_HOSTNAME,
         user=settings.INCOMING_EMAIL_USER,
         password=settings.INCOMING_EMAIL_PASSWORD,
         pop3_port=settings.INCOMING_EMAIL_POP3_PORT,
         smtp_port=settings.INCOMING_EMAIL_SMTP_PORT,
+    )
+
+
+def get_hmrc_to_dit_mailserver() -> MailServer:
+    return MailServer(
+        hostname=settings.HMRC_TO_DIT_EMAIL_HOSTNAME,
+        user=settings.HMRC_TO_DIT_EMAIL_USER,
+        password=settings.HMRC_TO_DIT_EMAIL_PASSWORD,
+        pop3_port=settings.HMRC_TO_DIT_EMAIL_POP3_PORT,
+        smtp_port=settings.HMRC_TO_DIT_EMAIL_SMTP_PORT,
     )
 
 
@@ -56,8 +66,16 @@ def get_spire_standin_mailserver() -> MailServer:
 
 def check_and_route_emails():
     logger.info("Checking for emails")
-    server = get_incoming_mailserver()
-    email_message_dtos = _get_email_message_dtos(server)
+    hmrc_to_dit_server = get_hmrc_to_dit_mailserver()
+    email_message_dtos = _get_email_message_dtos(hmrc_to_dit_server, number=None)
+
+    spire_to_dit_server = get_spire_to_dit_mailserver()
+    if hmrc_to_dit_server != spire_to_dit_server:
+        # if the config for the return path is different to outgoing mail path
+        # then check the return path otherwise don't bother as it will contain the
+        # same emails.
+        email_message_dtos.extend(_get_email_message_dtos(spire_to_dit_server))
+
     if not email_message_dtos:
         logger.info("Emails considered invalid")
         return
@@ -112,7 +130,7 @@ def _collect_and_send(mail: Mail):
 
     if message_to_send_dto:
         if message_to_send_dto.receiver != SourceEnum.LITE and message_to_send_dto.subject:
-            server = get_incoming_mailserver()
+            server = get_spire_to_dit_mailserver()
             send(server, message_to_send_dto)
             update_mail(mail, message_to_send_dto)
 
@@ -128,10 +146,13 @@ def _collect_and_send(mail: Mail):
             send_licence_updates_to_hmrc(schedule=0)  # noqa
 
 
-def _get_email_message_dtos(server: MailServer, number=3) -> List[Tuple[EmailMessageDto, Callable]]:
+def _get_email_message_dtos(server: MailServer, number: Optional[int] = 3) -> List[Tuple[EmailMessageDto, Callable]]:
     pop3_connection = server.connect_to_pop3()
     emails_iter = get_message_iterator(pop3_connection, server.user)
-    emails = list(islice(emails_iter, number))
+    if number:
+        emails = list(islice(emails_iter, number))
+    else:
+        emails = list(emails_iter)
     # emails = read_last_three_emails(pop3_connection)
     server.quit_pop3_connection()
     return emails

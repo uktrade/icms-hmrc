@@ -28,6 +28,20 @@ class MailServer(object):
         self.pop3_connection = None
         self.smtp_connection = None
 
+    def __eq__(self, other):
+
+        if not isinstance(other, MailServer):
+            return False
+
+        # noinspection TimingAttack
+        return (
+            self.hostname == other.hostname
+            and self.user == other.user
+            and self.password == other.password
+            and self.pop3_port == other.pop3_port
+            and self.smtp_port == other.smtp_port
+        )
+
     def connect_to_pop3(self) -> poplib.POP3_SSL:
         logging.info("establishing a pop3 connection...")
         self.pop3_connection = poplib.POP3_SSL(self.hostname, self.pop3_port, timeout=60)

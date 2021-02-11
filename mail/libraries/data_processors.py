@@ -114,7 +114,9 @@ def get_mail_instance(extract_type, run_number) -> Mail or None:
         ]:
             logging.info("Licence update reply has already been processed")
             return
-        return find_mail_of(ExtractTypeEnum.LICENCE_UPDATE, ReceptionStatusEnum.REPLY_PENDING)
+        return find_mail_of(
+            [ExtractTypeEnum.LICENCE_UPDATE, ExtractTypeEnum.LICENCE_DATA], ReceptionStatusEnum.REPLY_PENDING
+        )
     elif extract_type == ExtractTypeEnum.USAGE_REPLY:
         last_email = UsageUpdate.objects.filter(spire_run_number=run_number).last()
 
@@ -124,7 +126,7 @@ def get_mail_instance(extract_type, run_number) -> Mail or None:
         ]:
             logging.info("Usage update reply has already been processed")
             return
-        return find_mail_of(ExtractTypeEnum.USAGE_UPDATE, ReceptionStatusEnum.REPLY_PENDING)
+        return find_mail_of([ExtractTypeEnum.USAGE_UPDATE], ReceptionStatusEnum.REPLY_PENDING)
 
 
 def to_email_message_dto_from(mail: Mail) -> EmailMessageDto:

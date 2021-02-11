@@ -1,9 +1,9 @@
 import logging
 from django.conf import settings
 from email.message import Message
-from poplib import POP3_SSL
+from poplib import POP3_SSL, error_proto
 from smtplib import SMTP
-from typing import Callable, Iterator, Tuple
+from typing import Callable, Iterator, Tuple, List
 
 from mail.enums import MailReadStatuses
 from mail.libraries.email_message_dto import EmailMessageDto
@@ -56,7 +56,20 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
                 read_status.status = status
                 read_status.save()
 
-            yield to_mail_message_dto(pop3_connection.retr(message_id)), mark_status
+            try:
+                m = pop3_connection.retr(message_id)
+            except error_proto as err:
+                logging.error(f"Unable to RETR message {message_id} in {mailbox_config}: {err}", exc_info=True)
+                continue
+
+            try:
+                mail_message = to_mail_message_dto(m)
+            except ValueError as ve:
+                logging.error(f"Unable to convert message {message_id} to DTO in {mailbox_config}: {ve}", exc_info=True)
+                mark_status(MailReadStatuses.UNPROCESSABLE)
+                continue
+
+            yield mail_message, mark_status
 
 
 def read_last_message(pop3_connection: POP3_SSL) -> EmailMessageDto:
@@ -82,12 +95,12 @@ def read_last_three_emails(pop3connection: POP3_SSL) -> list:
     return email_message_dtos
 
 
-def find_mail_of(extract_type: str, reception_status: str) -> Mail or None:
+def find_mail_of(extract_types: List[str], reception_status: str) -> Mail or None:
     try:
-        mail = Mail.objects.get(status=reception_status, extract_type=extract_type)
+        mail = Mail.objects.get(status=reception_status, extract_type__in=extract_types)
     except Mail.DoesNotExist:
-        logging.warning("Can not find any mail in [%s] of extract type [%s]" % (reception_status, extract_type))
+        logging.warning(f"Can not find any mail in [{reception_status}] of extract type [{extract_types}]")
         return
 
-    logging.info("Found mail in [%s] of extract type [%s] " % (reception_status, extract_type))
+    logging.info(f"Found mail in [{reception_status}] of extract type [{extract_types}] ")
     return mail
