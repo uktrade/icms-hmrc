@@ -149,7 +149,7 @@ def build_email_message(email_message_dto: EmailMessageDto) -> MIMEMultipart:
     file = base64.b64encode(bytes(email_message_dto.attachment[1], "ASCII"))
 
     multipart_msg = MIMEMultipart()
-    multipart_msg["From"] = email_message_dto.sender
+    multipart_msg["From"] = settings.EMAIL_USER  # the SMTP server only allows sending as itself
     multipart_msg["To"] = email_message_dto.receiver
     multipart_msg["Subject"] = email_message_dto.subject
     payload = MIMEApplication(file)
