@@ -85,7 +85,15 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
     receiver = settings.SPIRE_ADDRESS
     run_number = None
 
-    if mail.extract_type == ExtractTypeEnum.LICENCE_UPDATE:
+    if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
+        licence_data = LicenceData.objects.get(mail=mail)
+        run_number = licence_data.source_run_number
+        receiver = convert_source_to_sender(licence_data.source)
+    elif mail.extract_type == ExtractTypeEnum.LICENCE_REPLY:
+        licence_data = LicenceData.objects.get(mail=mail)
+        run_number = licence_data.source_run_number
+        receiver = convert_source_to_sender(licence_data.source)
+    elif mail.extract_type == ExtractTypeEnum.LICENCE_UPDATE:
         licence_update = LicenceUpdate.objects.get(mail=mail)
         run_number = licence_update.source_run_number
         receiver = convert_source_to_sender(licence_update.source)

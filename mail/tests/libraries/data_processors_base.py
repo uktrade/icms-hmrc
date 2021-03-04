@@ -1,5 +1,5 @@
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
-from mail.models import Mail, LicenceUpdate, UsageUpdate
+from mail import models
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
@@ -10,14 +10,14 @@ class DataProcessorsTestBase(LiteHMRCTestClient):
         self.source_run_number = 28
         self.licence_ids = "GBOIE2017/12345B"
 
-        self.mail = Mail.objects.create(
+        self.mail = models.Mail.objects.create(
             edi_data=self.licence_update_file_body,
             extract_type=ExtractTypeEnum.LICENCE_UPDATE,
             status=ReceptionStatusEnum.PENDING,
             edi_filename=self.licence_update_file_name,
         )
 
-        self.licence_update = LicenceUpdate.objects.create(
+        self.licence_data = models.LicenceData.objects.create(
             mail=self.mail,
             hmrc_run_number=self.hmrc_run_number,
             source_run_number=self.source_run_number,
@@ -25,14 +25,22 @@ class DataProcessorsTestBase(LiteHMRCTestClient):
             source=SourceEnum.SPIRE,
         )
 
-        self.usage_mail = Mail.objects.create(
+        self.licence_update = models.LicenceUpdate.objects.create(
+            mail=self.mail,
+            hmrc_run_number=self.hmrc_run_number,
+            source_run_number=self.source_run_number,
+            licence_ids=self.licence_ids,
+            source=SourceEnum.SPIRE,
+        )
+
+        self.usage_mail = models.Mail.objects.create(
             edi_filename=self.licence_usage_file_name,
             edi_data=self.licence_usage_file_body,
             extract_type=ExtractTypeEnum.USAGE_UPDATE,
             status=ReceptionStatusEnum.PENDING,
         )
 
-        self.usage_update = UsageUpdate.objects.create(
+        self.usage_update = models.UsageUpdate.objects.create(
             mail=self.usage_mail,
             spire_run_number=self.source_run_number,
             licence_ids=self.licence_ids,
