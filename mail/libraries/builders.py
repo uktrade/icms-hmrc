@@ -1,10 +1,11 @@
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
 import json
-import base64
+
+from unidecode import unidecode
 
 from django.conf import settings
 from django.utils import timezone
-from email.mime.application import MIMEApplication
-from email.mime.multipart import MIMEMultipart
 
 from mail.enums import SourceEnum, ExtractTypeEnum
 from mail.libraries.combine_usage_replies import combine_lite_and_spire_usage_responses
@@ -146,7 +147,7 @@ def build_email_message(email_message_dto: EmailMessageDto) -> MIMEMultipart:
     """
     _validate_dto(email_message_dto)
 
-    file = base64.b64encode(bytes(email_message_dto.attachment[1], "ASCII"))
+    file = unidecode(email_message_dto.attachment[1], errors="replace")
 
     multipart_msg = MIMEMultipart()
     multipart_msg["From"] = settings.EMAIL_USER  # the SMTP server only allows sending as itself
@@ -157,6 +158,7 @@ def build_email_message(email_message_dto: EmailMessageDto) -> MIMEMultipart:
     payload.add_header(
         "Content-Disposition", "attachment; filename= %s" % email_message_dto.attachment[0],
     )
+    payload.add_header("Content-Transfer-Encoding", "7bit")
     multipart_msg.attach(payload)
     return multipart_msg
 
