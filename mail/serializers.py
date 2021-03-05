@@ -98,7 +98,7 @@ class LicenceUpdateMailSerializer(serializers.ModelSerializer):
 class UpdateResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Mail
-        fields = ["status", "response_filename", "response_data", "response_subject"]
+        fields = ["extract_type", "status", "response_filename", "response_data", "response_subject"]
 
         def update(self, instance, validated_data):
             instance.status = validated_data["status"]

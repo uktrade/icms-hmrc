@@ -1,7 +1,7 @@
 from django.test import tag
 from rest_framework.exceptions import ValidationError
 
-from conf.settings import SPIRE_ADDRESS, HMRC_ADDRESS, EMAIL_USER
+from django.conf import settings
 from mail.libraries.data_processors import (
     to_email_message_dto_from,
     serialize_email_message,
@@ -15,7 +15,7 @@ class SerializeEmailMessageTests(DataProcessorsTestBase):
     def test_successful_usage_update_inbound_dto_converts_to_outbound_dto(self):
         email_message_dto = EmailMessageDto(
             run_number=self.source_run_number + 1,
-            sender=HMRC_ADDRESS,
+            sender=settings.HMRC_ADDRESS,
             receiver="receiver@example.com",
             body="body",
             subject=self.licence_usage_file_name,
@@ -28,8 +28,8 @@ class SerializeEmailMessageTests(DataProcessorsTestBase):
         dto = to_email_message_dto_from(mail)
 
         self.assertEqual(dto.run_number, self.usage_update.hmrc_run_number + 1)
-        self.assertEqual(dto.sender, HMRC_ADDRESS)
-        self.assertEqual(dto.receiver, SPIRE_ADDRESS)
+        self.assertEqual(dto.sender, settings.HMRC_ADDRESS)
+        self.assertEqual(dto.receiver, settings.SPIRE_ADDRESS)
         self.assertEqual(dto.body, None)
         self.assertEqual(dto.raw_data, None)
 
@@ -51,8 +51,8 @@ class SerializeEmailMessageTests(DataProcessorsTestBase):
     def test_licence_update_dto_to_dto(self):
         email_message_dto = EmailMessageDto(
             run_number=self.source_run_number + 1,
-            sender=SPIRE_ADDRESS,
-            receiver=HMRC_ADDRESS,
+            sender=settings.SPIRE_ADDRESS,
+            receiver=settings.HMRC_ADDRESS,
             body=None,
             subject=self.licence_update_file_name,
             attachment=[self.licence_update_file_name, self.licence_update_file_body,],
@@ -64,9 +64,33 @@ class SerializeEmailMessageTests(DataProcessorsTestBase):
         dto = to_email_message_dto_from(mail)
 
         self.assertEqual(dto.run_number, self.licence_update.hmrc_run_number + 1)
-        self.assertEqual(dto.sender, EMAIL_USER)
+        self.assertEqual(dto.sender, settings.EMAIL_USER)
         self.assertEqual(dto.attachment[0], "ILBDOTI_live_CHIEF_licenceData_29_201902080025")
         self.assertEqual(dto.subject, "ILBDOTI_live_CHIEF_licenceData_29_201902080025")
-        self.assertEqual(dto.receiver, HMRC_ADDRESS)
+        self.assertEqual(dto.receiver, settings.HMRC_ADDRESS)
+        self.assertEqual(dto.body, None)
+        self.assertEqual(dto.raw_data, None)
+
+    @tag("ser")
+    def test_licence_data_dto_to_dto(self):
+        email_message_dto = EmailMessageDto(
+            run_number=self.source_run_number + 1,
+            sender=settings.SPIRE_ADDRESS,
+            receiver=settings.HMRC_ADDRESS,
+            body=None,
+            subject=self.licence_data_file_name,
+            attachment=[self.licence_data_file_name, self.licence_data_file_body,],
+            raw_data="qwerty",
+        )
+
+        # dto to dto processing
+        mail = serialize_email_message(email_message_dto)
+        dto = to_email_message_dto_from(mail)
+
+        self.assertEqual(dto.run_number, self.licence_update.hmrc_run_number + 1)
+        self.assertEqual(dto.sender, settings.EMAIL_USER)
+        self.assertEqual(dto.attachment[0], "CHIEF_LIVE_SPIRE_licenceData_29_201902080025")
+        self.assertEqual(dto.subject, "CHIEF_LIVE_SPIRE_licenceData_29_201902080025")
+        self.assertEqual(dto.receiver, settings.HMRC_ADDRESS)
         self.assertEqual(dto.body, None)
         self.assertEqual(dto.raw_data, None)
