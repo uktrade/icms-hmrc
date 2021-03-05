@@ -1,8 +1,6 @@
 from django.conf import settings
 from django.test import testcases
 
-from mail.models import LicencePayload
-from mail.tests.libraries import colours
 from mail.libraries import builders
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import read_file
@@ -29,8 +27,8 @@ class BuildEmailMessageTest(testcases.TestCase):
             (
                 'Content-Type: multipart/mixed; boundary="===============8537751789001939036=="\n'
                 "MIME-Version: 1.0\n"
-                "From: test_user\n"
-                "To: spire\n"
+                f"From: {settings.EMAIL_USER}\n"
+                f"To: {settings.SPIRE_ADDRESS}\n"
                 "Subject: Some subject\n\n"
                 "--===============8537751789001939036==\n"
                 "Content-Type: application/octet-stream\n"

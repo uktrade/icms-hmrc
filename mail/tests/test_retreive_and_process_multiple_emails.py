@@ -54,7 +54,7 @@ class MultipleEmailRetrievalTests(LiteHMRCTestClient):
 
         serialize_email_message(self.dto_3)
 
-        self.assertEqual(mail_count, Mail.objects.count())
+        self.assertEqual(mail_count, Mail.objects.count() - 1)
         self.assertEqual(licence_update_count, LicenceUpdate.objects.count())
 
     @tag("sequencing")

@@ -37,7 +37,7 @@ def serialize_email_message(dto: EmailMessageDto) -> Mail or None:
         return
 
     instance = get_mail_instance(extract_type, dto.run_number)
-    if not instance and extract_type in [ExtractTypeEnum.LICENCE_REPLY, ExtractTypeEnum.USAGE_REPLY]:
+    if not instance and extract_type in [ExtractTypeEnum.USAGE_REPLY]:
         return
 
     partial = True if instance else False
