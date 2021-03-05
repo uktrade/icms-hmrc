@@ -65,8 +65,8 @@ class SerializeEmailMessageTests(DataProcessorsTestBase):
 
         self.assertEqual(dto.run_number, self.licence_update.hmrc_run_number + 1)
         self.assertEqual(dto.sender, EMAIL_USER)
-        self.assertEqual(dto.attachment[0], "ILBDOTI_live_CHIEF_licenceUpdate_29_201902080025")
-        self.assertEqual(dto.subject, "ILBDOTI_live_CHIEF_licenceUpdate_29_201902080025")
+        self.assertEqual(dto.attachment[0], "ILBDOTI_live_CHIEF_licenceData_29_201902080025")
+        self.assertEqual(dto.subject, "ILBDOTI_live_CHIEF_licenceData_29_201902080025")
         self.assertEqual(dto.receiver, HMRC_ADDRESS)
         self.assertEqual(dto.body, None)
         self.assertEqual(dto.raw_data, None)

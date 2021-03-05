@@ -21,7 +21,6 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
     receiver = None
     attachment = [None, None]
     run_number = 0
-
     if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
         sender = settings.INCOMING_EMAIL_USER
         receiver = settings.OUTGOING_EMAIL_USER
@@ -131,7 +130,7 @@ def build_update_mail(licences) -> Mail:
 
 def build_licence_updates_file(licences, run_number) -> (str, str):
     now = timezone.now()
-    file_name = "SPIRE_live_CHIEF_licenceUpdate_{}_{:04d}{:02d}{:02d}{:02d}{:02d}".format(
+    file_name = "SPIRE_live_CHIEF_licenceData_{}_{:04d}{:02d}{:02d}{:02d}{:02d}".format(
         run_number, now.year, now.month, now.day, now.hour, now.minute
     )
 

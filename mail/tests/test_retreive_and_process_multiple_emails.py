@@ -26,8 +26,8 @@ class MultipleEmailRetrievalTests(LiteHMRCTestClient):
             sender=SPIRE_ADDRESS,
             receiver=EMAIL_USER,
             body="spire licence update",
-            subject="ILBDOTI_live_CHIEF_licenceUpdate_17_201901130300",
-            attachment=["ILBDOTI_live_CHIEF_licenceUpdate_49543_201901130300", self.licence_update_file_body,],
+            subject="ILBDOTI_live_CHIEF_licenceData_17_201901130300",
+            attachment=["ILBDOTI_live_CHIEF_licenceData_49543_201901130300", self.licence_update_file_body,],
             raw_data="qwerty",
         )
         self.dto_3 = EmailMessageDto(

@@ -36,7 +36,7 @@ class LiteHMRCTestClient(testcases.TestCase):
 
         self.usage_update_reply_name = "ILBDOTI_live_CHIEF_usageReply_49543_201902080025"
 
-        self.licence_update_file_name = "ILBDOTI_live_CHIEF_licenceUpdate_49543_201902080025"
+        self.licence_update_file_name = "ILBDOTI_live_CHIEF_licenceData_49543_201902080025"
 
         self.licence_update_file_body = read_file("mail/tests/files/license_update_file", mode="rb")
 
