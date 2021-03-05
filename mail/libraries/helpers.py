@@ -198,8 +198,8 @@ def get_licence_ids(file_body) -> str:
 
 
 def read_file(file_path: str, mode: str = "r", encoding: str = None):
-    _file = open(file_path, mode=mode, encoding=encoding)
-    return _file.read()
+    with open(file_path, mode=mode, encoding=encoding) as f:
+        return f.read()
 
 
 def decode(data, char_set: str):
