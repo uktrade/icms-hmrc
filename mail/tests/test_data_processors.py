@@ -11,7 +11,7 @@ from mail.libraries.data_processors import (
     to_email_message_dto_from,
 )
 from mail.libraries.email_message_dto import EmailMessageDto
-from mail.models import Mail, LicenceUpdate, UsageUpdate
+from mail.models import Mail, LicenceData, UsageUpdate
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
@@ -22,13 +22,13 @@ class TestDataProcessors(LiteHMRCTestClient):
         self.hmrc_run_number = 28
         self.source_run_number = 15
         self.mail = Mail.objects.create(
-            edi_data=self.licence_update_file_body.decode("utf-8"),
+            edi_data=self.licence_data_file_body.decode("utf-8"),
             extract_type=ExtractTypeEnum.USAGE_UPDATE,
             status=ReceptionStatusEnum.REPLY_SENT,
-            edi_filename=self.licence_update_reply_name,
+            edi_filename=self.licence_data_reply_name,
         )
 
-        self.licence_update = LicenceUpdate.objects.create(
+        self.licence_data = LicenceData.objects.create(
             mail=self.mail,
             hmrc_run_number=self.hmrc_run_number,
             source_run_number=self.source_run_number,
@@ -74,8 +74,8 @@ class TestDataProcessors(LiteHMRCTestClient):
         self.assertEqual(dto.body, None)
         self.assertEqual(dto.raw_data, None)
 
-    def test_licence_update_reply_is_saved(self):
-        self.mail.extract_type = ExtractTypeEnum.LICENCE_UPDATE
+    def test_licence_data_reply_is_saved(self):
+        self.mail.extract_type = ExtractTypeEnum.LICENCE_DATA
         self.mail.status = ReceptionStatusEnum.REPLY_PENDING
         self.mail.save()
 
@@ -84,8 +84,8 @@ class TestDataProcessors(LiteHMRCTestClient):
             sender=HMRC_ADDRESS,
             receiver=SPIRE_ADDRESS,
             body="body",
-            subject=self.licence_update_reply_name,
-            attachment=[self.licence_update_reply_name, self.licence_update_reply_body,],
+            subject=self.licence_data_reply_name,
+            attachment=[self.licence_data_reply_name, self.licence_data_reply_body,],
             raw_data="qwerty",
         )
 
@@ -120,7 +120,7 @@ class TestDataProcessors(LiteHMRCTestClient):
 
     @tag("serialize")
     def test_licence_reply_does_not_throw_exception_if_mail_already_updated(self):
-        self.mail.extract_type = ExtractTypeEnum.LICENCE_UPDATE
+        self.mail.extract_type = ExtractTypeEnum.LICENCE_DATA
         self.mail.status = ReceptionStatusEnum.REPLY_SENT
         self.mail.save()
 
@@ -131,8 +131,8 @@ class TestDataProcessors(LiteHMRCTestClient):
             sender=HMRC_ADDRESS,
             receiver=EMAIL_USER,
             body="body",
-            subject=self.licence_update_reply_name,
-            attachment=[self.licence_update_reply_name, self.licence_update_reply_body],
+            subject=self.licence_data_reply_name,
+            attachment=[self.licence_data_reply_name, self.licence_data_reply_body],
             raw_data="qwerty",
         )
 

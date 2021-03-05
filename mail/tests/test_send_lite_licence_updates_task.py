@@ -4,7 +4,7 @@ from django.test import tag
 
 from mail.enums import ReceptionStatusEnum
 from mail.models import LicencePayload, Mail
-from mail.tasks import send_licence_updates_to_hmrc
+from mail.tasks import send_licence_data_to_hmrc
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
@@ -16,7 +16,7 @@ class TaskTests(LiteHMRCTestClient):
         mail = Mail(status=ReceptionStatusEnum.PENDING)
         mail.save()
         send.return_value = None
-        send_licence_updates_to_hmrc.now()
+        send_licence_data_to_hmrc.now()
         self.assertEqual(LicencePayload.objects.filter(is_processed=True).count(), 0)
 
     @tag("missed-timing")
@@ -25,7 +25,7 @@ class TaskTests(LiteHMRCTestClient):
         mail = Mail(status=ReceptionStatusEnum.REPLY_PENDING)
         mail.save()
         send.return_value = None
-        send_licence_updates_to_hmrc.now()
+        send_licence_data_to_hmrc.now()
         self.assertEqual(LicencePayload.objects.filter(is_processed=True).count(), 0)
 
     @tag("missed-timing")
@@ -34,7 +34,7 @@ class TaskTests(LiteHMRCTestClient):
         mail = Mail(status=ReceptionStatusEnum.REPLY_RECEIVED)
         mail.save()
         send.return_value = None
-        send_licence_updates_to_hmrc.now()
+        send_licence_data_to_hmrc.now()
         self.assertEqual(LicencePayload.objects.filter(is_processed=True).count(), 0)
 
     @tag("missed-timing", "end-to-end")
@@ -43,7 +43,7 @@ class TaskTests(LiteHMRCTestClient):
         mail = Mail(status=ReceptionStatusEnum.REPLY_SENT, response_data="rejected")
         mail.save()
         send.return_value = None
-        send_licence_updates_to_hmrc.now()
+        send_licence_data_to_hmrc.now()
         self.assertEqual(LicencePayload.objects.filter(is_processed=True).count(), 0)
 
     @tag("missed-timing")
@@ -52,5 +52,5 @@ class TaskTests(LiteHMRCTestClient):
         mail = Mail(status=ReceptionStatusEnum.REPLY_SENT, response_data="accepted")
         mail.save()
         send.return_value = None
-        send_licence_updates_to_hmrc.now()
+        send_licence_data_to_hmrc.now()
         self.assertEqual(LicencePayload.objects.filter(is_processed=True).count(), 1)

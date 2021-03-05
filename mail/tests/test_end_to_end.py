@@ -8,9 +8,9 @@ from mail.libraries.data_processors import serialize_email_message
 from mail.libraries.helpers import get_extract_type
 from mail.libraries.mailbox_service import read_last_message
 from mail.libraries.routing_controller import _collect_and_send
-from mail.models import Mail, LicenceUpdate, LicencePayload
+from mail.models import Mail, LicenceData, LicencePayload
 from mail.servers import MailServer
-from mail.tasks import send_licence_updates_to_hmrc
+from mail.tasks import send_licence_data_to_hmrc
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
@@ -60,9 +60,9 @@ class EndToEndTests(LiteHMRCTestClient):
         print("file\t\t", last_msg_dto.attachment[1][0:150])
 
         if get_extract_type(last_msg_dto.subject) == "licence_reply":
-            mail = Mail(extract_type=ExtractTypeEnum.LICENCE_UPDATE, status=ReceptionStatusEnum.REPLY_PENDING,)
+            mail = Mail(extract_type=ExtractTypeEnum.LICENCE_DATA, status=ReceptionStatusEnum.REPLY_PENDING,)
             mail.save()
-            lu = LicenceUpdate(
+            lu = LicenceData(
                 source=SourceEnum.SPIRE,
                 source_run_number=last_msg_dto.run_number,
                 hmrc_run_number=last_msg_dto.run_number,
@@ -98,7 +98,7 @@ class EndToEndTests(LiteHMRCTestClient):
             reverse("mail:update_licence"), data=self.licence_payload_json, content_type="application/json"
         )
 
-        send_licence_updates_to_hmrc.now()  # Manually calling background task logic
+        send_licence_data_to_hmrc.now()  # Manually calling background task logic
 
         self.assertEqual(LicencePayload.objects.filter(is_processed=True).count(), 2)
 
@@ -108,6 +108,6 @@ class EndToEndTests(LiteHMRCTestClient):
             reverse("mail:update_licence"), data=self.licence_payload_json, content_type="application/json"
         )
 
-        send_licence_updates_to_hmrc.now()
+        send_licence_data_to_hmrc.now()
 
         self.assertEqual(LicencePayload.objects.filter(is_processed=True).count(), 2)

@@ -7,7 +7,7 @@ from parameterized import parameterized
 from mail.enums import LicenceActionEnum
 from mail.libraries.lite_to_edifact_converter import licences_to_edifact, get_transaction_reference
 from mail.models import LicencePayload, Mail, OrganisationIdMapping, GoodIdMapping
-from mail.tasks import send_licence_updates_to_hmrc
+from mail.tasks import send_licence_data_to_hmrc
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
@@ -57,7 +57,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
     @mock.patch("mail.tasks.send")
     def test_licence_is_marked_as_processed_after_sending(self, send):
         send.return_value = None
-        send_licence_updates_to_hmrc.now()
+        send_licence_data_to_hmrc.now()
 
         self.assertEqual(Mail.objects.count(), 1)
         self.single_siel_licence_payload.refresh_from_db()

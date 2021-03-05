@@ -4,7 +4,7 @@ import logging
 from rest_framework import serializers
 
 from mail.enums import LicenceActionEnum
-from mail.models import Mail, LicenceData, LicenceUpdate, UsageUpdate, LicenceIdMapping
+from mail.models import Mail, LicenceData, UsageUpdate, LicenceIdMapping
 
 
 class LicenceDataSerializer(serializers.ModelSerializer):
@@ -53,52 +53,6 @@ class LicenceDataMailSerializer(serializers.ModelSerializer):
         else:
             logging.error(licence_data_serializer.errors)
             raise serializers.ValidationError(licence_data_serializer.errors)
-        return mail
-
-
-class LicenceUpdateSerializer(serializers.ModelSerializer):
-    mail = serializers.PrimaryKeyRelatedField(queryset=Mail.objects.all(), required=False)
-
-    class Meta:
-        model = LicenceUpdate
-        fields = "__all__"
-
-    def create(self, validated_data):
-        instance, _ = LicenceUpdate.objects.get_or_create(**validated_data)
-        return instance
-
-
-class LicenceUpdateMailSerializer(serializers.ModelSerializer):
-    licence_update = LicenceUpdateSerializer(write_only=True)
-
-    class Meta:
-        model = Mail
-        fields = [
-            "id",
-            "edi_filename",
-            "edi_data",
-            "extract_type",
-            "raw_data",
-            "licence_update",
-        ]
-
-    def create(self, validated_data):
-        licence_update_data = validated_data.pop("licence_update")
-        dups = Mail.objects.filter(**validated_data)
-        if dups and dups.first().response_data and "rejected" in dups.first().response_data:
-            validated_data["retry"] = True
-            mail = Mail.objects.create(**validated_data)
-        else:
-            mail, _ = Mail.objects.get_or_create(**validated_data)
-        licence_update_data["mail"] = mail.id
-
-        licence_update_serializer = LicenceUpdateSerializer(data=licence_update_data)
-        if licence_update_serializer.is_valid():
-            licence_update_serializer.save()
-        else:
-            logging.error(licence_update_serializer.errors)
-            raise serializers.ValidationError(licence_update_serializer.errors)
-
         return mail
 
 
@@ -209,7 +163,7 @@ class ForiegnTraderSerializer(serializers.Serializer):
     address = AddressSerializer()
 
 
-class LiteLicenceUpdateSerializer(serializers.Serializer):
+class LiteLicenceDataSerializer(serializers.Serializer):
     id = serializers.CharField()
     reference = serializers.CharField(max_length=35)
     type = serializers.CharField()

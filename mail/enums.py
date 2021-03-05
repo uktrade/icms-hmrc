@@ -120,7 +120,6 @@ class ExtractTypeEnum:
     email_keys = [
         ("usageData", USAGE_UPDATE),
         ("usageReply", USAGE_REPLY),
-        ("licenceUpdate", LICENCE_UPDATE),
         ("licenceReply", LICENCE_REPLY),
         ("licenceData", LICENCE_DATA),
     ]

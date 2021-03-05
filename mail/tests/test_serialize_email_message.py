@@ -48,30 +48,6 @@ class SerializeEmailMessageTests(DataProcessorsTestBase):
         self.assertRaises(ValidationError, serialize_email_message, email_message_dto)
 
     @tag("ser")
-    def test_licence_update_dto_to_dto(self):
-        email_message_dto = EmailMessageDto(
-            run_number=self.source_run_number + 1,
-            sender=settings.SPIRE_ADDRESS,
-            receiver=settings.HMRC_ADDRESS,
-            body=None,
-            subject=self.licence_update_file_name,
-            attachment=[self.licence_update_file_name, self.licence_update_file_body,],
-            raw_data="qwerty",
-        )
-
-        # dto to dto processing
-        mail = serialize_email_message(email_message_dto)
-        dto = to_email_message_dto_from(mail)
-
-        self.assertEqual(dto.run_number, self.licence_update.hmrc_run_number + 1)
-        self.assertEqual(dto.sender, settings.EMAIL_USER)
-        self.assertEqual(dto.attachment[0], "ILBDOTI_live_CHIEF_licenceData_29_201902080025")
-        self.assertEqual(dto.subject, "ILBDOTI_live_CHIEF_licenceData_29_201902080025")
-        self.assertEqual(dto.receiver, settings.HMRC_ADDRESS)
-        self.assertEqual(dto.body, None)
-        self.assertEqual(dto.raw_data, None)
-
-    @tag("ser")
     def test_licence_data_dto_to_dto(self):
         email_message_dto = EmailMessageDto(
             run_number=self.source_run_number + 1,
@@ -87,10 +63,10 @@ class SerializeEmailMessageTests(DataProcessorsTestBase):
         mail = serialize_email_message(email_message_dto)
         dto = to_email_message_dto_from(mail)
 
-        self.assertEqual(dto.run_number, self.licence_update.hmrc_run_number + 1)
+        self.assertEqual(dto.run_number, self.licence_data.hmrc_run_number + 1)
         self.assertEqual(dto.sender, settings.EMAIL_USER)
-        self.assertEqual(dto.attachment[0], "CHIEF_LIVE_SPIRE_licenceData_29_201902080025")
-        self.assertEqual(dto.subject, "CHIEF_LIVE_SPIRE_licenceData_29_201902080025")
+        self.assertEqual(dto.attachment[0], "ILBDOTI_live_CHIEF_licenceData_29_201902080025")
+        self.assertEqual(dto.subject, "ILBDOTI_live_CHIEF_licenceData_29_201902080025")
         self.assertEqual(dto.receiver, settings.HMRC_ADDRESS)
         self.assertEqual(dto.body, None)
         self.assertEqual(dto.raw_data, None)

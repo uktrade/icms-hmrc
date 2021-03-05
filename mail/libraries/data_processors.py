@@ -21,10 +21,9 @@ from mail.libraries.helpers import (
     get_extract_type,
 )
 from mail.libraries.mailbox_service import find_mail_of
-from mail.models import LicenceUpdate, Mail, UsageUpdate
+from mail.models import Mail, UsageUpdate, LicenceData
 from mail.serializers import (
     LicenceDataMailSerializer,
-    LicenceUpdateMailSerializer,
     UpdateResponseSerializer,
     UsageUpdateMailSerializer,
 )
@@ -91,8 +90,6 @@ def get_serializer_for_dto(extract_type):
     serializer = None
     if extract_type == ExtractTypeEnum.LICENCE_DATA:
         serializer = LicenceDataMailSerializer
-    elif extract_type == ExtractTypeEnum.LICENCE_UPDATE:
-        serializer = LicenceUpdateMailSerializer
     elif extract_type == ExtractTypeEnum.LICENCE_REPLY:
         serializer = UpdateResponseSerializer
     elif extract_type == ExtractTypeEnum.USAGE_UPDATE:
@@ -105,7 +102,7 @@ def get_serializer_for_dto(extract_type):
 
 def get_mail_instance(extract_type, run_number) -> Mail or None:
     if extract_type == ExtractTypeEnum.LICENCE_REPLY:
-        last_email = LicenceUpdate.objects.filter(hmrc_run_number=run_number).last()
+        last_email = LicenceData.objects.filter(hmrc_run_number=run_number).last()
 
         if last_email and last_email.mail.status in [
             ReceptionStatusEnum.REPLY_SENT,

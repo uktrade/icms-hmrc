@@ -25,22 +25,22 @@ class LiteHMRCTestClient(testcases.TestCase):
 
         self.licence_usage_file_name = "ILBDOTI_live_CHIEF_usageData_49543_201901130300"
         self.licence_usage_file_body = read_file("mail/tests/files/license_usage_file", mode="rb")
-        self.licence_update_reply_body = (
+        self.licence_data_reply_body = (
             b"MVxmaWxlSGVhZGVyXENISUVGXFNQSVJFXGxpY2VuY2VSZXBseVwyMDE5MDIwODAwMjVcMTAxMAo"
             b"yXGFjY2VwdGVkXEdCU0lFTC8yMDIwLzAwMDAwMDEvUAozXGFjY2VwdGVkXEdCU0lFTC8yMDIwLz"
             b"AwMDAwMDEvUAo0XGZpbGVUcmFpbGVyXDJcMFww"
         )
         self.usage_update_reply_body = read_file("mail/tests/files/usage_update_reply_file", mode="rb")
-        logging.debug("licence_update_reply_body: \n{}".format(self.licence_update_reply_body))
-        self.licence_update_reply_name = "ILBDOTI_live_CHIEF_licenceReply_49543_201902080025"
+        logging.debug("licence_data_reply_body: \n{}".format(self.licence_data_reply_body))
+        self.licence_data_reply_name = "ILBDOTI_live_CHIEF_licenceReply_49543_201902080025"
 
         self.usage_update_reply_name = "ILBDOTI_live_CHIEF_usageReply_49543_201902080025"
 
         self.licence_data_file_name = "CHIEF_LIVE_SPIRE_licenceData_49543_201902080025"
-        self.licence_update_file_name = "ILBDOTI_live_CHIEF_licenceData_49543_201902080025"
+        self.licence_data_file_name = "ILBDOTI_live_CHIEF_licenceData_49543_201902080025"
 
         self.licence_data_file_body = read_file("mail/tests/files/license_update_file", mode="rb")
-        self.licence_update_file_body = read_file("mail/tests/files/license_update_file", mode="rb")
+        self.licence_data_file_body = read_file("mail/tests/files/license_update_file", mode="rb")
 
         self.licence_payload_json = json.loads(read_file("mail/tests/files/licence_payload_file", encoding="utf-8"))
 

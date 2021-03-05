@@ -193,7 +193,7 @@ def _handle_exception(message, lite_usage_update_id):
 
 
 @background(queue=LICENCE_UPDATES_TASK_QUEUE, schedule=0)
-def send_licence_updates_to_hmrc():
+def send_licence_data_to_hmrc():
     """Sends LITE licence updates to HMRC"""
 
     logging.info("Sending LITE licence updates to HMRC")

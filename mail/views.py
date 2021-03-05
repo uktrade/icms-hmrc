@@ -8,19 +8,19 @@ from conf.authentication import HawkOnlyAuthentication
 from mail.enums import LicenceTypeEnum, LicenceActionEnum
 from mail.models import LicencePayload, LicenceIdMapping, UsageUpdate
 from mail.serializers import (
-    LiteLicenceUpdateSerializer,
+    LiteLicenceDataSerializer,
     ForiegnTraderSerializer,
     GoodSerializer,
 )
 from mail.tasks import (
     manage_inbox,
-    send_licence_updates_to_hmrc,
+    send_licence_data_to_hmrc,
     send_licence_usage_figures_to_lite_api,
 )
 from rest_framework.status import HTTP_200_OK
 
 
-class UpdateLicence(APIView):
+class LicenceDataIngestView(APIView):
     authentication_classes = (HawkOnlyAuthentication,)
 
     def post(self, request):
@@ -31,7 +31,7 @@ class UpdateLicence(APIView):
         if not licence:
             errors.append({"licence": "This field is required."})
         else:
-            serializer = LiteLicenceUpdateSerializer(data=licence)
+            serializer = LiteLicenceDataSerializer(data=licence)
             if not serializer.is_valid():
                 errors.append({"licence": serializer.errors})
             else:
@@ -97,7 +97,7 @@ class ManageInbox(APIView):
 
 class SendLicenceUpdatesToHmrc(APIView):
     def get(self, request):
-        send_licence_updates_to_hmrc.now()
+        send_licence_data_to_hmrc.now()
 
         return HttpResponse(status=HTTP_200_OK)
 
