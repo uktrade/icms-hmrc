@@ -36,7 +36,15 @@ class LicenceDataMailSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         licence_data = validated_data.pop("licence_data")
         # Mail object should not exist for licence_data, so we can create it here safely
-        mail, _ = Mail.objects.get_or_create(**validated_data)
+
+        dups = Mail.objects.filter(**validated_data)
+
+        if dups and dups.first().response_data and "rejected" in dups.first().response_data:
+            validated_data["retry"] = True
+            mail = Mail.objects.create(**validated_data)
+        else:
+            mail, _ = Mail.objects.get_or_create(**validated_data)
+
         licence_data["mail"] = mail.id
 
         licence_data_serializer = LicenceDataSerializer(data=licence_data)
@@ -45,7 +53,6 @@ class LicenceDataMailSerializer(serializers.ModelSerializer):
         else:
             logging.error(licence_data_serializer.errors)
             raise serializers.ValidationError(licence_data_serializer.errors)
-
         return mail
 
 

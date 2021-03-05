@@ -42,13 +42,12 @@ def serialize_email_message(dto: EmailMessageDto) -> Mail or None:
 
     partial = True if instance else False
     data = convert_dto_data_for_serialization(dto, extract_type)
-    serializer = get_serializer_for_dto(extract_type)
-    serializer = serializer(instance=instance, data=data, partial=partial)
+    serializer_class = get_serializer_for_dto(extract_type)
+    serializer = serializer_class(instance=instance, data=data, partial=partial)
 
     if not serializer.is_valid():
         logging.error(f"Failed to serialize email -> {serializer.errors}")
         raise ValidationError(serializer.errors)
-
     _mail = serializer.save()
     if data["extract_type"] in ["licence_reply", "usage_reply"]:
         _mail.set_response_date_time()

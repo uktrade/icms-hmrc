@@ -5,7 +5,7 @@ from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.data_processors import serialize_email_message
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import select_email_for_sending
-from mail.models import Mail, LicenceUpdate
+from mail.models import Mail, LicenceUpdate, LicenceData
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
@@ -88,7 +88,7 @@ class MultipleEmailRetrievalTests(LiteHMRCTestClient):
     def test_retry(self):
         serialize_email_message(self.dto_2)
         mail_count = Mail.objects.count()
-        licence_update_count = LicenceUpdate.objects.count()
+        licence_update_count = LicenceData.objects.count()
         mail = serialize_email_message(self.dto_2)
         mail.response_data = "rejected"
         mail.save()
@@ -96,4 +96,4 @@ class MultipleEmailRetrievalTests(LiteHMRCTestClient):
         serialize_email_message(self.dto_2)
 
         self.assertEqual(Mail.objects.count(), mail_count + 1)
-        self.assertEqual(LicenceUpdate.objects.count(), licence_update_count + 1)
+        self.assertEqual(LicenceData.objects.count(), licence_update_count + 1)
