@@ -35,29 +35,7 @@ def convert_data_for_licence_data(dto: EmailMessageDto) -> dict:
     return data
 
 
-def convert_data_for_licence_update(dto: EmailMessageDto) -> dict:
-    source = convert_sender_to_source(dto.sender)
-    data = {"licence_update": {}}
-    data["licence_update"]["source"] = source
-    data["licence_update"]["hmrc_run_number"] = (
-        new_hmrc_run_number(int(dto.run_number)) if convert_sender_to_source(dto.sender) in VALID_SENDERS else None
-    )
-    data["licence_update"]["source_run_number"] = dto.run_number
-    if source == SourceEnum.SPIRE:
-        data["edi_filename"], data["edi_data"] = process_attachment(dto.attachment)
-    else:
-        data["edi_filename"] = dto.attachment[0]
-        data["edi_data"] = dto.attachment[1]
-
-    if isinstance(data["edi_data"], bytes):
-        data["edi_data"] = data["edi_data"].decode(settings.DEFAULT_ENCODING)
-
-    data["licence_update"]["licence_ids"] = get_licence_ids(data["edi_data"])
-    _log_result(data)
-    return data
-
-
-def convert_data_for_licence_update_reply(dto: EmailMessageDto) -> dict:
+def convert_data_for_licence_data_reply(dto: EmailMessageDto) -> dict:
     file_name, file_data = process_attachment(dto.attachment)
     data = {
         "response_filename": file_name,

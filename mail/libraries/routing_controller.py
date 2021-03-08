@@ -140,7 +140,7 @@ def _collect_and_send(mail: Mail):
         else:
             update_mail(mail, message_to_send_dto)
 
-        if message_to_send_dto.receiver == SPIRE_ADDRESS and mail.extract_type == ExtractTypeEnum.LICENCE_UPDATE:
+        if message_to_send_dto.receiver == SPIRE_ADDRESS and mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
             # Pick up any LITE licence updates once we send a licence update reply email to SPIRE
             # so LITE does not get locked out of the queue by SPIRE
             send_licence_data_to_hmrc(schedule=0)  # noqa

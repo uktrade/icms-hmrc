@@ -10,8 +10,7 @@ from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
 from mail.libraries.builders import build_request_mail_message_dto, build_reply_mail_message_dto
 from mail.libraries.data_converters import (
     convert_data_for_licence_data,
-    convert_data_for_licence_update,
-    convert_data_for_licence_update_reply,
+    convert_data_for_licence_data_reply,
     convert_data_for_usage_update,
     convert_data_for_usage_update_reply,
 )
@@ -65,10 +64,8 @@ def convert_dto_data_for_serialization(dto: EmailMessageDto, extract_type) -> di
     """
     if extract_type == ExtractTypeEnum.LICENCE_DATA:
         data = convert_data_for_licence_data(dto)
-    elif extract_type == ExtractTypeEnum.LICENCE_UPDATE:
-        data = convert_data_for_licence_update(dto)
     elif extract_type == ExtractTypeEnum.LICENCE_REPLY:
-        data = convert_data_for_licence_update_reply(dto)
+        data = convert_data_for_licence_data_reply(dto)
     elif extract_type == ExtractTypeEnum.USAGE_UPDATE:
         data = convert_data_for_usage_update(dto)
     elif extract_type == ExtractTypeEnum.USAGE_REPLY:
@@ -111,7 +108,7 @@ def get_mail_instance(extract_type, run_number) -> Mail or None:
             logging.info("Licence update reply has already been processed")
             return
         return find_mail_of(
-            [ExtractTypeEnum.LICENCE_UPDATE, ExtractTypeEnum.LICENCE_DATA], ReceptionStatusEnum.REPLY_PENDING
+            [ExtractTypeEnum.LICENCE_DATA, ExtractTypeEnum.LICENCE_DATA], ReceptionStatusEnum.REPLY_PENDING
         )
     elif extract_type == ExtractTypeEnum.USAGE_REPLY:
         last_email = UsageUpdate.objects.filter(spire_run_number=run_number).last()

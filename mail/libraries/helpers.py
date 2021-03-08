@@ -158,13 +158,13 @@ def process_attachment(attachment):
 
 
 def new_hmrc_run_number(dto_run_number: int) -> int:
-    last_licence_update = LicenceData.objects.last()
-    if last_licence_update:
+    last_update = LicenceData.objects.last()
+    if last_update:
         dto_run_number = dto_run_number % 100000
-        if not last_licence_update.source_run_number == dto_run_number:
-            return last_licence_update.hmrc_run_number + 1 if last_licence_update.hmrc_run_number != 99999 else 0
+        if not last_update.source_run_number == dto_run_number:
+            return last_update.hmrc_run_number + 1 if last_update.hmrc_run_number != 99999 else 0
         else:
-            return last_licence_update.hmrc_run_number
+            return last_update.hmrc_run_number
     return dto_run_number
 
 

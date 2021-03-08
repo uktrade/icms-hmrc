@@ -107,14 +107,14 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
     )
 
 
-def build_update_mail(licences) -> Mail:
+def build_licence_data_mail(licences) -> Mail:
     last_lite_update = LicenceData.objects.last()
     run_number = last_lite_update.hmrc_run_number + 1 if last_lite_update else 1
-    file_name, file_content = build_licence_updates_file(licences, run_number)
+    file_name, file_content = build_licence_data_file(licences, run_number)
     mail = Mail.objects.create(
         edi_filename=file_name,
         edi_data=file_content,
-        extract_type=ExtractTypeEnum.LICENCE_UPDATE,
+        extract_type=ExtractTypeEnum.LICENCE_DATA,
         raw_data="See Licence Payload",
     )
     licence_ids = json.dumps([licence.reference for licence in licences])
@@ -123,7 +123,7 @@ def build_update_mail(licences) -> Mail:
     return mail
 
 
-def build_licence_updates_file(licences, run_number) -> (str, str):
+def build_licence_data_file(licences, run_number) -> (str, str):
     now = timezone.now()
     file_name = "SPIRE_live_CHIEF_licenceData_{}_{:04d}{:02d}{:02d}{:02d}{:02d}".format(
         run_number, now.year, now.month, now.day, now.hour, now.minute
