@@ -22,7 +22,7 @@ from conf.settings import (
     MAX_ATTEMPTS,
 )
 from mail.enums import ReceptionStatusEnum, ReplyStatusEnum
-from mail.libraries.builders import build_update_mail
+from mail.libraries.builders import build_licence_data_mail
 from mail.libraries.data_processors import build_request_mail_message_dto
 from mail.libraries.mailbox_service import send_email
 from mail.libraries.routing_controller import check_and_route_emails
@@ -35,7 +35,7 @@ from mail.servers import MailServer
 
 MANAGE_INBOX_TASK_QUEUE = "manage_inbox_queue"
 NOTIFY_USERS_TASK_QUEUE = "notify_users_queue"
-LICENCE_UPDATES_TASK_QUEUE = "licences_updates_queue"
+LICENCE_DATA_TASK_QUEUE = "licences_updates_queue"
 USAGE_FIGURES_QUEUE = "usage_figures_queue"
 TASK_BACK_OFF = 3600  # Time, in seconds, to wait before scheduling a new task (used after MAX_ATTEMPTS is reached)
 
@@ -192,8 +192,8 @@ def _handle_exception(message, lite_usage_update_id):
 # Send Licence Updates to HMRC
 
 
-@background(queue=LICENCE_UPDATES_TASK_QUEUE, schedule=0)
-def send_licence_updates_to_hmrc():
+@background(queue=LICENCE_DATA_TASK_QUEUE, schedule=0)
+def send_licence_data_to_hmrc():
     """Sends LITE licence updates to HMRC"""
 
     logging.info("Sending LITE licence updates to HMRC")
@@ -210,7 +210,7 @@ def send_licence_updates_to_hmrc():
                 logging.info("There are currently no licences to send")
                 return
 
-            mail = build_update_mail(licences)
+            mail = build_licence_data_mail(licences)
             mail_dto = build_request_mail_message_dto(mail)
             licence_references = list(licences.values_list("reference", flat=True))
             logging.info(f"Created Mail [{mail.id}] from licences [{licence_references}]")

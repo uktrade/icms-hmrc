@@ -16,7 +16,7 @@ from mail.libraries.helpers import (
     get_country_id,
 )
 from mail.libraries.lite_to_edifact_converter import get_transaction_reference
-from mail.models import LicenceUpdate, Mail
+from mail.models import LicenceData, Mail
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
@@ -32,7 +32,7 @@ class HelpersTests(LiteHMRCTestClient):
     @parameterized.expand([[5, 4, 5], [1234568, 34567, 34568], [0, 99999, 0], [7, 7, 7]])
     def test_new_hmrc_run_number(self, source, old, new):
         mail = self._setup_mail()
-        LicenceUpdate.objects.create(
+        LicenceData.objects.create(
             mail=mail, hmrc_run_number=old, source_run_number=old, source=SourceEnum.SPIRE,
         )
         self.assertEqual(new_hmrc_run_number(source), new)
@@ -86,7 +86,7 @@ class HelpersTests(LiteHMRCTestClient):
 
     @parameterized.expand([("GB/00001/P", "00001P"), ("GB/001/P/A", "001PA"), ("GB/0/01/P/a", "001Pa")])
     @tag("1917", "transaction-ref")
-    def test_transaction_reference_for_licence_update(self, reference, transaction_reference):
+    def test_transaction_reference_for_licence_data(self, reference, transaction_reference):
         self.assertEqual(get_transaction_reference(reference), transaction_reference)
 
     @parameterized.expand([("O", "open"), ("E", "exhaust"), ("D", "expire"), ("S", "surrender"), ("C", "cancel")])

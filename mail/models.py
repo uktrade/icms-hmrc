@@ -91,23 +91,6 @@ class LicenceData(models.Model):
         return json.loads(self.licence_ids)
 
 
-class LicenceUpdate(models.Model):
-    licence_ids = models.TextField()
-    hmrc_run_number = models.IntegerField()
-    source_run_number = models.IntegerField(null=True)
-    source = models.CharField(choices=SourceEnum.choices, max_length=10)
-    mail = models.ForeignKey(Mail, on_delete=models.DO_NOTHING)
-
-    class Meta:
-        ordering = ["mail__created_at"]
-
-    def set_licence_ids(self, data: List):
-        self.licence_ids = json.dumps(data)
-
-    def get_licence_ids(self):
-        return json.loads(self.licence_ids)
-
-
 class UsageUpdate(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     licence_ids = JSONField()

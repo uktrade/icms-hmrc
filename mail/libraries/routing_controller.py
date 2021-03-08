@@ -118,7 +118,7 @@ def send(server: MailServer, email_message_dto: EmailMessageDto):
 
 
 def _collect_and_send(mail: Mail):
-    from mail.tasks import send_licence_updates_to_hmrc
+    from mail.tasks import send_licence_data_to_hmrc
 
     logger.info(f"Sending Mail [{mail.id}]")
 
@@ -140,10 +140,10 @@ def _collect_and_send(mail: Mail):
         else:
             update_mail(mail, message_to_send_dto)
 
-        if message_to_send_dto.receiver == SPIRE_ADDRESS and mail.extract_type == ExtractTypeEnum.LICENCE_UPDATE:
+        if message_to_send_dto.receiver == SPIRE_ADDRESS and mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
             # Pick up any LITE licence updates once we send a licence update reply email to SPIRE
             # so LITE does not get locked out of the queue by SPIRE
-            send_licence_updates_to_hmrc(schedule=0)  # noqa
+            send_licence_data_to_hmrc(schedule=0)  # noqa
 
 
 def _get_email_message_dtos(server: MailServer, number: Optional[int] = 3) -> List[Tuple[EmailMessageDto, Callable]]:

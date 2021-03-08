@@ -105,14 +105,12 @@ class ReceptionStatusEnum:
 class ExtractTypeEnum:
     USAGE_UPDATE = "usage_update"
     USAGE_REPLY = "usage_reply"
-    LICENCE_UPDATE = "licence_update"
     LICENCE_REPLY = "licence_reply"
     LICENCE_DATA = "licence_data"
 
     choices = [
         (USAGE_UPDATE, "Usage update"),
         (USAGE_REPLY, "Usage Reply"),
-        (LICENCE_UPDATE, "Licence Update"),
         (LICENCE_REPLY, "Licence Reply"),
         (LICENCE_DATA, "Licence Data"),
     ]
@@ -120,7 +118,6 @@ class ExtractTypeEnum:
     email_keys = [
         ("usageData", USAGE_UPDATE),
         ("usageReply", USAGE_REPLY),
-        ("licenceUpdate", LICENCE_UPDATE),
         ("licenceReply", LICENCE_REPLY),
         ("licenceData", LICENCE_DATA),
     ]

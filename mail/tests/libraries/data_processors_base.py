@@ -11,21 +11,13 @@ class DataProcessorsTestBase(LiteHMRCTestClient):
         self.licence_ids = "GBOIE2017/12345B"
 
         self.mail = models.Mail.objects.create(
-            edi_data=self.licence_update_file_body,
-            extract_type=ExtractTypeEnum.LICENCE_UPDATE,
+            edi_data=self.licence_data_file_body,
+            extract_type=ExtractTypeEnum.LICENCE_DATA,
             status=ReceptionStatusEnum.PENDING,
-            edi_filename=self.licence_update_file_name,
+            edi_filename=self.licence_data_file_name,
         )
 
         self.licence_data = models.LicenceData.objects.create(
-            mail=self.mail,
-            hmrc_run_number=self.hmrc_run_number,
-            source_run_number=self.source_run_number,
-            licence_ids=self.licence_ids,
-            source=SourceEnum.SPIRE,
-        )
-
-        self.licence_update = models.LicenceUpdate.objects.create(
             mail=self.mail,
             hmrc_run_number=self.hmrc_run_number,
             source_run_number=self.source_run_number,

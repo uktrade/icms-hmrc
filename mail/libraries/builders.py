@@ -13,7 +13,7 @@ from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import convert_source_to_sender
 from mail.libraries.lite_to_edifact_converter import licences_to_edifact
 from mail.libraries.usage_data_decomposition import split_edi_data_by_id, build_edifact_file_from_data_blocks
-from mail.models import LicenceData, LicenceUpdate, Mail, UsageUpdate
+from mail.models import LicenceData, Mail, UsageUpdate
 
 
 def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
@@ -21,21 +21,11 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
     receiver = None
     attachment = [None, None]
     run_number = 0
-
     if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
         sender = settings.INCOMING_EMAIL_USER
         receiver = settings.OUTGOING_EMAIL_USER
         licence_data = LicenceData.objects.get(mail=mail)
         run_number = licence_data.hmrc_run_number
-        attachment = [
-            build_sent_filename(mail.edi_filename, run_number),
-            build_sent_file_data(mail.edi_data, run_number),
-        ]
-    elif mail.extract_type == ExtractTypeEnum.LICENCE_UPDATE:
-        sender = settings.EMAIL_USER
-        receiver = settings.HMRC_ADDRESS
-        licence_update = LicenceUpdate.objects.get(mail=mail)
-        run_number = licence_update.hmrc_run_number
         attachment = [
             build_sent_filename(mail.edi_filename, run_number),
             build_sent_file_data(mail.edi_data, run_number),
@@ -94,10 +84,6 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
         licence_data = LicenceData.objects.get(mail=mail)
         run_number = licence_data.source_run_number
         receiver = convert_source_to_sender(licence_data.source)
-    elif mail.extract_type == ExtractTypeEnum.LICENCE_UPDATE:
-        licence_update = LicenceUpdate.objects.get(mail=mail)
-        run_number = licence_update.source_run_number
-        receiver = convert_source_to_sender(licence_update.source)
     elif mail.extract_type == ExtractTypeEnum.USAGE_UPDATE:
         usage_update = UsageUpdate.objects.get(mail=mail)
         run_number = usage_update.hmrc_run_number
@@ -121,25 +107,25 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
     )
 
 
-def build_update_mail(licences) -> Mail:
-    last_lite_update = LicenceUpdate.objects.last()
+def build_licence_data_mail(licences) -> Mail:
+    last_lite_update = LicenceData.objects.last()
     run_number = last_lite_update.hmrc_run_number + 1 if last_lite_update else 1
-    file_name, file_content = build_licence_updates_file(licences, run_number)
+    file_name, file_content = build_licence_data_file(licences, run_number)
     mail = Mail.objects.create(
         edi_filename=file_name,
         edi_data=file_content,
-        extract_type=ExtractTypeEnum.LICENCE_UPDATE,
+        extract_type=ExtractTypeEnum.LICENCE_DATA,
         raw_data="See Licence Payload",
     )
     licence_ids = json.dumps([licence.reference for licence in licences])
-    LicenceUpdate.objects.create(hmrc_run_number=run_number, source=SourceEnum.LITE, mail=mail, licence_ids=licence_ids)
+    LicenceData.objects.create(hmrc_run_number=run_number, source=SourceEnum.LITE, mail=mail, licence_ids=licence_ids)
 
     return mail
 
 
-def build_licence_updates_file(licences, run_number) -> (str, str):
+def build_licence_data_file(licences, run_number) -> (str, str):
     now = timezone.now()
-    file_name = "SPIRE_live_CHIEF_licenceUpdate_{}_{:04d}{:02d}{:02d}{:02d}{:02d}".format(
+    file_name = "SPIRE_live_CHIEF_licenceData_{}_{:04d}{:02d}{:02d}{:02d}{:02d}".format(
         run_number, now.year, now.month, now.day, now.hour, now.minute
     )
 

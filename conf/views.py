@@ -9,14 +9,14 @@ from rest_framework.status import HTTP_200_OK, HTTP_503_SERVICE_UNAVAILABLE
 from rest_framework.views import APIView
 
 from conf.settings import (
-    LITE_LICENCE_UPDATE_POLL_INTERVAL,
+    LITE_LICENCE_DATA_POLL_INTERVAL,
     INBOX_POLL_INTERVAL,
     EMAIL_AWAITING_REPLY_TIME,
     EMAIL_AWAITING_CORRECTIONS_TIME,
 )
 from mail.enums import ReceptionStatusEnum, ReplyStatusEnum
 from mail.models import Mail
-from mail.tasks import LICENCE_UPDATES_TASK_QUEUE, MANAGE_INBOX_TASK_QUEUE
+from mail.tasks import LICENCE_DATA_TASK_QUEUE, MANAGE_INBOX_TASK_QUEUE
 
 
 class HealthCheck(APIView):
@@ -28,7 +28,7 @@ class HealthCheck(APIView):
         start_time = time.time()
 
         if not self._is_lite_licence_update_task_responsive():
-            logging.error(f"{LICENCE_UPDATES_TASK_QUEUE} is not responsive")
+            logging.error(f"{LICENCE_DATA_TASK_QUEUE} is not responsive")
             return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
 
         if not self._is_inbox_polling_task_responsive():
@@ -56,8 +56,8 @@ class HealthCheck(APIView):
     @staticmethod
     def _is_lite_licence_update_task_responsive() -> bool:
         return Task.objects.filter(
-            queue=LICENCE_UPDATES_TASK_QUEUE,
-            run_at__lte=timezone.now() + datetime.timedelta(seconds=LITE_LICENCE_UPDATE_POLL_INTERVAL),
+            queue=LICENCE_DATA_TASK_QUEUE,
+            run_at__lte=timezone.now() + datetime.timedelta(seconds=LITE_LICENCE_DATA_POLL_INTERVAL),
         ).exists()
 
     @staticmethod
