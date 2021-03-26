@@ -1,0 +1,262 @@
+From - Thu Feb 18 12:03:18 2021
+X-Account-Key: account9
+X-UIDL: 21
+X-Mozilla-Status: 0001
+X-Mozilla-Status2: 00000000
+X-Mozilla-Keys:
+Received: from LO2P265MB0285.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:64::13)
+ by LO2P265MB3498.GBRP265.PROD.OUTLOOK.COM with HTTPS; Thu, 18 Feb 2021
+ 11:59:47 +0000
+Authentication-Results: test.trade.gov.uk; dkim=none (message not signed)
+ header.d=none;test.trade.gov.uk; dmarc=none action=none
+ header.from=test.trade.gov.uk;
+Received: from LO3P265MB1849.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:b7::12)
+ by LO2P265MB0285.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:64::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3846.36; Thu, 18 Feb
+ 2021 11:59:46 +0000
+Received: from LO3P265MB1849.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::ccbe:81d4:a06c:fdf7]) by LO3P265MB1849.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::ccbe:81d4:a06c:fdf7%3]) with mapi id 15.20.3846.044; Thu, 18 Feb 2021
+ 11:59:46 +0000
+To: test-test-gateway@test.trade.gov.uk
+From: "test-test-test@test.trade.gov.uk"
+ <test-test-test@test.trade.gov.uk>
+Subject: CHIEF_LIVE_SPIRE_licenceData_96838_202102121916
+Message-ID: <7246a107-d5dc-1d58-0ee4-a45ee6ded1bb@test.trade.gov.uk>
+Date: Thu, 18 Feb 2021 11:59:45 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
+Content-Type: multipart/mixed;
+ boundary="------------103CF4423B627F51BE819985"
+Content-Language: en-US
+X-MS-Exchange-Organization-ExpirationStartTime: 18 Feb 2021 11:59:46.1159
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id:
+ d4ad5b26-7de3-459f-d60a-08d8d404af6e
+X-MS-Exchange-Organization-AuthSource: LO3P265MB1849.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-Organization-AuthAs: Internal
+X-MS-Exchange-Organization-AuthMechanism: 06
+X-Originating-IP: [188.30.128.45]
+X-ClientProxiedBy: LO2P265CA0094.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:8::34) To LO3P265MB1849.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:b7::12)
+X-MS-Exchange-Organization-MessageDirectionality: Originating
+Return-Path: test-test-test@test.trade.gov.uk
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.9.114] (188.30.128.45) by LO2P265CA0094.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:8::34) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3846.38 via Frontend Transport; Thu, 18 Feb 2021 11:59:46 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: d4ad5b26-7de3-459f-d60a-08d8d404af6e
+X-MS-TrafficTypeDiagnostic: LO2P265MB0285:
+X-MS-Oob-TLC-OOBClassifiers: OLM:459;
+X-MS-Exchange-Organization-SCL: -1
+X-Microsoft-Antispam: BCL:0;
+X-Forefront-Antispam-Report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:-1;SRV:;IPV:NLI;SFV:SKI;H:LO3P265MB1849.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:;DIR:INB;
+X-MS-Exchange-AntiSpam-MessageData:
+ =?Windows-1252?Q?J7DogiVQ1+D+XdX1mNHVoFKc4sD19KUVEDP42LUNG4OEroQ5JtOzcFBd?=
+ =?Windows-1252?Q?5cTCyQd+aMuXPRGhbQ4FfA/1L5FHrN61OYuPh2GhbbGRndoY2Wg6ppcJ?=
+ =?Windows-1252?Q?3uQVn//Kq39edChg6hp9koS4evEqiNg+nV7vYYFFJTP+bRmPPpX+ZfVn?=
+ =?Windows-1252?Q?LxLsg5krwiPY1s164XAqbUZik2HaLm/3y/XC2fUpq7GJRwB+/HYmCcLp?=
+ =?Windows-1252?Q?502JSm5peoiGcLqgzaVsOboO8sujstQC2IuY8f5S+1pv/GSPd3JQ0dWN?=
+ =?Windows-1252?Q?s6lN4J0iCCcaH3btutDTmfBzAwwdLBPG8u4WLuC4Fc/sYzpyj+zKc6gr?=
+ =?Windows-1252?Q?l5AWr9ibNHDMrr1yeV6pA3lwcYShXFMZr2KjBSvGAvL0i9Xerq2TSWjI?=
+ =?Windows-1252?Q?8/vkbI+OigXshR8dIRjvr3LtgIM3ujbpXbd43Ia4w4Fz1wWbocxd8FVe?=
+ =?Windows-1252?Q?mFZTcno3E9NTdm6F3/kZLKrOrDoZafG4C0YDapzXatU/F2R7lmJF67Gq?=
+ =?Windows-1252?Q?pcUUYJ/R9tNjInsrrMCfg+rgIaCqB2K9tfCD2LqqrJhj1Fe7GswUaAB7?=
+ =?Windows-1252?Q?mHhp4nE2anDTEoMAkjuu3mgMTFGffsd1WZsQFp+P6kNwo3tlK8GsXE2p?=
+ =?Windows-1252?Q?+3rIiW0/Tc7W/H5AYINrKcCLjf7AkD+VP7KichdbparNWjTdGWT1CSJx?=
+ =?Windows-1252?Q?aQpX7Jj82qNuYckaEBQNsurZZrTgeK32r2I/G1+ARA6k+t6SHl/Eo/+d?=
+ =?Windows-1252?Q?iZU9WnV66NkK4tXFB/Ls5O6xMxpOZRsZw9MBb5M5CLVXBTNlCyHdnPT2?=
+ =?Windows-1252?Q?lRUoyo8HnCOKabp76hO8SIMgW6LcU245iynwss7MCddALcLZNLvBotVN?=
+ =?Windows-1252?Q?jWNrQNWVpQJl6u9acxCJzrDv81pAl2hqiHrA54T6vxIDmkkUZNIvHL/y?=
+ =?Windows-1252?Q?CnIo3ohZNdiLmcjNUg+UfuW/CJ0xmK8AUjhynMFFKOzlyOphytglUJ2d?=
+ =?Windows-1252?Q?0gMDUuVVN/RvLcbdj/B4Mi7CBfTD2l3vVwDAI5z/N5iGGI2ntskvlMO3?=
+ =?Windows-1252?Q?kRx0VslRGzpOOr62uM6v5k0Nv9c0gektVackKz484DBAHg9LAOT4W1M9?=
+ =?Windows-1252?Q?BWxftjosiFfgc4H4n7EFc7w+oRnf3/bF6wqx6VeoiTNVrBG71g3RdUzA?=
+ =?Windows-1252?Q?3vtt16badcYbtNhz8JWPHqxM+3BsCW3u8/+IM6LZFjx97qmMXd13MpvE?=
+ =?Windows-1252?Q?P6T4PSMesVg+K+fpWrs93QNAxx2Ybjy9NuJ/Qzsbvb8sqkF0f6HD2VDY?=
+ =?Windows-1252?Q?TnUj5PI4s55ghTYFyIn5t+s+ThKRS/D9z+0M0r8JeSX6WFBVQgTAZUxw?=
+ =?Windows-1252?Q?wxbcl3PxGpsKGfbLcInp/Eq/4lVWBr8xSMH104vB/roAQYI/0CYta/kk?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: d4ad5b26-7de3-459f-d60a-08d8d404af6e
+X-MS-Exchange-CrossTenant-AuthSource: LO3P265MB1849.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2021 11:59:46.2105
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84fc6706-977d-4992-8e18-6f234806589c
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: HXuJD7CYj3J26rCx9zdTPpaD1y2r0zxzqNSUxA2Wwf506JK8KVw5JzJKXeXj2j49UAGzRllvLlfpqGYC6vZOMSZ2m4voaXUUrYW/OjsTyOa0RVlT7RDqrxtR8lffzFDZGx51ZW+kk1OnmxApajLNnQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO2P265MB0285
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:01.1222500
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.3846.044
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(750129)(520011016)(706158)(944506458)(944626604);
+X-Microsoft-Antispam-Message-Info:
+	8DVdQpZcVfMTrC7El4UNPDA2DDNabYIbvpHl1eTXmiUUTmqaEEdtg5yMU7ajX/cj1Fwrv60n4D2yndcHOESHGW0GFnzBrGQX1A85nhgM3ueEspQy2NrXg5kNtSbzBTmzOsYwkgLx9b0FaoE+8fQRlna1TPm5tF3pGt1IbRO0D1B2rCiKtQhCf2gf4OpHhrDCOX2m/QINDnNNhkDqXbTyyl05wX059wjoqb1hdzl1VJRICrQkm3lohJVJ5MJJu8oKEa1uIguQi6e8+kqTYF0Dbw==
+MIME-Version: 1.0
+
+--------------103CF4423B627F51BE819985
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+
+test
+
+--------------103CF4423B627F51BE819985
+Content-Type: text/plain; charset=UTF-8;
+ name="CHIEF_LIVE_SPIRE_licenceData_96838_202102121916"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="CHIEF_LIVE_SPIRE_licenceData_96838_202102121916"
+
+1\fileHeader\SPIRE\CHIEF\licenceData\202102121916\96838\N
+2\licence\193251\insert\GBSIE2021/00002\SIE\E\20210212\20230212
+3\trader\417869120000\000002\20210212\20230212\UNIVERSAL EXPORTS\MASSENET'U MAGUS SHORTHAND HIGH\NOSE PAUL DECSTATION PAULIE\UNDESIGNING\HYDEPARKSTATION\ZP7 1ZI\
+4\country\US\\D
+5\foreignTrader\UNIVERSAL IMPORTS\123 FAKE STREET\UNITED STATES\\\\\US
+6\restrictions\Provisos may apply please see licence
+7\line\1\\\\\SIDELOCK EJECTOR\Q\\030\\1
+8\line\2\\\\\BOXLOCK EJECTOR\Q\\030\\1
+9\line\3\\\\\HAMMERGUN\Q\\030\\1
+10\end\licence\9
+11\licence\193252\insert\GBSIE2021/00003\SIE\E\20210212\20220212
+12\trader\417869120000\000003\20210212\20220212\UNIVERSAL EXPORTS\MASSENET'U MAGUS SHORTHAND HIGH\NOSE PAUL DECSTATION PAULIE\UNDESIGNING\HYDEPARKSTATION\ZP7 1ZI\
+13\country\US\\D
+14\foreignTrader\UNIVERSAL IMPORTS\2812 DAVIS PLACE\TOLEDO\OHIO\UNITED STATES\\\US
+15\restrictions\Provisos may apply please see licence
+16\line\1\\\\\MF50 PACKAGED\Q\\030\\2
+17\line\2\\\\\FM61EU FILTER (PACK OF 2)\Q\\030\\1
+18\line\3\\\\\MILCF50 FILTER (PACK OF 4)\Q\\030\\1
+19\line\4\\\\\POSITIVE PRESSURE MODULE\Q\\030\\1
+20\end\licence\10
+21\licence\193253\insert\GBOIE2021/00001\OIE\E\20210212\20260212
+22\trader\417869120000\000001\20210212\20260212\UNIVERSAL EXPORTS\MASSENET'U MAGUS SHORTHAND HIGH\NOSE PAUL DECSTATION PAULIE\UNDESIGNING\HYDEPARKSTATION\ZP7 1ZI\
+23\country\DE\\D
+24\country\FR\\D
+25\country\NL\\D
+26\country\SE\\D
+27\restrictions\Provisos may apply please see licence
+28\line\1\\\\\Open Licence goods - see actual licence for information\O\\\\
+29\end\licence\9
+30\licence\193254\insert\GBOIE2021/00002\OIE\E\20210212\20240212
+31\trader\417869120000\000002\20210212\20240212\UNIVERSAL EXPORTS\MASSENET'U MAGUS SHORTHAND HIGH\NOSE PAUL DECSTATION PAULIE\UNDESIGNING\HYDEPARKSTATION\ZP7 1ZI\
+32\country\AT\\D
+33\country\BE\\D
+34\country\BG\\D
+35\country\CY\\D
+36\country\CZ\\D
+37\country\DE\\D
+38\country\DK\\D
+39\country\EE\\D
+40\country\ES\\D
+41\country\FI\\D
+42\country\FR\\D
+43\country\GR\\D
+44\country\HR\\D
+45\country\HU\\D
+46\country\IT\\D
+47\country\LT\\D
+48\country\LU\\D
+49\country\LV\\D
+50\country\MT\\D
+51\country\NL\\D
+52\country\PL\\D
+53\country\PT\\D
+54\country\RO\\D
+55\country\SE\\D
+56\country\SI\\D
+57\country\SK\\D
+58\restrictions\Provisos may apply please see licence
+59\line\1\\\\\Open Licence goods - see actual licence for information\O\\\\
+60\end\licence\31
+61\licence\193255\insert\GBOIE2021/00003\OIE\E\20210212\20260212
+62\trader\417869120000\000003\20210212\20260212\UNIVERSAL EXPORTS\MASSENET'U MAGUS SHORTHAND HIGH\NOSE PAUL DECSTATION PAULIE\UNDESIGNING\HYDEPARKSTATION\ZP7 1ZI\
+63\country\AF\\E
+64\country\AM\\E
+65\country\AO\\E
+66\country\AT\\E
+67\country\AU\\E
+68\country\AZ\\E
+69\country\BA\\E
+70\country\BE\\E
+71\country\BG\\E
+72\country\BI\\E
+73\country\CA\\E
+74\country\CD\\E
+75\country\CH\\E
+76\country\CN\\E
+77\country\CY\\E
+78\country\CZ\\E
+79\country\DE\\E
+80\country\DK\\E
+81\country\EE\\E
+82\country\ER\\E
+83\country\ES\\E
+84\country\ET\\E
+85\country\FI\\E
+86\country\FR\\E
+87\country\GR\\E
+88\country\HR\\E
+89\country\HU\\E
+90\country\IE\\E
+91\country\IQ\\E
+92\country\IR\\E
+93\country\IT\\E
+94\country\JP\\E
+95\country\KP\\E
+96\country\LR\\E
+97\country\LT\\E
+98\country\LU\\E
+99\country\LV\\E
+100\country\LY\\E
+101\country\MM\\E
+102\country\MT\\E
+103\country\NG\\E
+104\country\NL\\E
+105\country\NO\\E
+106\country\NZ\\E
+107\country\PL\\E
+108\country\PT\\E
+109\country\RO\\E
+110\country\RU\\E
+111\country\RW\\E
+112\country\SD\\E
+113\country\SE\\E
+114\country\SI\\E
+115\country\SK\\E
+116\country\SL\\E
+117\country\SO\\E
+118\country\SS\\E
+119\country\SY\\E
+120\country\TZ\\E
+121\country\UG\\E
+122\country\US\\E
+123\country\ZW\\E
+124\restrictions\Provisos may apply please see licence
+125\line\1\\\\\Open Licence goods - see actual licence for information\O\\\\
+126\end\licence\66
+127\licence\193256\insert\GBOGE2021/00001\OGE\E\20210212\20770101
+128\trader\417869120000\000001\\\UNIVERSAL EXPORTS\MASSENET'U MAGUS SHORTHAND HIGH\NOSE PAUL DECSTATION PAULIE\UNDESIGNING\HYDEPARKSTATION\ZP7 1ZI\
+129\country\\G012\D
+130\restrictions\Provisos may apply please see licence
+131\line\1\\\\\Open General Licence - see actual licence for information - Turkey\O\\\\
+132\end\licence\6
+133\licence\193257\insert\GBOGE2021/00002\OGE\E\20210212\20770101
+134\trader\417869120000\000002\\\UNIVERSAL EXPORTS\MASSENET'U MAGUS SHORTHAND HIGH\NOSE PAUL DECSTATION PAULIE\UNDESIGNING\HYDEPARKSTATION\ZP7 1ZI\
+135\country\\G012\D
+136\restrictions\Provisos may apply please see licence
+137\line\1\\\\\Open General Licence - see actual licence for information - Military Goods, Software and Technology: Government or NATO End-Use\O\\\\
+138\end\licence\6
+139\licence\193258\insert\GBOGE2021/00003\OGE\E\20210212\20770101
+140\trader\417869120000\000003\\\UNIVERSAL EXPORTS\MASSENET'U MAGUS SHORTHAND HIGH\NOSE PAUL DECSTATION PAULIE\UNDESIGNING\HYDEPARKSTATION\ZP7 1ZI\
+141\country\\G012\D
+142\restrictions\Provisos may apply please see licence
+143\line\1\\\\\Open General Licence - see actual licence for information - Open General Export Licence (PCBs and components for dual-use items)\O\\\\
+144\end\licence\6
+145\fileTrailer\8
+
+--------------103CF4423B627F51BE819985--
+.
