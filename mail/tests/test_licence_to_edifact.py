@@ -42,13 +42,14 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             + "\\1234\\Y"
-            + "\n2\\licence\\20200000001P\\insert\\GBSIEL/2020/0000001/P\\siel\\E\\20200602\\20220602"
+            + "\n2\\licence\\20200000001P\\insert\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
             + f"\n3\\trader\\\\{org_mapping.rpa_trader_id}\\20200602\\20220602\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Tennessee\\99580"
-            + "\n4\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
-            + "\n5\\restrictions\\Provisos may apply please see licence"
-            + "\n6\\line\\1\\\\\\\\\\finally\\Q\\30\\10"
-            + "\n7\\end\\licence\\6"
-            + "\n8\\fileTrailer\\1"
+            + "\n4\\country\\GB\\\\D"
+            + "\n5\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
+            + "\n6\\restrictions\\Provisos may apply please see licence"
+            + "\n7\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\10"
+            + "\n8\\end\\licence\\7"
+            + "\n9\\fileTrailer\\1"
         )
 
         self.assertEqual(result, expected)
@@ -96,15 +97,16 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             + "\\1234\\Y"
-            + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\siel\\E\\20200602\\20220602"
+            + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
             + "\n3\\end\\licence\\2"
-            + "\n4\\licence\\20200000001Pa\\insert\\GBSIEL/2020/0000001/P/a\\siel\\E\\20200602\\20220703"
+            + "\n4\\licence\\20200000001Pa\\insert\\GBSIEL/2020/0000001/P/a\\SIE\\E\\20200602\\20220703"
             + f"\n5\\trader\\\\{org_mapping.rpa_trader_id}\\20200602\\20220703\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Tennessee\\99580"
-            + "\n6\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
-            + "\n7\\restrictions\\Provisos may apply please see licence"
-            + "\n8\\line\\1\\\\\\\\\\finally\\Q\\30\\15"
-            + "\n9\\end\\licence\\6"
-            + "\n10\\fileTrailer\\2"
+            + "\n6\\country\\GB\\\\D"
+            + "\n7\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
+            + "\n8\\restrictions\\Provisos may apply please see licence"
+            + "\n9\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\15"
+            + "\n10\\end\\licence\\7"
+            + "\n11\\fileTrailer\\2"
         )
 
         self.assertEqual(result, expected)
@@ -123,7 +125,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             + "\\1234\\Y"
-            + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\siel\\E\\20200602\\20220602"
+            + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
             + "\n3\\end\\licence\\2"
             + "\n4\\fileTrailer\\1"
         )
