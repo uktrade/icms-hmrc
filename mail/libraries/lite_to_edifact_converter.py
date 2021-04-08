@@ -9,7 +9,7 @@ from mail.models import OrganisationIdMapping, GoodIdMapping, LicencePayload
 def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
     now = timezone.now()
     time_stamp = "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
-    edifact_file = "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\{}\\{}".format(time_stamp, run_number)
+    edifact_file = "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\{}\\{}\\Y".format(time_stamp, run_number)
     i = 1
     for licence in licences:
         licence_payload = licence.data

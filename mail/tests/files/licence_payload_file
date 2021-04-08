@@ -29,7 +29,8 @@
       "goods": [
           {
               "id": "f95ded2a-354f-46f1-a572-c7f97d63bed1",
-              "description": "finally",
+              "name": "Sporting shotgun",
+              "description": "",
               "unit": "NAR",
               "quantity": 10.0
           }

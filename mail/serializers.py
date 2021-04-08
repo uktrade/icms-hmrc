@@ -133,7 +133,8 @@ class UsageUpdateMailSerializer(serializers.ModelSerializer):
 
 
 class GoodSerializer(serializers.Serializer):
-    description = serializers.CharField(max_length=2000, allow_blank=False)
+    name = serializers.CharField()
+    description = serializers.CharField(max_length=2000, allow_blank=True)
     quantity = serializers.DecimalField(decimal_places=3, max_digits=13)
     unit = serializers.CharField()
 
