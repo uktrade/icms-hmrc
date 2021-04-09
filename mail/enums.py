@@ -1,3 +1,14 @@
+LITE_HMRC_LICENCE_TYPE_MAPPING = {
+    "siel": "SIE",
+    "sicl": "SIE",
+    "sitl": "SIE",
+    "oiel": "OIE",
+    "ogel": "OGE",
+    "ogcl": "OGE",
+    "ogtl": "OGE",
+}
+
+
 class LicenceActionEnum:
     INSERT = "insert"
     CANCEL = "cancel"

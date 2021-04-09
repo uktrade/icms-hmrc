@@ -1,21 +1,16 @@
+import logging
+
 from django.db.models import QuerySet
 from django.utils import timezone
 
-from mail.enums import UnitMapping, LicenceActionEnum, LicenceTypeEnum
+from mail.enums import UnitMapping, LicenceActionEnum, LicenceTypeEnum, LITE_HMRC_LICENCE_TYPE_MAPPING
 from mail.libraries.helpers import get_country_id
 from mail.models import OrganisationIdMapping, GoodIdMapping, LicencePayload
+from mail.libraries.edifact_validator import validate_edifact_file
 
 
-LITE_HMRC_LICENCE_TYPE_MAPPING = {
-    "siel": "SIE",
-    "sicl": "SIE",
-    "sitl": "SIE",
-    "oiel": "OIE",
-    "oiel": "OIE",
-    "ogel": "OGE",
-    "ogcl": "OGE",
-    "ogtl": "OGE",
-}
+class EdifactValidationError(Exception):
+    pass
 
 
 def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
@@ -139,8 +134,8 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
                     )
             if licence_payload.get("type") in LicenceTypeEnum.OPEN_LICENCES:
                 line_no += 1
-                edifact_file += (
-                    "\n{}\\line\\1\\\\\\\\\\Open Licence goods - see actual licence for information\\".format(line_no)
+                edifact_file += "\n{}\\line\\1\\\\\\\\\\Open Licence goods - see actual licence for information\\".format(
+                    line_no
                 )
         line_no += 1
         edifact_file += "\n{}\\end\\licence\\{}".format(line_no, line_no - start_line)
@@ -148,6 +143,12 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
     edifact_file += "\n{}\\fileTrailer\\{}".format(
         line_no, licences.count() + licences.filter(action=LicenceActionEnum.UPDATE).count()
     )
+
+    errors = validate_edifact_file(edifact_file)
+    if errors:
+        logging.error(f"File content not as per specification, {errors}")
+        raise EdifactValidationError
+
     return edifact_file
 
 
