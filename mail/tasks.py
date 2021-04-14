@@ -25,6 +25,7 @@ from mail.enums import ReceptionStatusEnum, ReplyStatusEnum
 from mail.libraries.builders import build_licence_data_mail
 from mail.libraries.data_processors import build_request_mail_message_dto
 from mail.libraries.mailbox_service import send_email
+from mail.libraries.lite_to_edifact_converter import EdifactValidationError
 from mail.libraries.routing_controller import check_and_route_emails
 from mail.libraries.routing_controller import update_mail, send
 from mail.libraries.usage_data_decomposition import build_json_payload_from_data_blocks, split_edi_data_by_id
@@ -219,6 +220,8 @@ def send_licence_data_to_hmrc():
             send(server, mail_dto)
             update_mail(mail, mail_dto)
             licences.update(is_processed=True)
+    except EdifactValidationError as err:  # noqa
+        raise err
     except Exception as exc:  # noqa
         logging.error(
             f"An unexpected error occurred when sending LITE licence updates to HMRC -> {type(exc).__name__}: {exc}"

@@ -5,10 +5,15 @@ from django.utils import timezone
 from parameterized import parameterized
 
 from mail.enums import LicenceActionEnum
-from mail.libraries.lite_to_edifact_converter import licences_to_edifact, get_transaction_reference
+from mail.libraries.lite_to_edifact_converter import (
+    licences_to_edifact,
+    get_transaction_reference,
+    EdifactValidationError,
+)
 from mail.models import LicencePayload, Mail, OrganisationIdMapping, GoodIdMapping
 from mail.tasks import send_licence_data_to_hmrc
 from mail.tests.libraries.client import LiteHMRCTestClient
+from mail.libraries import edifact_validator
 
 
 class LicenceToEdifactTests(LiteHMRCTestClient):
@@ -41,14 +46,15 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         expected = (
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
-            + "\\1234"
-            + "\n2\\licence\\20200000001P\\insert\\GBSIEL/2020/0000001/P\\siel\\E\\20200602\\20220602"
+            + "\\1234\\Y"
+            + "\n2\\licence\\20200000001P\\insert\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
             + f"\n3\\trader\\\\{org_mapping.rpa_trader_id}\\20200602\\20220602\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Tennessee\\99580"
-            + "\n4\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
-            + "\n5\\restrictions\\Provisos may apply please see licence"
-            + "\n6\\line\\1\\\\\\\\\\finally\\Q\\30\\10"
-            + "\n7\\end\\licence\\6"
-            + "\n8\\fileTrailer\\1"
+            + "\n4\\country\\GB\\\\D"
+            + "\n5\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
+            + "\n6\\restrictions\\Provisos may apply please see licence"
+            + "\n7\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\10"
+            + "\n8\\end\\licence\\7"
+            + "\n9\\fileTrailer\\1"
         )
 
         self.assertEqual(result, expected)
@@ -95,16 +101,17 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         expected = (
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
-            + "\\1234"
-            + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\siel\\E\\20200602\\20220602"
+            + "\\1234\\Y"
+            + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
             + "\n3\\end\\licence\\2"
-            + "\n4\\licence\\20200000001Pa\\insert\\GBSIEL/2020/0000001/P/a\\siel\\E\\20200602\\20220703"
+            + "\n4\\licence\\20200000001Pa\\insert\\GBSIEL/2020/0000001/P/a\\SIE\\E\\20200602\\20220703"
             + f"\n5\\trader\\\\{org_mapping.rpa_trader_id}\\20200602\\20220703\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Tennessee\\99580"
-            + "\n6\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
-            + "\n7\\restrictions\\Provisos may apply please see licence"
-            + "\n8\\line\\1\\\\\\\\\\finally\\Q\\30\\15"
-            + "\n9\\end\\licence\\6"
-            + "\n10\\fileTrailer\\2"
+            + "\n6\\country\\GB\\\\D"
+            + "\n7\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
+            + "\n8\\restrictions\\Provisos may apply please see licence"
+            + "\n9\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\15"
+            + "\n10\\end\\licence\\7"
+            + "\n11\\fileTrailer\\2"
         )
 
         self.assertEqual(result, expected)
@@ -122,10 +129,131 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         expected = (
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
-            + "\\1234"
-            + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\siel\\E\\20200602\\20220602"
+            + "\\1234\\Y"
+            + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
             + "\n3\\end\\licence\\2"
             + "\n4\\fileTrailer\\1"
         )
 
         self.assertEqual(result, expected)
+
+    def test_edifact_gen_raises_exception_on_errors(self):
+        licence = LicencePayload.objects.get()
+        licence.data["type"] = "INVALID_TYPE"
+        licence.save()
+
+        with self.assertRaises(EdifactValidationError) as context:
+            licences_to_edifact(LicencePayload.objects.filter(is_processed=False), 1234)
+
+
+class LicenceToEdifactValidationTests(LiteHMRCTestClient):
+    @parameterized.expand(
+        [
+            ("1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\202104090304\\96839\\Y", 0),
+            ("1\\fileHeader\\SPIRE\\SPIRE\\licenceData\\202104090304\\96839\\Y", 1),
+            ("1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\202104090304\\96839", 1),
+            ("1\\fileHeaders\\SPIRE\\CHIEF\\licenceUpdate\\202104090304\\96839\\Y", 2),
+            ("1\\fileHeader\\SPIRE\\CHIEF\\licenceUpdate\\202104090304\\96839\\T", 2),
+        ]
+    )
+    def test_file_header_validation(self, header, num_errors):
+        errors = edifact_validator.validate_file_header(header)
+        self.assertEqual(len(errors), num_errors)
+
+    @parameterized.expand(
+        [
+            ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIE\\E\\20210408\\20220408", 0),
+            ("2\\licences\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIE\\E\\20210408\\20220408", 1),
+            ("2\\licences\\20210000006TA\\add\\GBSIEL/2021/0000006/T/A\\SIE\\E\\20210408\\20220408", 2),
+            ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIEL\\E\\20210408\\20220408", 1),
+            ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIEL\\T\\20210408\\20220408", 2),
+        ]
+    )
+    def test_licence_transaction_header_validation(self, licence_tx_line, num_errors):
+        errors = edifact_validator.validate_licence_transaction_header("licenceData", licence_tx_line)
+        self.assertEqual(len(errors), num_errors)
+
+    @parameterized.expand(
+        [
+            (
+                "3\\trader\\\\6\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2CD",
+                0,
+            ),
+            (
+                "3\\traders\\\\6\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2CD",
+                1,
+            ),
+            (
+                "3\\trader\\\\\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2CD",
+                1,
+            ),
+            (
+                "3\\trader\\\\\\20210408\\20200408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2CD",
+                2,
+            ),
+        ]
+    )
+    def test_permitted_trader_validation(self, line, num_errors):
+        errors = edifact_validator.validate_permitted_trader(line)
+        self.assertEqual(len(errors), num_errors)
+
+    @parameterized.expand(
+        [
+            ("4\\country\\AU\\\\D", 0),
+            ("4\\country\\AU\\", 1),
+            ("4\\country\\AU\\\\T", 1),
+            ("4\\country_id\\AU\\AU\\D", 2),
+        ]
+    )
+    def test_country_validation(self, line, num_errors):
+        errors = edifact_validator.validate_country(line)
+        self.assertEqual(len(errors), num_errors)
+
+    @parameterized.expand(
+        [
+            ("5\\foreignTrader\\Test party\\1234\\\\\\\\\\\\AU", 0),
+            ("5\\foreignTrader\\Test party\\1234\\\\\\\\\\", 1),
+            ("5\\foreignTraders\\Test party\\1234\\\\\\\\\\\\AU", 1),
+        ]
+    )
+    def test_foreign_trader_validation(self, line, num_errors):
+        errors = edifact_validator.validate_foreign_trader(line)
+        self.assertEqual(len(errors), num_errors)
+
+    @parameterized.expand(
+        [
+            ("6\\restrictions\\Provisos may apply please see licence", 0),
+            ("6\\restrictions", 1),
+            ("6\\restrictionsline\\Provisos may apply please see licence", 1),
+        ]
+    )
+    def test_restrictions_validation(self, line, num_errors):
+        errors = edifact_validator.validate_restrictions(line)
+        self.assertEqual(len(errors), num_errors)
+
+    @parameterized.expand(
+        [
+            ("7\\line\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\4", 0),
+            ("7\\line\\1\\\\\\\\\\Rifle\\Q\\\\030\\", 1),
+            ("7\\lines\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\4", 1),
+            ("7\\line\\1\\\\\\\\\\Rifle\\T\\\\30\\\\4", 2),
+            ("7\\lines\\1\\\\\\\\\\\\Q\\\\030\\\\4", 2),
+        ]
+    )
+    def test_licence_product_line_validation(self, line, num_errors):
+        errors = edifact_validator.validate_licence_product_line(line)
+        self.assertEqual(len(errors), num_errors)
+
+    @parameterized.expand(
+        [("10\\end\\licence\\9", 0), ("10\\end\\licence", 1), ("10\\ending\\licence\\9", 1),]
+    )
+    def test_end_line_validation(self, line, num_errors):
+        errors = edifact_validator.validate_end_line(line)
+        self.assertEqual(len(errors), num_errors)
+
+    @parameterized.expand(
+        [("11\\fileTrailer\\1", 0), ("11\\fileTrailer", 1), ("11\\fileTrailers\\1", 1),]
+    )
+    def test_file_trailer_validation(self, line, num_errors):
+        errors = edifact_validator.validate_file_trailer(line)
+        self.assertEqual(len(errors), num_errors)

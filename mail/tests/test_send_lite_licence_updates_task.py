@@ -6,6 +6,7 @@ from mail.enums import ReceptionStatusEnum
 from mail.models import LicencePayload, Mail
 from mail.tasks import send_licence_data_to_hmrc
 from mail.tests.libraries.client import LiteHMRCTestClient
+from mail.libraries.lite_to_edifact_converter import EdifactValidationError
 
 
 @mock.patch("mail.apps.BACKGROUND_TASK_ENABLED", False)  # Disable task from being run on app initialization
@@ -54,3 +55,9 @@ class TaskTests(LiteHMRCTestClient):
         send.return_value = None
         send_licence_data_to_hmrc.now()
         self.assertEqual(LicencePayload.objects.filter(is_processed=True).count(), 1)
+
+    @mock.patch("mail.libraries.lite_to_edifact_converter.validate_edifact_file")
+    def test_exception(self, validator):
+        validator.side_effect = EdifactValidationError()
+        with self.assertRaises(EdifactValidationError):
+            send_licence_data_to_hmrc.now()
