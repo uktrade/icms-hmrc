@@ -176,20 +176,36 @@ class LicenceToEdifactValidationTests(LiteHMRCTestClient):
     @parameterized.expand(
         [
             (
-                "3\\trader\\\\6\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2CD",
+                "3\\trader\\\\6\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
                 0,
             ),
             (
-                "3\\traders\\\\6\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2CD",
+                "3\\traders\\\\6\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
                 1,
             ),
             (
-                "3\\trader\\\\\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2CD",
+                "3\\trader\\\\\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
                 1,
             ),
             (
-                "3\\trader\\\\\\20210408\\20200408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2CD",
+                "3\\trader\\\\\\20210408\\20200408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
                 2,
+            ),
+            (
+                "3\\trader\\\\\\20210408\\20200408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\Islington",
+                3,
+            ),
+            (
+                "3\\trader\\\\6\\20210408\\20220408\\Very long organisation name to trigger validation error, max length is 80 characters\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
+                1,
+            ),
+            (
+                "3\\trader\\\\6\\20210408\\20220408\\Very long organisation name to trigger validation error, max length is 80 characters\\This is a very long address line to trigger error\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
+                2,
+            ),
+            (
+                "3\\trader\\\\6\\20210408\\20220408\\Very long organisation name to trigger validation error, max length is 80 characters\\This is a very long address line to trigger error\\windsor house\\\\Windsor\\Surrey\\INVALID POSTCODE",
+                3,
             ),
         ]
     )

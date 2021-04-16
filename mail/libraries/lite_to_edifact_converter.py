@@ -17,7 +17,8 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
     now = timezone.now()
     time_stamp = "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
 
-    edifact_file = "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\{}\\{}\\Y".format(time_stamp, run_number)
+    reset_run_number_indicator = "Y"
+    edifact_file = f"1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\{time_stamp}\\{run_number}\\{reset_run_number_indicator}"
 
     line_no = 1
     for licence in licences:
