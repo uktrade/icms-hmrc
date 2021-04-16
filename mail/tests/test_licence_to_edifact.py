@@ -48,7 +48,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             + "\\1234\\Y"
             + "\n2\\licence\\20200000001P\\insert\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
-            + f"\n3\\trader\\\\{org_mapping.rpa_trader_id}\\20200602\\20220602\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Tennessee\\99580"
+            + f"\n3\\trader\\\\{org_mapping.rpa_trader_id}\\20200602\\20220602\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Farnborough\\GU40 2LX"
             + "\n4\\country\\GB\\\\D"
             + "\n5\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
             + "\n6\\restrictions\\Provisos may apply please see licence"
@@ -105,7 +105,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
             + "\n3\\end\\licence\\2"
             + "\n4\\licence\\20200000001Pa\\insert\\GBSIEL/2020/0000001/P/a\\SIE\\E\\20200602\\20220703"
-            + f"\n5\\trader\\\\{org_mapping.rpa_trader_id}\\20200602\\20220703\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Tennessee\\99580"
+            + f"\n5\\trader\\\\{org_mapping.rpa_trader_id}\\20200602\\20220703\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Farnborough\\GU40 2LX"
             + "\n6\\country\\GB\\\\D"
             + "\n7\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
             + "\n8\\restrictions\\Provisos may apply please see licence"
@@ -144,6 +144,29 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
 
         with self.assertRaises(EdifactValidationError) as context:
             licences_to_edifact(LicencePayload.objects.filter(is_processed=False), 1234)
+
+    def test_foreign_trader_address_sanitize(self):
+        lp = LicencePayload.objects.get()
+        lp.is_processed = True
+        lp.save()
+        payload = self.licence_payload_json.copy()
+        payload["licence"]["end_user"]["name"] = "Advanced Firearms Limited"
+        payload["licence"]["end_user"]["address"][
+            "line_1"
+        ] = "50 Industrial Estate\nVery long address line_2 exceeding 35 chars\nVery long address line_3 exceeding 35 chars\nQueensland\nNSW 42551"
+        LicencePayload.objects.create(
+            reference="GBSIEL/2021/0000001/P",
+            data=payload["licence"],
+            action=LicenceActionEnum.INSERT,
+            lite_id="00000000-0000-0000-0000-9792333e8cc8",
+        )
+        licences = LicencePayload.objects.filter(is_processed=False)
+        edifact_file = licences_to_edifact(licences, 1234)
+        foreign_trader_line = edifact_file.split("\n")[4]
+        self.assertEqual(
+            foreign_trader_line,
+            "5\\foreignTrader\\Advanced Firearms Limited\\50 Industrial Estate Very long\\address line_2 exceeding 35 chars\\Very long address line_3 exceeding\\35 chars Queensland NSW 42551\\\\\\GB",
+        )
 
 
 class LicenceToEdifactValidationTests(LiteHMRCTestClient):
@@ -230,6 +253,18 @@ class LicenceToEdifactValidationTests(LiteHMRCTestClient):
             ("5\\foreignTrader\\Test party\\1234\\\\\\\\\\\\AU", 0),
             ("5\\foreignTrader\\Test party\\1234\\\\\\\\\\", 1),
             ("5\\foreignTraders\\Test party\\1234\\\\\\\\\\\\AU", 1),
+            (
+                "5\\foreignTrader\\Advanced Firearms Limited\\50 Industrial Estate Very long\\address line_2 exceeding 35 chars\\Very long address line_3 exceeding\\35 chars Queensland NSW 42551\\\\\\GB",
+                0,
+            ),
+            (
+                "5\\foreignTrader\\Advanced Firearms Limited\\50 Industrial Estate Very long\\address line_2 exceeding 35 chars\\Very long address line_3 exceeding\\35 chars Queensland NSW 42551 make it longer\\\\\\GB",
+                1,
+            ),
+            (
+                "5\\foreignTrader\\Advanced Firearms Limited\\50 Industrial Estate Very long\\address line_2 exceeding 35 chars\\Very long address line_3 exceeding\\35 chars Queensland NSW 42551\\\\123456789\\GBR",
+                2,
+            ),
         ]
     )
     def test_foreign_trader_validation(self, line, num_errors):

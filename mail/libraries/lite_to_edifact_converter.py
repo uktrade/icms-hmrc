@@ -1,4 +1,5 @@
 import logging
+import textwrap
 
 from django.db.models import QuerySet
 from django.utils import timezone
@@ -6,7 +7,11 @@ from django.utils import timezone
 from mail.enums import UnitMapping, LicenceActionEnum, LicenceTypeEnum, LITE_HMRC_LICENCE_TYPE_MAPPING
 from mail.libraries.helpers import get_country_id
 from mail.models import OrganisationIdMapping, GoodIdMapping, LicencePayload
-from mail.libraries.edifact_validator import validate_edifact_file
+from mail.libraries.edifact_validator import (
+    validate_edifact_file,
+    FOREIGN_TRADER_NUM_ADDR_LINES,
+    FOREIGN_TRADER_ADDR_LINE_MAX_LEN,
+)
 
 
 class EdifactValidationError(Exception):
@@ -104,6 +109,7 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
 
             if licence_payload.get("end_user"):
                 trader = licence_payload.get("end_user")
+                trader = sanitize_foreign_trader_address(trader)
                 line_no += 1
                 edifact_file += "\n{}\\foreignTrader\\{}\\{}\\{}\\{}\\{}\\{}\\{}\\{}".format(
                     line_no,
@@ -156,3 +162,26 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
 def get_transaction_reference(licence_reference: str) -> str:
     licence_reference = licence_reference.split("/", 1)[1]
     return licence_reference.replace("/", "")
+
+
+def sanitize_foreign_trader_address(trader):
+    """
+    Foreign trader/End user address is currently a single text field.
+    User may enter in multiple lines or in a single line separated so we try to
+    break them in chunks of 35 chars and populate them as address lines
+    """
+    address = trader["address"]
+    # line_1 contains the complete address at this point
+    if len(address["line_1"]) <= FOREIGN_TRADER_ADDR_LINE_MAX_LEN:
+        return trader
+
+    addr_line = address.pop("line_1")
+    addr_line = addr_line.replace("\n", " ").replace("\r", " ")
+    addr_lines = textwrap.wrap(addr_line, width=FOREIGN_TRADER_ADDR_LINE_MAX_LEN, break_long_words=False)
+    if len(addr_lines) > FOREIGN_TRADER_NUM_ADDR_LINES:
+        addr_lines = addr_lines[:FOREIGN_TRADER_NUM_ADDR_LINES]
+
+    for index, line in enumerate(addr_lines, start=1):
+        address[f"line_{index}"] = line
+
+    return trader
