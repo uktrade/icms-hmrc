@@ -1,10 +1,19 @@
+import re
+
 from mail.enums import LicenceActionEnum, LITE_HMRC_LICENCE_TYPE_MAPPING
 
 FILE_HEADER_FIELDS_LEN = 8
 LICENCE_TRANSACTION_HEADER_FIELDS_LEN = 9
 PERMITTED_TRADER_HEADER_FIELDS_LEN = 13
+PERMITTED_TRADER_NAME_MAX_LEN = 80
+PERMITTED_TRADER_ADDR_LINE_MAX_LEN = 35
 COUNTRY_FIELDS_LEN = 5
 FOREIGN_TRADER_FIELDS_LEN = 10
+FOREIGN_TRADER_NAME_MAX_LEN = 80
+FOREIGN_TRADER_NUM_ADDR_LINES = 5
+FOREIGN_TRADER_ADDR_LINE_MAX_LEN = 35
+FOREIGN_TRADER_POSTCODE_MAX_LEN = 8
+FOREIGN_TRADER_COUNTRY_MAX_LEN = 2
 LICENCE_LINE_FIELDS_LEN = 13
 FILE_TRAILER_FIELDS_LEN = 3
 
@@ -66,6 +75,26 @@ def validate_licence_transaction_header(data_identifier, record):
     return errors
 
 
+def is_postcode_valid(value):
+    """
+    Postcode validator for UK based postcodes only
+    Reused from lite-api (validate_postcode() in api/addresses/serializers.py)
+    """
+    outcode_pattern = "[A-PR-UWYZ]([0-9]{1,2}|([A-HIK-Y][0-9](|[0-9]|[ABEHMNPRVWXY]))|[0-9][A-HJKSTUW])"
+    incode_pattern = "[0-9][ABD-HJLNP-UW-Z]{2}"
+    postcode_regex = re.compile(r"^(GIR 0AA|%s %s)$" % (outcode_pattern, incode_pattern))
+    space_regex = re.compile(r" *(%s)$" % incode_pattern)
+
+    postcode = value.upper().strip()
+    # Put a single space before the incode (second part).
+    postcode = space_regex.sub(r" \1", postcode)
+
+    if not postcode_regex.search(postcode):
+        return False
+
+    return True
+
+
 def validate_permitted_trader(record):
     errors = []
     tokens = record.split("\\")
@@ -85,6 +114,17 @@ def validate_permitted_trader(record):
 
     if int(tokens[5]) < int(tokens[4]):
         errors.append({record_type: "Invalid start and end dates for the licence"})
+
+    organisation_name = tokens[6]
+    if len(organisation_name) > PERMITTED_TRADER_NAME_MAX_LEN:
+        errors.append({record_type: f"Organisation name cannot exceed {PERMITTED_TRADER_NAME_MAX_LEN} chars"})
+
+    for i in range(5):
+        if len(tokens[7 + i]) > PERMITTED_TRADER_ADDR_LINE_MAX_LEN:
+            errors.append({record_type: f"Address line cannot exceed {PERMITTED_TRADER_ADDR_LINE_MAX_LEN} chars"})
+
+    if not is_postcode_valid(tokens[12]):
+        errors.append({record_type: f"Invalid postcode found {tokens[12]}"})
 
     return errors
 
@@ -121,6 +161,28 @@ def validate_foreign_trader(record):
 
     if tokens[1] != "foreignTrader":
         errors.append({record_type: f"Invalid file header tag {tokens[1]}"})
+
+    name = tokens[2]
+    if len(name) > FOREIGN_TRADER_NAME_MAX_LEN:
+        errors.append({record_type: f"Foreign trader name ({name}) cannot exceed {FOREIGN_TRADER_NAME_MAX_LEN} chars"})
+
+    for index, line in enumerate(tokens[3:8], start=1):
+        if len(line) > FOREIGN_TRADER_ADDR_LINE_MAX_LEN:
+            errors.append(
+                {record_type: f"Address line_{index} ({line}) trader exceeds {FOREIGN_TRADER_ADDR_LINE_MAX_LEN} chars"}
+            )
+
+    postcode = tokens[8]
+    country = tokens[9]
+    if len(postcode) > FOREIGN_TRADER_POSTCODE_MAX_LEN:
+        errors.append(
+            {record_type: f"Foreign trader postcode ({postcode}) exceeds {FOREIGN_TRADER_POSTCODE_MAX_LEN} chars"}
+        )
+
+    if len(country) > FOREIGN_TRADER_COUNTRY_MAX_LEN:
+        errors.append(
+            {record_type: f"Foreign trader country code ({country}) exceeds {FOREIGN_TRADER_COUNTRY_MAX_LEN} chars"}
+        )
 
     return errors
 
