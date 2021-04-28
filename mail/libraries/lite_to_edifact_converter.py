@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from mail.enums import UnitMapping, LicenceActionEnum, LicenceTypeEnum, LITE_HMRC_LICENCE_TYPE_MAPPING
 from mail.libraries.helpers import get_country_id
-from mail.models import OrganisationIdMapping, GoodIdMapping, LicencePayload
+from mail.models import GoodIdMapping, LicencePayload
 from mail.libraries.edifact_validator import (
     validate_edifact_file,
     FOREIGN_TRADER_NUM_ADDR_LINES,
@@ -128,7 +128,7 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
                         lite_id=commodity["id"], licence_reference=licence.reference, line_number=g
                     )
                     controlled_by = "Q"  # usage is controlled by quantity only
-                    edifact_file += "\n{}\\line\\{}\\\\\\\\\\{}\\{}\\\\{:03d}\\\\{}".format(
+                    edifact_file += "\n{}\\line\\{}\\\\\\\\\\{}\\{}\\\\{:03d}\\\\{}\\\\\\\\\\\\".format(
                         line_no,
                         g,
                         commodity.get("name"),

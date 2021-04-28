@@ -10,7 +10,7 @@ from mail.libraries.lite_to_edifact_converter import (
     get_transaction_reference,
     EdifactValidationError,
 )
-from mail.models import LicencePayload, Mail, OrganisationIdMapping, GoodIdMapping
+from mail.models import LicencePayload, Mail, GoodIdMapping
 from mail.tasks import send_licence_data_to_hmrc
 from mail.tests.libraries.client import LiteHMRCTestClient
 from mail.libraries import edifact_validator
@@ -38,9 +38,6 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
 
         result = licences_to_edifact(licences, 1234)
         trader = licences[0].data["organisation"]
-        org_mapping, _ = OrganisationIdMapping.objects.get_or_create(
-            lite_id=trader["id"], defaults={"lite_id": trader["id"]}
-        )
         now = timezone.now()
         expected = (
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
@@ -51,7 +48,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             + "\n4\\country\\GB\\\\D"
             + "\n5\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
             + "\n6\\restrictions\\Provisos may apply please see licence"
-            + "\n7\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\10"
+            + "\n7\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\10\\\\\\\\\\\\"
             + "\n8\\end\\licence\\7"
             + "\n9\\fileTrailer\\1"
         )
@@ -105,7 +102,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             + "\n6\\country\\GB\\\\D"
             + "\n7\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
             + "\n8\\restrictions\\Provisos may apply please see licence"
-            + "\n9\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\15"
+            + "\n9\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\15\\\\\\\\\\\\"
             + "\n10\\end\\licence\\7"
             + "\n11\\fileTrailer\\2"
         )
@@ -280,11 +277,11 @@ class LicenceToEdifactValidationTests(LiteHMRCTestClient):
 
     @parameterized.expand(
         [
-            ("7\\line\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\4", 0),
-            ("7\\line\\1\\\\\\\\\\Rifle\\Q\\\\030\\", 1),
-            ("7\\lines\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\4", 1),
-            ("7\\line\\1\\\\\\\\\\Rifle\\T\\\\30\\\\4", 2),
-            ("7\\lines\\1\\\\\\\\\\\\Q\\\\030\\\\4", 2),
+            ("7\\line\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\4\\\\\\\\\\\\", 0),
+            ("7\\line\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\\\\\\\\\\\", 1),
+            ("7\\lines\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\4\\\\\\\\\\\\", 1),
+            ("7\\line\\1\\\\\\\\\\Rifle\\T\\\\30\\\\4\\\\\\\\\\\\", 2),
+            ("7\\lines\\1\\\\\\\\\\\\Q\\\\030\\\\4\\\\\\\\\\\\", 2),
         ]
     )
     def test_licence_product_line_validation(self, line, num_errors):
