@@ -112,6 +112,9 @@ def validate_permitted_trader(record):
     if TURN == "" and rpa_trader_id == "":
         errors.append({record_type: "RPA Trader Id must not be empty when TURN is empty"})
 
+    if len(rpa_trader_id) < 12 or len(rpa_trader_id) > 15:
+        errors.append({record_type: "RPA Trader Id must be of atleast 12 chars and max 15 chars wide"})
+
     if int(tokens[5]) < int(tokens[4]):
         errors.append({record_type: "Invalid start and end dates for the licence"})
 

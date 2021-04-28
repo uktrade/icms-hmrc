@@ -72,14 +72,11 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
             )
         if licence.action != LicenceActionEnum.CANCEL:
             trader = licence_payload.get("organisation")
-            org_mapping, _ = OrganisationIdMapping.objects.get_or_create(
-                lite_id=trader["id"], defaults={"lite_id": trader["id"]}
-            )
             line_no += 1
             edifact_file += "\n{}\\trader\\{}\\{}\\{}\\{}\\{}\\{}\\{}\\{}\\{}\\{}\\{}".format(
                 line_no,
                 "",  # turn
-                org_mapping.rpa_trader_id,
+                trader.get("eori_number", ""),
                 licence_payload.get("start_date").replace("-", ""),
                 licence_payload.get("end_date").replace("-", ""),
                 trader.get("name"),
