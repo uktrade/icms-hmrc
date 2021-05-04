@@ -10,7 +10,7 @@ from mail.libraries.lite_to_edifact_converter import (
     get_transaction_reference,
     EdifactValidationError,
 )
-from mail.models import LicencePayload, Mail, OrganisationIdMapping, GoodIdMapping
+from mail.models import LicencePayload, Mail, GoodIdMapping
 from mail.tasks import send_licence_data_to_hmrc
 from mail.tests.libraries.client import LiteHMRCTestClient
 from mail.libraries import edifact_validator
@@ -28,7 +28,6 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
 
         licences_to_edifact(LicencePayload.objects.filter(), 1234)
 
-        self.assertEqual(OrganisationIdMapping.objects.filter(lite_id=organisation_id).count(), 1)
         self.assertEqual(
             GoodIdMapping.objects.filter(lite_id=good_id, line_number=1, licence_reference=licence.reference).count(), 1
         )
@@ -39,20 +38,17 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
 
         result = licences_to_edifact(licences, 1234)
         trader = licences[0].data["organisation"]
-        org_mapping, _ = OrganisationIdMapping.objects.get_or_create(
-            lite_id=trader["id"], defaults={"lite_id": trader["id"]}
-        )
         now = timezone.now()
         expected = (
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             + "\\1234\\Y"
             + "\n2\\licence\\20200000001P\\insert\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
-            + f"\n3\\trader\\\\{org_mapping.rpa_trader_id}\\20200602\\20220602\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Farnborough\\GU40 2LX"
+            + f"\n3\\trader\\\\{trader['eori_number']}\\20200602\\20220602\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Farnborough\\GU40 2LX"
             + "\n4\\country\\GB\\\\D"
             + "\n5\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
             + "\n6\\restrictions\\Provisos may apply please see licence"
-            + "\n7\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\10"
+            + "\n7\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\10\\\\\\\\\\\\"
             + "\n8\\end\\licence\\7"
             + "\n9\\fileTrailer\\1"
         )
@@ -94,9 +90,6 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         result = licences_to_edifact(licences, 1234)
 
         trader = licences[0].data["organisation"]
-        org_mapping, _ = OrganisationIdMapping.objects.get_or_create(
-            lite_id=trader["id"], defaults={"lite_id": trader["id"]}
-        )
         now = timezone.now()
         expected = (
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
@@ -105,11 +98,11 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
             + "\n3\\end\\licence\\2"
             + "\n4\\licence\\20200000001Pa\\insert\\GBSIEL/2020/0000001/P/a\\SIE\\E\\20200602\\20220703"
-            + f"\n5\\trader\\\\{org_mapping.rpa_trader_id}\\20200602\\20220703\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Farnborough\\GU40 2LX"
+            + f"\n5\\trader\\\\{trader['eori_number']}\\20200602\\20220703\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Farnborough\\GU40 2LX"
             + "\n6\\country\\GB\\\\D"
             + "\n7\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
             + "\n8\\restrictions\\Provisos may apply please see licence"
-            + "\n9\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\15"
+            + "\n9\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\15\\\\\\\\\\\\"
             + "\n10\\end\\licence\\7"
             + "\n11\\fileTrailer\\2"
         )
@@ -199,35 +192,35 @@ class LicenceToEdifactValidationTests(LiteHMRCTestClient):
     @parameterized.expand(
         [
             (
-                "3\\trader\\\\6\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
+                "3\\trader\\\\GB123456789000\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
                 0,
             ),
             (
-                "3\\traders\\\\6\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
+                "3\\traders\\\\GB123456789000\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
                 1,
             ),
             (
                 "3\\trader\\\\\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
-                1,
-            ),
-            (
-                "3\\trader\\\\\\20210408\\20200408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
                 2,
             ),
             (
-                "3\\trader\\\\\\20210408\\20200408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\Islington",
+                "3\\trader\\\\\\20210408\\20200408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
                 3,
             ),
             (
-                "3\\trader\\\\6\\20210408\\20220408\\Very long organisation name to trigger validation error, max length is 80 characters\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
+                "3\\trader\\\\GB123456789000\\20210408\\20200408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\Islington",
+                2,
+            ),
+            (
+                "3\\trader\\\\GB123456789000\\20210408\\20220408\\Very long organisation name to trigger validation error, max length is 80 characters\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
                 1,
             ),
             (
                 "3\\trader\\\\6\\20210408\\20220408\\Very long organisation name to trigger validation error, max length is 80 characters\\This is a very long address line to trigger error\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
-                2,
+                3,
             ),
             (
-                "3\\trader\\\\6\\20210408\\20220408\\Very long organisation name to trigger validation error, max length is 80 characters\\This is a very long address line to trigger error\\windsor house\\\\Windsor\\Surrey\\INVALID POSTCODE",
+                "3\\trader\\\\GB123456789000\\20210408\\20220408\\Very long organisation name to trigger validation error, max length is 80 characters\\This is a very long address line to trigger error\\windsor house\\\\Windsor\\Surrey\\INVALID POSTCODE",
                 3,
             ),
         ]
@@ -284,11 +277,11 @@ class LicenceToEdifactValidationTests(LiteHMRCTestClient):
 
     @parameterized.expand(
         [
-            ("7\\line\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\4", 0),
-            ("7\\line\\1\\\\\\\\\\Rifle\\Q\\\\030\\", 1),
-            ("7\\lines\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\4", 1),
-            ("7\\line\\1\\\\\\\\\\Rifle\\T\\\\30\\\\4", 2),
-            ("7\\lines\\1\\\\\\\\\\\\Q\\\\030\\\\4", 2),
+            ("7\\line\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\4\\\\\\\\\\\\", 0),
+            ("7\\line\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\\\\\\\\\\\", 1),
+            ("7\\lines\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\4\\\\\\\\\\\\", 1),
+            ("7\\line\\1\\\\\\\\\\Rifle\\T\\\\30\\\\4\\\\\\\\\\\\", 2),
+            ("7\\lines\\1\\\\\\\\\\\\Q\\\\030\\\\4\\\\\\\\\\\\", 2),
         ]
     )
     def test_licence_product_line_validation(self, line, num_errors):

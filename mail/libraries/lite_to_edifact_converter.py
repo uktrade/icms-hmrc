@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from mail.enums import UnitMapping, LicenceActionEnum, LicenceTypeEnum, LITE_HMRC_LICENCE_TYPE_MAPPING
 from mail.libraries.helpers import get_country_id
-from mail.models import OrganisationIdMapping, GoodIdMapping, LicencePayload
+from mail.models import GoodIdMapping, LicencePayload
 from mail.libraries.edifact_validator import (
     validate_edifact_file,
     FOREIGN_TRADER_NUM_ADDR_LINES,
@@ -72,14 +72,11 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
             )
         if licence.action != LicenceActionEnum.CANCEL:
             trader = licence_payload.get("organisation")
-            org_mapping, _ = OrganisationIdMapping.objects.get_or_create(
-                lite_id=trader["id"], defaults={"lite_id": trader["id"]}
-            )
             line_no += 1
             edifact_file += "\n{}\\trader\\{}\\{}\\{}\\{}\\{}\\{}\\{}\\{}\\{}\\{}\\{}".format(
                 line_no,
                 "",  # turn
-                org_mapping.rpa_trader_id,
+                trader.get("eori_number", ""),
                 licence_payload.get("start_date").replace("-", ""),
                 licence_payload.get("end_date").replace("-", ""),
                 trader.get("name"),
@@ -131,7 +128,7 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
                         lite_id=commodity["id"], licence_reference=licence.reference, line_number=g
                     )
                     controlled_by = "Q"  # usage is controlled by quantity only
-                    edifact_file += "\n{}\\line\\{}\\\\\\\\\\{}\\{}\\\\{:03d}\\\\{}".format(
+                    edifact_file += "\n{}\\line\\{}\\\\\\\\\\{}\\{}\\\\{:03d}\\\\{}\\\\\\\\\\\\".format(
                         line_no,
                         g,
                         commodity.get("name"),

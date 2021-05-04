@@ -14,7 +14,7 @@ FOREIGN_TRADER_NUM_ADDR_LINES = 5
 FOREIGN_TRADER_ADDR_LINE_MAX_LEN = 35
 FOREIGN_TRADER_POSTCODE_MAX_LEN = 8
 FOREIGN_TRADER_COUNTRY_MAX_LEN = 2
-LICENCE_LINE_FIELDS_LEN = 13
+LICENCE_LINE_FIELDS_LEN = 19
 FILE_TRAILER_FIELDS_LEN = 3
 
 VALID_ACTIONS_TO_HMRC = [choice[0] for choice in LicenceActionEnum.choices]
@@ -111,6 +111,9 @@ def validate_permitted_trader(record):
 
     if TURN == "" and rpa_trader_id == "":
         errors.append({record_type: "RPA Trader Id must not be empty when TURN is empty"})
+
+    if len(rpa_trader_id) < 12 or len(rpa_trader_id) > 15:
+        errors.append({record_type: "RPA Trader Id must be of atleast 12 chars and max 15 chars wide"})
 
     if int(tokens[5]) < int(tokens[4]):
         errors.append({record_type: "Invalid start and end dates for the licence"})
