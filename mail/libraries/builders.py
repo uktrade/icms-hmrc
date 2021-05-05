@@ -13,7 +13,7 @@ from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import convert_source_to_sender
 from mail.libraries.lite_to_edifact_converter import licences_to_edifact
 from mail.libraries.usage_data_decomposition import split_edi_data_by_id, build_edifact_file_from_data_blocks
-from mail.models import LicenceData, Mail, UsageUpdate
+from mail.models import LicenceData, Mail, UsageData
 
 
 def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
@@ -30,10 +30,10 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
             build_sent_filename(mail.edi_filename, run_number),
             build_sent_file_data(mail.edi_data, run_number),
         ]
-    elif mail.extract_type == ExtractTypeEnum.USAGE_UPDATE:
+    elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
         sender = settings.HMRC_ADDRESS
         receiver = settings.SPIRE_ADDRESS
-        update = UsageUpdate.objects.get(mail=mail)
+        update = UsageData.objects.get(mail=mail)
         run_number = update.spire_run_number
         spire_data, _ = split_edi_data_by_id(mail.edi_data)
         if len(spire_data) > 2:  # if SPIRE blocks contain more than just a header & footer
@@ -84,9 +84,9 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
         licence_data = LicenceData.objects.get(mail=mail)
         run_number = licence_data.source_run_number
         receiver = convert_source_to_sender(licence_data.source)
-    elif mail.extract_type == ExtractTypeEnum.USAGE_UPDATE:
-        usage_update = UsageUpdate.objects.get(mail=mail)
-        run_number = usage_update.hmrc_run_number
+    elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
+        usage_data = UsageData.objects.get(mail=mail)
+        run_number = usage_data.hmrc_run_number
         sender = settings.SPIRE_ADDRESS
         receiver = settings.HMRC_ADDRESS
         mail.response_data = combine_lite_and_spire_usage_responses(mail)

@@ -1,11 +1,11 @@
 from django.utils import timezone
 
-from mail.models import UsageUpdate, LicenceIdMapping, GoodIdMapping, TransactionMapping
+from mail.models import UsageData, LicenceIdMapping, GoodIdMapping, TransactionMapping
 
 
 def combine_lite_and_spire_usage_responses(mail) -> str:  # noqa
-    usage_update = UsageUpdate.objects.get(mail=mail)
-    lite_response = usage_update.lite_response
+    usage_data = UsageData.objects.get(mail=mail)
+    lite_response = usage_data.lite_response
     spire_response = mail.response_data
     edi_lines = mail.edi_data.split("\n")
 
@@ -39,7 +39,7 @@ def combine_lite_and_spire_usage_responses(mail) -> str:  # noqa
                         transaction_id = TransactionMapping.objects.get(
                             licence_reference=licence_reference,
                             line_number=good_mapping.line_number,
-                            usage_update=usage_update,
+                            usage_data=usage_data,
                         ).usage_transaction
                         edifact_file += "{}\\accepted\\{}\n".format(i, transaction_id)
                         i += 1
@@ -47,7 +47,7 @@ def combine_lite_and_spire_usage_responses(mail) -> str:  # noqa
                 else:
                     licence_reference = LicenceIdMapping.objects.get(lite_id=licence["id"]).reference
                     transaction_id = TransactionMapping.objects.get(
-                        licence_reference=licence_reference, line_number=None, usage_update=usage_update,
+                        licence_reference=licence_reference, line_number=None, usage_data=usage_data,
                     ).usage_transaction
                     edifact_file += "{}\\accepted\\{}\n".format(i, transaction_id)
                     i += 1
@@ -60,7 +60,7 @@ def combine_lite_and_spire_usage_responses(mail) -> str:  # noqa
                     transaction = TransactionMapping.objects.get(
                         licence_reference=licence_reference,
                         line_number=good_mapping.line_number,
-                        usage_update=usage_update,
+                        usage_data=usage_data,
                     )
                     transaction_id = transaction.usage_transaction
                     start_line = i - 1

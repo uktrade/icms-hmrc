@@ -9,7 +9,7 @@ from json.decoder import JSONDecodeError
 
 from mail.enums import SourceEnum, ExtractTypeEnum, UnitMapping, ReceptionStatusEnum
 from mail.libraries.email_message_dto import EmailMessageDto, HmrcEmailMessageDto
-from mail.models import LicenceData, UsageUpdate, Mail, GoodIdMapping, LicenceIdMapping
+from mail.models import LicenceData, UsageData, Mail, GoodIdMapping, LicenceIdMapping
 
 ALLOWED_FILE_MIMETYPES = ["application/octet-stream", "text/plain"]
 
@@ -169,13 +169,13 @@ def new_hmrc_run_number(dto_run_number: int) -> int:
 
 
 def new_spire_run_number(dto_run_number: int) -> int:
-    last_usage_update = UsageUpdate.objects.last()
-    if last_usage_update:
+    last_usage_data = UsageData.objects.last()
+    if last_usage_data:
         dto_run_number = dto_run_number % 100000
-        if not last_usage_update.hmrc_run_number == dto_run_number:
-            return last_usage_update.spire_run_number + 1 if last_usage_update.spire_run_number != 99999 else 0
+        if not last_usage_data.hmrc_run_number == dto_run_number:
+            return last_usage_data.spire_run_number + 1 if last_usage_data.spire_run_number != 99999 else 0
         else:
-            return last_usage_update.spire_run_number
+            return last_usage_data.spire_run_number
     return dto_run_number
 
 
@@ -225,17 +225,17 @@ def select_email_for_sending() -> Mail or None:
 
     reply_received = Mail.objects.filter(status=ReceptionStatusEnum.REPLY_RECEIVED).first()
     if reply_received:
-        if reply_received.extract_type == ExtractTypeEnum.USAGE_UPDATE:
-            usage_update = UsageUpdate.objects.get(mail=reply_received)
-            if usage_update.has_lite_data and not usage_update.lite_sent_at:
+        if reply_received.extract_type == ExtractTypeEnum.USAGE_DATA:
+            usage_data = UsageData.objects.get(mail=reply_received)
+            if usage_data.has_lite_data and not usage_data.lite_sent_at:
                 return
         return reply_received
 
     reply_pending = Mail.objects.filter(status=ReceptionStatusEnum.REPLY_PENDING).first()
     if reply_pending:
-        if reply_pending.extract_type == ExtractTypeEnum.USAGE_UPDATE:
-            usage_update = UsageUpdate.objects.get(mail=reply_pending)
-            if not usage_update.has_spire_data:
+        if reply_pending.extract_type == ExtractTypeEnum.USAGE_DATA:
+            usage_data = UsageData.objects.get(mail=reply_pending)
+            if not usage_data.has_spire_data:
                 return reply_pending
         logging.info("Email currently in flight")
         return

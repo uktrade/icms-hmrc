@@ -1,5 +1,5 @@
 from django.contrib import admin
-from mail.models import LicenceData, Mail, MailboxConfig, MailReadStatus, UsageUpdate
+from mail.models import LicenceData, Mail, MailboxConfig, MailReadStatus, UsageData
 
 
 class LicenceDataAdmin(admin.ModelAdmin):
@@ -15,6 +15,6 @@ class MailAdmin(admin.ModelAdmin):
 
 admin.site.register(MailboxConfig)
 admin.site.register(MailReadStatus)
-admin.site.register(UsageUpdate)
+admin.site.register(UsageData)
 admin.site.register(LicenceData, LicenceDataAdmin)
 admin.site.register(Mail, MailAdmin)

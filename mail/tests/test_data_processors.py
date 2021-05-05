@@ -11,7 +11,7 @@ from mail.libraries.data_processors import (
     to_email_message_dto_from,
 )
 from mail.libraries.email_message_dto import EmailMessageDto
-from mail.models import Mail, LicenceData, UsageUpdate
+from mail.models import Mail, LicenceData, UsageData
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
@@ -23,7 +23,7 @@ class TestDataProcessors(LiteHMRCTestClient):
         self.source_run_number = 15
         self.mail = Mail.objects.create(
             edi_data=self.licence_data_file_body.decode("utf-8"),
-            extract_type=ExtractTypeEnum.USAGE_UPDATE,
+            extract_type=ExtractTypeEnum.USAGE_DATA,
             status=ReceptionStatusEnum.REPLY_SENT,
             edi_filename=self.licence_data_reply_name,
         )
@@ -35,7 +35,7 @@ class TestDataProcessors(LiteHMRCTestClient):
             source=SourceEnum.SPIRE,
         )
 
-        self.usage_update = UsageUpdate.objects.create(
+        self.usage_data = UsageData.objects.create(
             mail=self.mail, spire_run_number=self.source_run_number, hmrc_run_number=self.hmrc_run_number,
         )
 
@@ -52,13 +52,13 @@ class TestDataProcessors(LiteHMRCTestClient):
         self.assertRaises(ValidationError, serialize_email_message, email_message_dto)
 
         email = Mail.objects.last()
-        usage_update = UsageUpdate.objects.get(mail=email)
+        usage_data = UsageData.objects.get(mail=email)
 
-        self.assertEqual(email.extract_type, ExtractTypeEnum.USAGE_UPDATE)
+        self.assertEqual(email.extract_type, ExtractTypeEnum.USAGE_DATA)
         self.assertEqual(email.response_filename, None)
         self.assertEqual(email.response_data, None)
-        self.assertEqual(usage_update.hmrc_run_number, self.hmrc_run_number)
-        self.assertEqual(usage_update.spire_run_number, email_message_dto.run_number)
+        self.assertEqual(usage_data.hmrc_run_number, self.hmrc_run_number)
+        self.assertEqual(usage_data.spire_run_number, email_message_dto.run_number)
         self.assertEqual(email.raw_data, email_message_dto.raw_data)
 
     def test_successful_email_db_record_converted_to_dto(self):
@@ -66,7 +66,7 @@ class TestDataProcessors(LiteHMRCTestClient):
 
         dto = to_email_message_dto_from(self.mail)
 
-        self.assertEqual(dto.run_number, self.usage_update.spire_run_number)
+        self.assertEqual(dto.run_number, self.usage_data.spire_run_number)
         self.assertEqual(dto.sender, HMRC_ADDRESS)
         self.assertEqual("ILBDOTI_live_CHIEF_licenceReply_49543_201902080025", self.mail.edi_filename)
         self.assertEqual("ILBDOTI_live_CHIEF_licenceReply_49543_201902080025", self.mail.edi_filename)
@@ -95,7 +95,7 @@ class TestDataProcessors(LiteHMRCTestClient):
         self.assertEqual(self.mail.status, ReceptionStatusEnum.REPLY_RECEIVED)
         self.assertIsNotNone(self.mail.response_date)
 
-    def test_usage_update_reply_is_saved(self):
+    def test_usage_data_reply_is_saved(self):
         self.mail.status = ReceptionStatusEnum.REPLY_PENDING
         self.mail.save()
         email_message_dto = EmailMessageDto(
@@ -103,8 +103,8 @@ class TestDataProcessors(LiteHMRCTestClient):
             sender=SPIRE_ADDRESS,
             receiver=HMRC_ADDRESS,
             body="body",
-            subject=self.usage_update_reply_name,
-            attachment=[self.usage_update_reply_name, self.usage_update_reply_body],
+            subject=self.usage_data_reply_name,
+            attachment=[self.usage_data_reply_name, self.usage_data_reply_body],
             raw_data="qwerty",
         )
 
@@ -115,7 +115,7 @@ class TestDataProcessors(LiteHMRCTestClient):
         self.assertIsNotNone(self.mail.response_date)
 
         self.assertIn(
-            self.mail.response_data, self.usage_update_reply_body.decode("utf-8"),
+            self.mail.response_data, self.usage_data_reply_body.decode("utf-8"),
         )
 
     @tag("serialize")

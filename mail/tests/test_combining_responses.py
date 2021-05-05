@@ -1,11 +1,11 @@
 from django.test import tag
 
 from mail.libraries.combine_usage_replies import combine_lite_and_spire_usage_responses
-from mail.models import Mail, GoodIdMapping, LicenceIdMapping, UsageUpdate, TransactionMapping
+from mail.models import Mail, GoodIdMapping, LicenceIdMapping, UsageData, TransactionMapping
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
-class CombiningUsageUpdateReplies(LiteHMRCTestClient):
+class CombiningUsageDataReplies(LiteHMRCTestClient):
     @tag("combine", "end-to-end")
     def test_combine_two_responses(self):
         edi_data = (
@@ -32,7 +32,7 @@ class CombiningUsageUpdateReplies(LiteHMRCTestClient):
         )
 
         lite_response = {
-            "usage_update_id": "1e5a4fd0-e581-4efd-9770-ac68e04852d2",
+            "usage_data_id": "1e5a4fd0-e581-4efd-9770-ac68e04852d2",
             "licences": {
                 "accepted": [
                     {
@@ -76,7 +76,7 @@ class CombiningUsageUpdateReplies(LiteHMRCTestClient):
         )
 
         mail = Mail.objects.create(edi_data=edi_data, response_data=spire_response)
-        usage_update = UsageUpdate.objects.create(
+        usage_data = UsageData.objects.create(
             lite_response=lite_response, spire_run_number=12345, hmrc_run_number=54321, mail=mail
         )
         LicenceIdMapping.objects.create(
@@ -96,19 +96,19 @@ class CombiningUsageUpdateReplies(LiteHMRCTestClient):
             usage_transaction="LU04148/00001",
             line_number=1,
             licence_reference="GBSIEL/2020/0000008/P",
-            usage_update=usage_update,
+            usage_data=usage_data,
         )
         TransactionMapping.objects.create(
             usage_transaction="LU04148/00002",
             line_number=1,
             licence_reference="GBSIEL/2020/0000009/P",
-            usage_update=usage_update,
+            usage_data=usage_data,
         )
         TransactionMapping.objects.create(
             usage_transaction="LU04148/00002",
             line_number=2,
             licence_reference="GBSIEL/2020/0000009/P",
-            usage_update=usage_update,
+            usage_data=usage_data,
         )
 
         result = combine_lite_and_spire_usage_responses(mail=mail)

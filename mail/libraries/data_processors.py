@@ -11,8 +11,8 @@ from mail.libraries.builders import build_request_mail_message_dto, build_reply_
 from mail.libraries.data_converters import (
     convert_data_for_licence_data,
     convert_data_for_licence_data_reply,
-    convert_data_for_usage_update,
-    convert_data_for_usage_update_reply,
+    convert_data_for_usage_data,
+    convert_data_for_usage_data_reply,
 )
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import (
@@ -20,11 +20,11 @@ from mail.libraries.helpers import (
     get_extract_type,
 )
 from mail.libraries.mailbox_service import find_mail_of
-from mail.models import Mail, UsageUpdate, LicenceData
+from mail.models import Mail, UsageData, LicenceData
 from mail.serializers import (
     LicenceDataMailSerializer,
     UpdateResponseSerializer,
-    UsageUpdateMailSerializer,
+    UsageDataMailSerializer,
 )
 
 
@@ -66,10 +66,10 @@ def convert_dto_data_for_serialization(dto: EmailMessageDto, extract_type) -> di
         data = convert_data_for_licence_data(dto)
     elif extract_type == ExtractTypeEnum.LICENCE_REPLY:
         data = convert_data_for_licence_data_reply(dto)
-    elif extract_type == ExtractTypeEnum.USAGE_UPDATE:
-        data = convert_data_for_usage_update(dto)
+    elif extract_type == ExtractTypeEnum.USAGE_DATA:
+        data = convert_data_for_usage_data(dto)
     elif extract_type == ExtractTypeEnum.USAGE_REPLY:
-        data = convert_data_for_usage_update_reply(dto)
+        data = convert_data_for_usage_data_reply(dto)
     else:
         filename, filedata = process_attachment(dto.attachment)
         data = {
@@ -89,8 +89,8 @@ def get_serializer_for_dto(extract_type):
         serializer = LicenceDataMailSerializer
     elif extract_type == ExtractTypeEnum.LICENCE_REPLY:
         serializer = UpdateResponseSerializer
-    elif extract_type == ExtractTypeEnum.USAGE_UPDATE:
-        serializer = UsageUpdateMailSerializer
+    elif extract_type == ExtractTypeEnum.USAGE_DATA:
+        serializer = UsageDataMailSerializer
     elif extract_type == ExtractTypeEnum.USAGE_REPLY:
         serializer = UpdateResponseSerializer
 
@@ -111,7 +111,7 @@ def get_mail_instance(extract_type, run_number) -> Mail or None:
             [ExtractTypeEnum.LICENCE_DATA, ExtractTypeEnum.LICENCE_DATA], ReceptionStatusEnum.REPLY_PENDING
         )
     elif extract_type == ExtractTypeEnum.USAGE_REPLY:
-        last_email = UsageUpdate.objects.filter(spire_run_number=run_number).last()
+        last_email = UsageData.objects.filter(spire_run_number=run_number).last()
 
         if last_email and last_email.mail.status in [
             ReceptionStatusEnum.REPLY_SENT,
@@ -119,7 +119,7 @@ def get_mail_instance(extract_type, run_number) -> Mail or None:
         ]:
             logging.info("Usage update reply has already been processed")
             return
-        return find_mail_of([ExtractTypeEnum.USAGE_UPDATE], ReceptionStatusEnum.REPLY_PENDING)
+        return find_mail_of([ExtractTypeEnum.USAGE_DATA], ReceptionStatusEnum.REPLY_PENDING)
 
 
 def to_email_message_dto_from(mail: Mail) -> EmailMessageDto:

@@ -11,7 +11,7 @@ from mail.libraries.usage_data_decomposition import (
     build_json_payload_from_data_blocks,
     id_owner,
 )
-from mail.models import LicencePayload, GoodIdMapping, UsageUpdate, Mail, TransactionMapping, LicenceIdMapping
+from mail.models import LicencePayload, GoodIdMapping, UsageData, Mail, TransactionMapping, LicenceIdMapping
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
@@ -301,7 +301,7 @@ class FileDeconstruction(LiteHMRCTestClient):
             lite_id="00000000-0000-0000-0000-000000000001", reference="GBSIEL/2020/0000002/P"
         )
         split_edi_data_by_id(
-            usage_data, UsageUpdate.objects.create(mail=Mail.objects.create(), spire_run_number=1, hmrc_run_number=1)
+            usage_data, UsageData.objects.create(mail=Mail.objects.create(), spire_run_number=1, hmrc_run_number=1)
         )
 
         for t in TransactionMapping.objects.all():

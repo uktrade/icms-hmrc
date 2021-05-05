@@ -3,7 +3,7 @@ from unittest import mock
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_207_MULTI_STATUS, HTTP_208_ALREADY_REPORTED
 
 from conf.settings import LITE_API_URL, HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS, LITE_API_REQUEST_TIMEOUT, MAX_ATTEMPTS
-from mail.models import Mail, UsageUpdate, LicencePayload
+from mail.models import Mail, UsageData, LicencePayload
 from mail.tasks import send_licence_usage_figures_to_lite_api, schedule_max_tried_task_as_new_task
 from mail.tests.libraries.client import LiteHMRCTestClient
 
@@ -53,7 +53,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
                 "12\\fileTrailer\\2"
             )
         )
-        self.usage_update = UsageUpdate.objects.create(
+        self.usage_data = UsageData.objects.create(
             id="1e5a4fd0-e581-4efd-9770-ac68e04852d2",
             mail=self.mail,
             licence_ids='["GBSIEL/2020/0000008/P", "GBSIEL/2020/0000009/P"]',
@@ -65,7 +65,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
     def test_schedule_usages_for_lite_api_207_ok(self, put_request):
         put_request.return_value = MockResponse(
             json={
-                "usage_update_id": "1e5a4fd0-e581-4efd-9770-ac68e04852d2",
+                "usage_data_id": "1e5a4fd0-e581-4efd-9770-ac68e04852d2",
                 "licences": {
                     "accepted": [
                         {
@@ -94,57 +94,57 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
             status_code=HTTP_207_MULTI_STATUS,
         )
 
-        send_licence_usage_figures_to_lite_api.now(str(self.usage_update.id))
+        send_licence_usage_figures_to_lite_api.now(str(self.usage_data.id))
 
-        self.usage_update.refresh_from_db()
+        self.usage_data.refresh_from_db()
         put_request.assert_called_with(
             f"{LITE_API_URL}/licences/hmrc-integration/",
-            self.usage_update.lite_payload,
+            self.usage_data.lite_payload,
             hawk_credentials=HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
             timeout=LITE_API_REQUEST_TIMEOUT,
         )
-        self.usage_update.refresh_from_db()
-        self.assertIsNotNone(self.usage_update.lite_sent_at)
-        self.assertEqual(self.usage_update.lite_accepted_licences, ["GBSIEL/2020/0000008/P"])
-        self.assertEqual(self.usage_update.lite_rejected_licences, ["GBSIEL/2020/0000009/P"])
+        self.usage_data.refresh_from_db()
+        self.assertIsNotNone(self.usage_data.lite_sent_at)
+        self.assertEqual(self.usage_data.lite_accepted_licences, ["GBSIEL/2020/0000008/P"])
+        self.assertEqual(self.usage_data.lite_rejected_licences, ["GBSIEL/2020/0000009/P"])
 
     @mock.patch("mail.tasks.put")
     def test_schedule_usages_for_lite_api_208_ok(self, put_request):
-        original_sent_at = self.usage_update.lite_sent_at
-        original_accepted_licences = self.usage_update.lite_accepted_licences
-        original_rejected_licences = self.usage_update.lite_rejected_licences
+        original_sent_at = self.usage_data.lite_sent_at
+        original_accepted_licences = self.usage_data.lite_accepted_licences
+        original_rejected_licences = self.usage_data.lite_rejected_licences
         put_request.return_value = MockResponse(status_code=HTTP_208_ALREADY_REPORTED)
 
-        send_licence_usage_figures_to_lite_api.now(str(self.usage_update.id))
+        send_licence_usage_figures_to_lite_api.now(str(self.usage_data.id))
 
-        self.usage_update.refresh_from_db()
+        self.usage_data.refresh_from_db()
         put_request.assert_called_with(
             f"{LITE_API_URL}/licences/hmrc-integration/",
-            self.usage_update.lite_payload,
+            self.usage_data.lite_payload,
             hawk_credentials=HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
             timeout=LITE_API_REQUEST_TIMEOUT,
         )
-        self.usage_update.refresh_from_db()
-        self.assertEqual(self.usage_update.lite_sent_at, original_sent_at)
-        self.assertEqual(self.usage_update.lite_accepted_licences, original_accepted_licences)
-        self.assertEqual(self.usage_update.lite_rejected_licences, original_rejected_licences)
+        self.usage_data.refresh_from_db()
+        self.assertEqual(self.usage_data.lite_sent_at, original_sent_at)
+        self.assertEqual(self.usage_data.lite_accepted_licences, original_accepted_licences)
+        self.assertEqual(self.usage_data.lite_rejected_licences, original_rejected_licences)
 
     @mock.patch("mail.tasks.put")
     def test_schedule_usages_for_lite_api_400_bad_request(self, put_request):
         put_request.return_value = MockResponse(status_code=HTTP_400_BAD_REQUEST)
 
         with self.assertRaises(Exception) as error:
-            send_licence_usage_figures_to_lite_api.now(str(self.usage_update.id))
+            send_licence_usage_figures_to_lite_api.now(str(self.usage_data.id))
 
-        self.usage_update.refresh_from_db()
+        self.usage_data.refresh_from_db()
         put_request.assert_called_with(
             f"{LITE_API_URL}/licences/hmrc-integration/",
-            self.usage_update.lite_payload,
+            self.usage_data.lite_payload,
             hawk_credentials=HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
             timeout=LITE_API_REQUEST_TIMEOUT,
         )
-        self.usage_update.refresh_from_db()
-        self.assertIsNone(self.usage_update.lite_sent_at)
+        self.usage_data.refresh_from_db()
+        self.assertIsNone(self.usage_data.lite_sent_at)
 
     @mock.patch("mail.tasks.schedule_max_tried_task_as_new_task")
     @mock.patch("mail.tasks.Task.objects.get")
@@ -155,23 +155,23 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
         schedule_new_task.return_value = None
 
         with self.assertRaises(Exception) as error:
-            send_licence_usage_figures_to_lite_api.now(str(self.usage_update.id))
+            send_licence_usage_figures_to_lite_api.now(str(self.usage_data.id))
 
-        self.usage_update.refresh_from_db()
+        self.usage_data.refresh_from_db()
         put_request.assert_called_with(
             f"{LITE_API_URL}/licences/hmrc-integration/",
-            self.usage_update.lite_payload,
+            self.usage_data.lite_payload,
             hawk_credentials=HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
             timeout=LITE_API_REQUEST_TIMEOUT,
         )
-        schedule_new_task.assert_called_with(str(self.usage_update.id))
-        self.usage_update.refresh_from_db()
-        self.assertIsNone(self.usage_update.lite_sent_at)
+        schedule_new_task.assert_called_with(str(self.usage_data.id))
+        self.usage_data.refresh_from_db()
+        self.assertIsNone(self.usage_data.lite_sent_at)
 
     @mock.patch("mail.tasks.send_licence_usage_figures_to_lite_api")
     def test_schedule_new_task(self, send_licence_usage_figures):
         send_licence_usage_figures.return_value = None
 
-        schedule_max_tried_task_as_new_task(str(self.usage_update.id))
+        schedule_max_tried_task_as_new_task(str(self.usage_data.id))
 
-        send_licence_usage_figures.assert_called_with(str(self.usage_update.id), schedule=mock.ANY)
+        send_licence_usage_figures.assert_called_with(str(self.usage_data.id), schedule=mock.ANY)

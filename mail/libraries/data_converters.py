@@ -47,21 +47,21 @@ def convert_data_for_licence_data_reply(dto: EmailMessageDto) -> dict:
     return data
 
 
-def convert_data_for_usage_update(dto: EmailMessageDto) -> dict:
+def convert_data_for_usage_data(dto: EmailMessageDto) -> dict:
     data = {
-        "usage_update": {},
+        "usage_data": {},
         "edi_filename": process_attachment(dto.attachment)[0],
         "edi_data": process_attachment(dto.attachment)[1],
     }
-    data["usage_update"]["spire_run_number"] = (
+    data["usage_data"]["spire_run_number"] = (
         new_spire_run_number(int(dto.run_number)) if convert_sender_to_source(dto.sender) in VALID_SENDERS else None
     )
-    data["usage_update"]["hmrc_run_number"] = dto.run_number
-    data["usage_update"]["licence_ids"] = get_licence_ids(data["edi_data"])
+    data["usage_data"]["hmrc_run_number"] = dto.run_number
+    data["usage_data"]["licence_ids"] = get_licence_ids(data["edi_data"])
     return data
 
 
-def convert_data_for_usage_update_reply(dto: EmailMessageDto) -> dict:
+def convert_data_for_usage_data_reply(dto: EmailMessageDto) -> dict:
     file_name, file_data = process_attachment(dto.attachment)
     data = {
         "response_filename": file_name,
