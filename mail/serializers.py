@@ -4,7 +4,7 @@ import logging
 from rest_framework import serializers
 
 from mail.enums import LicenceActionEnum
-from mail.models import Mail, LicenceData, UsageUpdate, LicenceIdMapping
+from mail.models import Mail, LicenceData, UsageData, LicenceIdMapping
 
 
 class LicenceDataSerializer(serializers.ModelSerializer):
@@ -72,11 +72,11 @@ class UpdateResponseSerializer(serializers.ModelSerializer):
             return instance
 
 
-class UsageUpdateSerializer(serializers.ModelSerializer):
+class UsageDataSerializer(serializers.ModelSerializer):
     mail = serializers.PrimaryKeyRelatedField(queryset=Mail.objects.all(), required=False)
 
     class Meta:
-        model = UsageUpdate
+        model = UsageData
         fields = ("licence_ids", "mail", "spire_run_number", "hmrc_run_number")
 
     def create(self, validated_data):
@@ -94,7 +94,7 @@ class UsageUpdateSerializer(serializers.ModelSerializer):
             validated_data["has_lite_data"] = has_lite_data
             validated_data["has_spire_data"] = has_spire_data
 
-        instance, created = UsageUpdate.objects.get_or_create(**validated_data)
+        instance, created = UsageData.objects.get_or_create(**validated_data)
 
         if created and instance.has_lite_data:
             instance.send_usage_updates_to_lite(instance.id)
@@ -102,8 +102,8 @@ class UsageUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
-class UsageUpdateMailSerializer(serializers.ModelSerializer):
-    usage_update = UsageUpdateSerializer(write_only=True)
+class UsageDataMailSerializer(serializers.ModelSerializer):
+    usage_data = UsageDataSerializer(write_only=True)
 
     class Meta:
         model = Mail
@@ -113,21 +113,21 @@ class UsageUpdateMailSerializer(serializers.ModelSerializer):
             "edi_data",
             "extract_type",
             "raw_data",
-            "usage_update",
+            "usage_data",
         ]
 
     def create(self, validated_data):
-        usage_update_data = validated_data.pop("usage_update")
+        usage_data = validated_data.pop("usage_data")
         mail, created = Mail.objects.get_or_create(**validated_data)
 
-        usage_update_data["mail"] = mail.id
+        usage_data["mail"] = mail.id
 
         if created:
-            usage_update_serializer = UsageUpdateSerializer(data=usage_update_data)
-            if usage_update_serializer.is_valid():
-                usage_update_serializer.save()
+            serializer = UsageDataSerializer(data=usage_data)
+            if serializer.is_valid():
+                serializer.save()
             else:
-                raise serializers.ValidationError(usage_update_serializer.errors)
+                raise serializers.ValidationError(serializer.errors)
 
         return mail
 

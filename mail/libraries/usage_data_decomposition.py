@@ -1,10 +1,10 @@
 from mail.enums import SourceEnum
 from mail.libraries.helpers import get_good_id, get_licence_id, get_action
-from mail.models import LicenceIdMapping, TransactionMapping, UsageUpdate
+from mail.models import LicenceIdMapping, TransactionMapping, UsageData
 
 
-def split_edi_data_by_id(usage_data, usage_update: UsageUpdate = None) -> (list, list):
-    lines = usage_data.split("\n")
+def split_edi_data_by_id(data, usage_data: UsageData = None) -> (list, list):
+    lines = data.split("\n")
     spire_blocks = []
     lite_blocks = []
     block = []
@@ -20,12 +20,12 @@ def split_edi_data_by_id(usage_data, usage_update: UsageUpdate = None) -> (list,
         data_line = line.split("\\", 1)[1]
         block.append(data_line)
 
-        if usage_update:
+        if usage_data:
             if licence_owner == SourceEnum.LITE and "line" in data_line and "end" not in data_line:
                 line_number = int(data_line.split("\\")[1])
                 TransactionMapping.objects.get_or_create(
                     line_number=line_number,
-                    usage_update=usage_update,
+                    usage_data=usage_data,
                     licence_reference=licence_id,
                     usage_transaction=transaction_id,
                 )
@@ -37,7 +37,7 @@ def split_edi_data_by_id(usage_data, usage_update: UsageUpdate = None) -> (list,
             ):
                 TransactionMapping.objects.get_or_create(
                     line_number=None,
-                    usage_update=usage_update,
+                    usage_data=usage_data,
                     licence_reference=licence_id,
                     usage_transaction=transaction_id,
                 )

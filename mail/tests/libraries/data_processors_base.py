@@ -28,11 +28,11 @@ class DataProcessorsTestBase(LiteHMRCTestClient):
         self.usage_mail = models.Mail.objects.create(
             edi_filename=self.licence_usage_file_name,
             edi_data=self.licence_usage_file_body,
-            extract_type=ExtractTypeEnum.USAGE_UPDATE,
+            extract_type=ExtractTypeEnum.USAGE_DATA,
             status=ReceptionStatusEnum.PENDING,
         )
 
-        self.usage_update = models.UsageUpdate.objects.create(
+        self.usage_data = models.UsageData.objects.create(
             mail=self.usage_mail,
             spire_run_number=self.source_run_number,
             licence_ids=self.licence_ids,

@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 
 from conf.authentication import HawkOnlyAuthentication
 from mail.enums import LicenceTypeEnum, LicenceActionEnum
-from mail.models import LicencePayload, LicenceIdMapping, UsageUpdate
+from mail.models import LicencePayload, LicenceIdMapping, UsageData
 from mail.serializers import (
     LiteLicenceDataSerializer,
     ForiegnTraderSerializer,
@@ -104,7 +104,7 @@ class SendLicenceUpdatesToHmrc(APIView):
 
 class SendUsageUpdatesToLiteApi(APIView):
     def get(self, request):
-        usage_update = UsageUpdate.objects.last()
-        send_licence_usage_figures_to_lite_api.now(str(usage_update.id))
+        usage_data = UsageData.objects.last()
+        send_licence_usage_figures_to_lite_api.now(str(usage_data.id))
 
         return HttpResponse(status=HTTP_200_OK)

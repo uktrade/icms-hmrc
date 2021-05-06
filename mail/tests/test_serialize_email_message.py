@@ -12,7 +12,7 @@ from mail.tests.libraries.data_processors_base import DataProcessorsTestBase
 
 class SerializeEmailMessageTests(DataProcessorsTestBase):
     @tag("ser")
-    def test_successful_usage_update_inbound_dto_converts_to_outbound_dto(self):
+    def test_successful_usage_data_inbound_dto_converts_to_outbound_dto(self):
         email_message_dto = EmailMessageDto(
             run_number=self.source_run_number + 1,
             sender=settings.HMRC_ADDRESS,
@@ -27,7 +27,7 @@ class SerializeEmailMessageTests(DataProcessorsTestBase):
         mail = serialize_email_message(email_message_dto)
         dto = to_email_message_dto_from(mail)
 
-        self.assertEqual(dto.run_number, self.usage_update.hmrc_run_number + 1)
+        self.assertEqual(dto.run_number, self.usage_data.hmrc_run_number + 1)
         self.assertEqual(dto.sender, settings.HMRC_ADDRESS)
         self.assertEqual(dto.receiver, settings.SPIRE_ADDRESS)
         self.assertEqual(dto.body, None)

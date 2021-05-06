@@ -91,7 +91,7 @@ class LicenceData(models.Model):
         return json.loads(self.licence_ids)
 
 
-class UsageUpdate(models.Model):
+class UsageData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     licence_ids = JSONField()
     mail = models.ForeignKey(Mail, on_delete=models.DO_NOTHING, null=False)
@@ -167,10 +167,10 @@ class TransactionMapping(models.Model):
     licence_reference = models.CharField(null=False, blank=False, max_length=35, unique=False)
     line_number = models.PositiveIntegerField(null=True, blank=True)
     usage_transaction = models.CharField(null=False, blank=False, max_length=35)
-    usage_update = models.ForeignKey(UsageUpdate, on_delete=models.DO_NOTHING)
+    usage_data = models.ForeignKey(UsageData, on_delete=models.DO_NOTHING)
 
     class Meta:
-        unique_together = [["licence_reference", "line_number", "usage_update"]]
+        unique_together = [["licence_reference", "line_number", "usage_data"]]
 
 
 class MailboxConfig(TimeStampedModel):
