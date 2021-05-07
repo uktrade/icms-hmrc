@@ -33,10 +33,6 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
 
     mail_message_ids = [get_message_id(m.decode(settings.DEFAULT_ENCODING)) for m in mails]
 
-    # if there is a start_message_id then remove any messages before that
-    if mailbox_config.start_message_id:
-        mail_message_ids = mail_message_ids[mail_message_ids.index(mailbox_config.start_message_id) :]
-
     # these are mailbox message ids we've seen before
     read_messages = set(
         MailReadStatus.objects.filter(

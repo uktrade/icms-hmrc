@@ -175,17 +175,17 @@ class TransactionMapping(models.Model):
 
 class MailboxConfig(TimeStampedModel):
     username = models.TextField(null=False, blank=False, primary_key=True, help_text="Username of the POP3 mailbox")
-    start_message_id = models.TextField(
-        null=True,
-        blank=False,
-        default=None,
-        help_text="Process messages from this message ID onwards, can be Null if messages should be processed from the very first message in the mailbox",
-    )
 
 
 class MailReadStatus(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    message_id = models.TextField()
+    message_num = models.TextField(
+        default="",
+        help_text="Sequence number of the message as assigned by pop3 when the messages list is requested from the mailbox",
+    )
+    message_id = models.UUIDField(
+        default=uuid.uuid4, help_text="Unique Message-ID of the message that is retrieved from the message header"
+    )
     status = models.TextField(choices=MailReadStatuses.choices, default=MailReadStatuses.UNREAD, db_index=True)
     mailbox = models.ForeignKey(MailboxConfig, on_delete=models.CASCADE)
 
