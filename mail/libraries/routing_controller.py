@@ -98,6 +98,9 @@ def check_and_route_emails():
 def update_mail(mail: Mail, mail_dto: EmailMessageDto):
     if mail.status == ReceptionStatusEnum.PENDING:
         mail.status = ReceptionStatusEnum.REPLY_PENDING
+        if mail.extract_type == ExtractTypeEnum.USAGE_DATA:
+            mail.status = ReceptionStatusEnum.REPLY_SENT
+
         # Update the mail object to record what we sent to destination
         mail.sent_filename = mail_dto.attachment[0]
         mail.sent_data = mail_dto.attachment[1]
