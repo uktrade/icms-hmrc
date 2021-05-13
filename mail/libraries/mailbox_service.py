@@ -15,15 +15,30 @@ def send_email(smtp_connection: SMTP, message: Message):
     smtp_connection.send_message(message)
 
 
-def get_message_id(listing_msg: bytes) -> bytes:
+def get_message_id(pop3_connection, listing_msg):
     """
     Takes a single line from pop3 LIST command and extracts
-    the message id
+    the message num. Uses the message number further to extract header information
+    from which the actual Message-ID is extracted.
+
+    :param pop3_connection: pop3 connection instance
     :param listing_msg: a line returned from the pop3.list command, e.g. b"2 5353"
-    :return: the message id extracted from the input, for the above example: b"2"
+    :return: the message-id and message_num extracted from the input, for the above example: b"2"
     """
-    message_id = listing_msg.split()[0]
-    return message_id
+    msg_num = listing_msg.split()[0]
+
+    # retrieves the header information
+    # 0 indicates the number of lines of message to be retrieved after the header
+    msg_header = pop3_connection.top(msg_num, 0)
+
+    message_id = None
+    for item in msg_header[1]:
+        hdr_item_fields = item.decode("utf-8").split(" ")
+        # message id is of the form b"Message-ID: <963d810e-c573-ef26-4ac0-151572b3524b@email-domail.co.uk>"
+        if hdr_item_fields[0] == "Message-ID:":
+            value = hdr_item_fields[1].replace("<", "").replace(">", "")
+            message_id = value.split("@")[0]
+    return message_id, msg_num
 
 
 def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[Tuple[EmailMessageDto, Callable]]:
@@ -31,11 +46,7 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
     _, mails, _ = pop3_connection.list()
     mailbox_config, _ = MailboxConfig.objects.get_or_create(username=username)
 
-    mail_message_ids = [get_message_id(m.decode(settings.DEFAULT_ENCODING)) for m in mails]
-
-    # if there is a start_message_id then remove any messages before that
-    if mailbox_config.start_message_id:
-        mail_message_ids = mail_message_ids[mail_message_ids.index(mailbox_config.start_message_id) :]
+    mail_message_ids = [get_message_id(pop3_connection, m.decode(settings.DEFAULT_ENCODING)) for m in mails]
 
     # these are mailbox message ids we've seen before
     read_messages = set(
@@ -44,10 +55,10 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
         ).values_list("message_id", flat=True)
     )
 
-    for message_id in mail_message_ids:
+    for message_id, message_num in mail_message_ids:
         # only return messages we haven't seen before
         if message_id not in read_messages:
-            read_status, _ = MailReadStatus.objects.get_or_create(message_id=message_id, mailbox=mailbox_config)
+            read_status, _ = MailReadStatus.objects.get_or_create(message_id=message_id, message_num=message_num, mailbox=mailbox_config)
 
             def mark_status(status):
                 """
@@ -57,15 +68,15 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
                 read_status.save()
 
             try:
-                m = pop3_connection.retr(message_id)
+                m = pop3_connection.retr(message_num)
             except error_proto as err:
-                logging.error(f"Unable to RETR message {message_id} in {mailbox_config}: {err}", exc_info=True)
+                logging.error(f"Unable to RETR message num {message_num} with Message-ID {message_id} in {mailbox_config}: {err}", exc_info=True)
                 continue
 
             try:
                 mail_message = to_mail_message_dto(m)
             except ValueError as ve:
-                logging.error(f"Unable to convert message {message_id} to DTO in {mailbox_config}: {ve}", exc_info=True)
+                logging.error(f"Unable to convert message num {message_id} with Message-Id {message_id} to DTO in {mailbox_config}: {ve}", exc_info=True)
                 mark_status(MailReadStatuses.UNPROCESSABLE)
                 continue
 
@@ -74,8 +85,8 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
 
 def read_last_message(pop3_connection: POP3_SSL) -> EmailMessageDto:
     _, mails, _ = pop3_connection.list()
-    message_id = get_message_id(mails[-1])
-    return to_mail_message_dto(pop3_connection.retr(message_id))
+    _, message_num = get_message_id(pop3_connection, mails[-1])
+    return to_mail_message_dto(pop3_connection.retr(message_num))
 
 
 def read_last_three_emails(pop3connection: POP3_SSL) -> list:
@@ -84,9 +95,9 @@ def read_last_three_emails(pop3connection: POP3_SSL) -> list:
     reversed_mails = list(reversed(mails))
     last_three_mails = reversed_mails[:3]
 
-    message_ids = [get_message_id(line.decode(settings.DEFAULT_ENCODING)) for line in last_three_mails]
+    message_ids = [get_message_id(pop3connection, line.decode(settings.DEFAULT_ENCODING)) for line in last_three_mails]
 
-    emails = [pop3connection.retr(message_id) for message_id in message_ids]
+    emails = [pop3connection.retr(message_num) for message_id, message_num in message_ids]
 
     email_message_dtos = []
     for email in emails:
