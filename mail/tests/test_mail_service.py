@@ -14,14 +14,8 @@ from mail.tests.libraries.client import LiteHMRCTestClient
 class MailServiceTests(LiteHMRCTestClient):
     @parameterized.expand(
         [
-            (
-                [b"1 1234"],
-                {b"1": [b"OK", [b"Subject: mock", b"hello"], "\r\n.\r\n"]},
-            ),
-            (
-                [b"0 1234"],
-                {b"0": [b"OK", [b"Subject: mock", b"hello"], "\r\n.\r\n"]},
-            ),
+            ([b"1 1234"], {b"1": [b"OK", [b"Subject: mock", b"hello"], "\r\n.\r\n"]},),
+            ([b"0 1234"], {b"0": [b"OK", [b"Subject: mock", b"hello"], "\r\n.\r\n"]},),
             (
                 [b"0 1234", b"1 4321"],
                 {
