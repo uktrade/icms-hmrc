@@ -58,7 +58,9 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
     for message_id, message_num in mail_message_ids:
         # only return messages we haven't seen before
         if message_id not in read_messages:
-            read_status, _ = MailReadStatus.objects.get_or_create(message_id=message_id, message_num=message_num, mailbox=mailbox_config)
+            read_status, _ = MailReadStatus.objects.get_or_create(
+                message_id=message_id, message_num=message_num, mailbox=mailbox_config
+            )
 
             def mark_status(status):
                 """
@@ -70,13 +72,19 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
             try:
                 m = pop3_connection.retr(message_num)
             except error_proto as err:
-                logging.error(f"Unable to RETR message num {message_num} with Message-ID {message_id} in {mailbox_config}: {err}", exc_info=True)
+                logging.error(
+                    f"Unable to RETR message num {message_num} with Message-ID {message_id} in {mailbox_config}: {err}",
+                    exc_info=True,
+                )
                 continue
 
             try:
                 mail_message = to_mail_message_dto(m)
             except ValueError as ve:
-                logging.error(f"Unable to convert message num {message_id} with Message-Id {message_id} to DTO in {mailbox_config}: {ve}", exc_info=True)
+                logging.error(
+                    f"Unable to convert message num {message_id} with Message-Id {message_id} to DTO in {mailbox_config}: {ve}",
+                    exc_info=True,
+                )
                 mark_status(MailReadStatuses.UNPROCESSABLE)
                 continue
 
@@ -85,8 +93,14 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
 
 def read_last_message(pop3_connection: POP3_SSL) -> EmailMessageDto:
     _, mails, _ = pop3_connection.list()
-    _, message_num = get_message_id(pop3_connection, mails[-1])
-    return to_mail_message_dto(pop3_connection.retr(message_num))
+    message_id, message_num = get_message_id(pop3_connection, mails[-1])
+
+    try:
+        message = pop3_connection.retr(message_num)
+    except error_proto as err:
+        raise Exception(f"Unable to RETR message num {message_num} with Message-ID {message_id}",) from err
+
+    return to_mail_message_dto(message)
 
 
 def read_last_three_emails(pop3connection: POP3_SSL) -> list:
@@ -97,7 +111,12 @@ def read_last_three_emails(pop3connection: POP3_SSL) -> list:
 
     message_ids = [get_message_id(pop3connection, line.decode(settings.DEFAULT_ENCODING)) for line in last_three_mails]
 
-    emails = [pop3connection.retr(message_num) for message_id, message_num in message_ids]
+    emails = []
+    for message_id, message_num in message_ids:
+        try:
+            emails.append(pop3connection.retr(message_num))
+        except error_proto as err:
+            raise Exception(f"Unable to RETR message num {message_num} with Message-ID {message_id}",) from err
 
     email_message_dtos = []
     for email in emails:
