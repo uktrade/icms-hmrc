@@ -133,6 +133,9 @@ def convert_sender_to_source(sender: str) -> str:
     if sender == settings.SPIRE_ADDRESS_PARALLEL_RUN:
         return SourceEnum.SPIRE
 
+    if sender == settings.INCOMING_EMAIL_USER:
+        return SourceEnum.SPIRE
+
     return sender
 
 
