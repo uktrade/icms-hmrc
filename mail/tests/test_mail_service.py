@@ -88,8 +88,24 @@ class MailServiceTests(LiteHMRCTestClient):
                 [b"0 1234", b"1 4321"],
                 OrderedDict(
                     {
-                        "0": [b"OK", [b"Subject: mock0", b"hello"], "\r\n.\r\n"],
-                        "1": [b"OK", [b"Subject: mock1", b"hello"], "\r\n.\r\n"],
+                        "0": [
+                            b"OK",
+                            [
+                                b"Message-ID: <963d810e-c573-ef26-4ac0-151572b35240@email-domail.co.uk>",
+                                b"Subject: mock0",
+                                b"hello",
+                            ],
+                            "\r\n.\r\n",
+                        ],
+                        "1": [
+                            b"OK",
+                            [
+                                b"Message-ID: <963d810e-c573-ef26-4ac0-151572b35241@email-domail.co.uk>",
+                                b"Subject: mock1",
+                                b"hello",
+                            ],
+                            "\r\n.\r\n",
+                        ],
                     }
                 ),
             ),
@@ -97,9 +113,33 @@ class MailServiceTests(LiteHMRCTestClient):
                 [b"0 1234", b"1 4321", b"4 4444"],
                 OrderedDict(
                     {
-                        "0": [b"OK", [b"Subject: mock0", b"hello"], "\r\n.\r\n"],
-                        "1": [b"OK", [b"Subject: mock1", b"hello"], "\r\n.\r\n"],
-                        "4": [b"OK", [b"Subject: mock4", b"hello"], "\r\n.\r\n"],
+                        "0": [
+                            b"OK",
+                            [
+                                b"Message-ID: <963d810e-c573-ef26-4ac0-151572b35241@email-domail.co.uk>",
+                                b"Subject: mock0",
+                                b"hello",
+                            ],
+                            "\r\n.\r\n",
+                        ],
+                        "1": [
+                            b"OK",
+                            [
+                                b"Message-ID: <963d810e-c573-ef26-4ac0-151572b35241@email-domail.co.uk>",
+                                b"Subject: mock1",
+                                b"hello",
+                            ],
+                            "\r\n.\r\n",
+                        ],
+                        "4": [
+                            b"OK",
+                            [
+                                b"Message-ID: <963d810e-c573-ef26-4ac0-151572b35244@email-domail.co.uk>",
+                                b"Subject: mock4",
+                                b"hello",
+                            ],
+                            "\r\n.\r\n",
+                        ],
                     }
                 ),
             ),
@@ -107,18 +147,54 @@ class MailServiceTests(LiteHMRCTestClient):
                 [b"2 1234", b"1 4321", b"4 4444", b"5 5555"],
                 OrderedDict(
                     {
-                        "2": [b"OK", [b"Subject: mock2", b"hello"], "\r\n.\r\n"],
-                        "1": [b"OK", [b"Subject: mock1", b"hello"], "\r\n.\r\n"],
-                        "4": [b"OK", [b"Subject: mock4", b"hello"], "\r\n.\r\n"],
-                        "5": [b"OK", [b"Subject: mock5", b"hello"], "\r\n.\r\n"],
+                        "2": [
+                            b"OK",
+                            [
+                                b"Message-ID: <963d810e-c573-ef26-4ac0-151572b35242@email-domail.co.uk>",
+                                b"Subject: mock2",
+                                b"hello",
+                            ],
+                            "\r\n.\r\n",
+                        ],
+                        "1": [
+                            b"OK",
+                            [
+                                b"Message-ID: <963d810e-c573-ef26-4ac0-151572b35241@email-domail.co.uk>",
+                                b"Subject: mock1",
+                                b"hello",
+                            ],
+                            "\r\n.\r\n",
+                        ],
+                        "4": [
+                            b"OK",
+                            [
+                                b"Message-ID: <963d810e-c573-ef26-4ac0-151572b35244@email-domail.co.uk>",
+                                b"Subject: mock4",
+                                b"hello",
+                            ],
+                            "\r\n.\r\n",
+                        ],
+                        "5": [
+                            b"OK",
+                            [
+                                b"Message-ID: <963d810e-c573-ef26-4ac0-151572b35245@email-domail.co.uk>",
+                                b"Subject: mock5",
+                                b"hello",
+                            ],
+                            "\r\n.\r\n",
+                        ],
                     }
                 ),
             ),
         ]
     )
     def test_get_message_iterator(self, email_list, retr_data):
+        def get_header(msg_num, num_lines):
+            return retr_data.get(msg_num)
+
         pop3conn = MagicMock(spec=POP3_SSL)
         pop3conn.list.return_value = (None, email_list, None)
+        pop3conn.top = MagicMock(side_effect=get_header)
         pop3conn.retr = MagicMock(side_effect=retr_data.__getitem__)
         message_list = list(get_message_iterator(pop3conn, "test"))
 
@@ -128,7 +204,7 @@ class MailServiceTests(LiteHMRCTestClient):
         # check they are the last 3 messages (reverse input order and take first 3)
         message_list_and_expected_source = zip(message_list, retr_data.values())
         for message, retr_item in message_list_and_expected_source:
-            self.assertEqual(f"Subject: {message[0].subject}".encode("utf-8"), retr_item[1][0])
+            self.assertEqual(f"Subject: {message[0].subject}".encode("utf-8"), retr_item[1][1])
 
 
 @tag("mail_service")
