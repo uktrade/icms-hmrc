@@ -31,6 +31,10 @@ def get_message_id(pop3_connection, listing_msg):
     # 0 indicates the number of lines of message to be retrieved after the header
     msg_header = pop3_connection.top(msg_num, 0)
 
+    from_address = settings.SPIRE_FROM_ADDRESS.encode("utf-8")
+    if from_address not in msg_header[1]:
+        return None, msg_num
+
     message_id = None
     for index, item in enumerate(msg_header[1]):
         hdr_item_fields = item.decode("utf-8").split(" ")
@@ -42,8 +46,8 @@ def get_message_id(pop3_connection, listing_msg):
                 message_id = value.split("@")[0]
         elif len(hdr_item_fields) == 1:
             if hdr_item_fields[0] == "Message-ID:":
-                value = msg_header[1][index + 1]
-                value = value.replace("<", "").replace(">", "")
+                value = msg_header[1][index + 1].decode("utf-8")
+                value = value.replace("<", "").replace(">", "").strip(" ")
                 message_id = value.split("@")[0]
 
     return message_id, msg_num
@@ -70,7 +74,7 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
 
     for message_id, message_num in mail_message_ids:
         # only return messages we haven't seen before
-        if message_id not in read_messages:
+        if message_id is not None and message_id not in read_messages:
             read_status, _ = MailReadStatus.objects.get_or_create(
                 message_id=message_id, message_num=message_num, mailbox=mailbox_config
             )
