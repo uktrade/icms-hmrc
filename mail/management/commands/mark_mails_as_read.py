@@ -37,6 +37,9 @@ class Command(BaseCommand):
             mailbox_config, _ = models.MailboxConfig.objects.get_or_create(username=email_user)
 
             for message_id, message_num in mail_message_ids:
+                if message_id is None:
+                    continue
+
                 read_status, _ = models.MailReadStatus.objects.get_or_create(
                     message_id=message_id, message_num=message_num, mailbox=mailbox_config,
                 )
