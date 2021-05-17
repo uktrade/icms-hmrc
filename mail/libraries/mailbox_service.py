@@ -32,12 +32,20 @@ def get_message_id(pop3_connection, listing_msg):
     msg_header = pop3_connection.top(msg_num, 0)
 
     message_id = None
-    for item in msg_header[1]:
+    for index, item in enumerate(msg_header[1]):
         hdr_item_fields = item.decode("utf-8").split(" ")
         # message id is of the form b"Message-ID: <963d810e-c573-ef26-4ac0-151572b3524b@email-domail.co.uk>"
-        if hdr_item_fields[0] == "Message-ID:":
-            value = hdr_item_fields[1].replace("<", "").replace(">", "")
-            message_id = value.split("@")[0]
+
+        if len(hdr_item_fields) == 2:
+            if hdr_item_fields[0] == "Message-ID:":
+                value = hdr_item_fields[1].replace("<", "").replace(">", "")
+                message_id = value.split("@")[0]
+        elif len(hdr_item_fields) == 1:
+            if hdr_item_fields[0] == "Message-ID:":
+                value = msg_header[1][index + 1]
+                value = value.replace("<", "").replace(">", "")
+                message_id = value.split("@")[0]
+
     return message_id, msg_num
 
 
