@@ -41,6 +41,15 @@ def get_message_id(pop3_connection, listing_msg):
     return message_id, msg_num
 
 
+def get_read_messages(mailbox_config):
+    return [
+        str(m.message_id)
+        for m in MailReadStatus.objects.filter(
+            mailbox=mailbox_config, status__in=[MailReadStatuses.READ, MailReadStatuses.UNPROCESSABLE]
+        )
+    ]
+
+
 def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[Tuple[EmailMessageDto, Callable]]:
     mails: list
     _, mails, _ = pop3_connection.list()
@@ -49,11 +58,7 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
     mail_message_ids = [get_message_id(pop3_connection, m.decode(settings.DEFAULT_ENCODING)) for m in mails]
 
     # these are mailbox message ids we've seen before
-    read_messages = set(
-        MailReadStatus.objects.filter(
-            mailbox=mailbox_config, status__in=[MailReadStatuses.READ, MailReadStatuses.UNPROCESSABLE]
-        ).values_list("message_id", flat=True)
-    )
+    read_messages = get_read_messages(mailbox_config)
 
     for message_id, message_num in mail_message_ids:
         # only return messages we haven't seen before

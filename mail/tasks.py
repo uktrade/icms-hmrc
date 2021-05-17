@@ -232,11 +232,6 @@ def _is_email_slot_free() -> bool:
         logging.error(f"The following Mail is pending: {pending_mail}")
         return False
 
-    rejected_mail = _get_rejected_mail()
-    if rejected_mail:
-        logging.error(f"The following Mail has been rejected: {pending_mail}")
-        return False
-
     return True
 
 
