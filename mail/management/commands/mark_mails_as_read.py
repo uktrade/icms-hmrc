@@ -20,7 +20,7 @@ class Command(BaseCommand):
         dry_run = options.pop("dry_run")
 
         server = MailServer(
-            hostname="outlook.office365.com", user=email_user, password=email_password, pop3_port=995, smtp_port=587,
+            hostname=settings.EMAIL_HOSTNAME, user=email_user, password=email_password, pop3_port=995, smtp_port=587,
         )
         pop3_connection = server.connect_to_pop3()
         self.stdout.write(self.style.SUCCESS(f"Connected to {email_user}"))

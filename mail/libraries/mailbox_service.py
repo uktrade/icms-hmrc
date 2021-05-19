@@ -31,8 +31,11 @@ def get_message_id(pop3_connection, listing_msg):
     # 0 indicates the number of lines of message to be retrieved after the header
     msg_header = pop3_connection.top(msg_num, 0)
 
-    from_address = settings.SPIRE_FROM_ADDRESS.encode("utf-8")
-    if from_address not in msg_header[1]:
+    spire_from_address = settings.SPIRE_FROM_ADDRESS.encode("utf-8")
+    hmrc_dit_reply_address = settings.HMRC_TO_DIT_REPLY_ADDRESS.encode("utf-8")
+
+    if spire_from_address not in msg_header[1] and hmrc_dit_reply_address not in msg_header[1]:
+        logging.error(f"Found mail with message_num {msg_num} that is not from SPIRE or HMRC, skipping")
         return None, msg_num
 
     message_id = None
@@ -41,15 +44,16 @@ def get_message_id(pop3_connection, listing_msg):
         # message id is of the form b"Message-ID: <963d810e-c573-ef26-4ac0-151572b3524b@email-domail.co.uk>"
 
         if len(hdr_item_fields) == 2:
-            if hdr_item_fields[0] == "Message-ID:":
+            if hdr_item_fields[0].lower() == "message-id:":
                 value = hdr_item_fields[1].replace("<", "").replace(">", "")
                 message_id = value.split("@")[0]
         elif len(hdr_item_fields) == 1:
-            if hdr_item_fields[0] == "Message-ID:":
+            if hdr_item_fields[0].lower() == "message-id:":
                 value = msg_header[1][index + 1].decode("utf-8")
                 value = value.replace("<", "").replace(">", "").strip(" ")
                 message_id = value.split("@")[0]
 
+    logging.info(f"Extracted Message-Id as {message_id} for the message_num {msg_num}")
     return message_id, msg_num
 
 
