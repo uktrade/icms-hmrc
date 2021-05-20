@@ -228,7 +228,7 @@ BACKGROUND_TASK_ENABLED = env("BACKGROUND_TASK_ENABLED")
 BACKGROUND_TASK_RUN_ASYNC = True
 # Number of times a task is retried given a failure occurs with exponential back-off = ((current_attempt ** 4) + 5)
 MAX_ATTEMPTS = 7  # e.g. 7th attempt occurs approx 40 minutes after 1st attempt (assuming instantaneous failures)
-BACKGROUND_TASK_MAX_RUN_TIME = env("BACKGROUND_TASK_MAX_RUN_TIME", default=900)
+MAX_RUN_TIME = env("BACKGROUND_TASK_MAX_RUN_TIME", default=900)
 
 # Sentry
 if env.str("SENTRY_DSN", ""):
