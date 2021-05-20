@@ -27,6 +27,7 @@ python-json-logger = "~=0.1"
 psycopg2 = "~=2.8"
 requests = "~=2.21"
 unidecode = "~=1.2"
+django-log-formatter-ecs = "==0.0.5"
 
 [requires]
 python_version = "3.7"
