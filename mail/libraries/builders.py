@@ -162,6 +162,7 @@ def build_email_message(email_message_dto: EmailMessageDto) -> MIMEMultipart:
         "Content-Disposition",
         "attachment; filename= %s" % email_message_dto.attachment[0],
     )
+    payload.add_header("Content-Transfer-Encoding", "7bit")
     payload.add_header("name", email_message_dto.subject)
     multipart_msg.attach(payload)
     logging.info(f"Email headers:\nMessage headers: {multipart_msg.items()}\nPayload headers: {payload.items()}")
