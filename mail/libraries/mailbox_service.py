@@ -88,13 +88,17 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
                 """
                 :param status: A choice from `MailReadStatuses.choices`
                 """
-                logging.info(f"Marking message_id {message_id} with message_num {message_num} from {read_status.mailbox.username} as {status}")
+                logging.info(
+                    f"Marking message_id {message_id} with message_num {message_num} from {read_status.mailbox.username} as {status}"
+                )
                 read_status.status = status
                 read_status.save()
 
             try:
                 m = pop3_connection.retr(message_num)
-                logging.info(f"Retrieved message_id {message_id} with message_num {message_num} from {read_status.mailbox.username}")
+                logging.info(
+                    f"Retrieved message_id {message_id} with message_num {message_num} from {read_status.mailbox.username}"
+                )
             except error_proto as err:
                 logging.error(
                     f"Unable to RETR message num {message_num} with Message-ID {message_id} in {mailbox_config}: {err}",
