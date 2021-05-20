@@ -31,8 +31,11 @@ def get_message_id(pop3_connection, listing_msg):
     # 0 indicates the number of lines of message to be retrieved after the header
     msg_header = pop3_connection.top(msg_num, 0)
 
-    from_address = settings.SPIRE_FROM_ADDRESS.encode("utf-8")
-    if from_address not in msg_header[1]:
+    spire_from_address = settings.SPIRE_FROM_ADDRESS.encode("utf-8")
+    hmrc_dit_reply_address = settings.HMRC_TO_DIT_REPLY_ADDRESS.encode("utf-8")
+
+    if spire_from_address not in msg_header[1] and hmrc_dit_reply_address not in msg_header[1]:
+        logging.error(f"Found mail with message_num {msg_num} that is not from SPIRE or HMRC, skipping")
         return None, msg_num
 
     message_id = None
@@ -41,15 +44,16 @@ def get_message_id(pop3_connection, listing_msg):
         # message id is of the form b"Message-ID: <963d810e-c573-ef26-4ac0-151572b3524b@email-domail.co.uk>"
 
         if len(hdr_item_fields) == 2:
-            if hdr_item_fields[0] == "Message-ID:":
+            if hdr_item_fields[0].lower() == "message-id:":
                 value = hdr_item_fields[1].replace("<", "").replace(">", "")
                 message_id = value.split("@")[0]
         elif len(hdr_item_fields) == 1:
-            if hdr_item_fields[0] == "Message-ID:":
+            if hdr_item_fields[0].lower() == "message-id:":
                 value = msg_header[1][index + 1].decode("utf-8")
                 value = value.replace("<", "").replace(">", "").strip(" ")
                 message_id = value.split("@")[0]
 
+    logging.info(f"Extracted Message-Id as {message_id} for the message_num {msg_num}")
     return message_id, msg_num
 
 
@@ -71,6 +75,7 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
 
     # these are mailbox message ids we've seen before
     read_messages = get_read_messages(mailbox_config)
+    logging.info(f"Number of messages READ/UNPROCESSABLE in {mailbox_config.username} are {len(read_messages)}")
 
     for message_id, message_num in mail_message_ids:
         # only return messages we haven't seen before
@@ -83,11 +88,17 @@ def get_message_iterator(pop3_connection: POP3_SSL, username: str) -> Iterator[T
                 """
                 :param status: A choice from `MailReadStatuses.choices`
                 """
+                logging.info(
+                    f"Marking message_id {message_id} with message_num {message_num} from {read_status.mailbox.username} as {status}"
+                )
                 read_status.status = status
                 read_status.save()
 
             try:
                 m = pop3_connection.retr(message_num)
+                logging.info(
+                    f"Retrieved message_id {message_id} with message_num {message_num} from {read_status.mailbox.username}"
+                )
             except error_proto as err:
                 logging.error(
                     f"Unable to RETR message num {message_num} with Message-ID {message_id} in {mailbox_config}: {err}",

@@ -134,6 +134,7 @@ SPIRE_STANDIN_EMAIL_POP3_PORT = env("SPIRE_STANDIN_EMAIL_POP3_PORT")
 SPIRE_STANDIN_EMAIL_SMTP_PORT = env("SPIRE_STANDIN_EMAIL_SMTP_PORT")
 
 SPIRE_FROM_ADDRESS = env("SPIRE_FROM_ADDRESS", default="spire@example.com")
+HMRC_TO_DIT_REPLY_ADDRESS = env("HMRC_TO_DIT_REPLY_ADDRESS", default="hmrctodit@example.com")
 
 EMAIL_PASSWORD = env("EMAIL_PASSWORD")
 EMAIL_HOSTNAME = env("EMAIL_HOSTNAME")
@@ -227,6 +228,7 @@ BACKGROUND_TASK_ENABLED = env("BACKGROUND_TASK_ENABLED")
 BACKGROUND_TASK_RUN_ASYNC = True
 # Number of times a task is retried given a failure occurs with exponential back-off = ((current_attempt ** 4) + 5)
 MAX_ATTEMPTS = 7  # e.g. 7th attempt occurs approx 40 minutes after 1st attempt (assuming instantaneous failures)
+MAX_RUN_TIME = env("BACKGROUND_TASK_MAX_RUN_TIME", default=900)
 
 # Sentry
 if env.str("SENTRY_DSN", ""):

@@ -183,8 +183,10 @@ class MailReadStatus(TimeStampedModel):
         default="",
         help_text="Sequence number of the message as assigned by pop3 when the messages list is requested from the mailbox",
     )
-    message_id = models.UUIDField(
-        default=uuid.uuid4, help_text="Unique Message-ID of the message that is retrieved from the message header"
+    message_id = models.TextField(
+        default=uuid.uuid4,
+        unique=True,
+        help_text="Unique Message-ID of the message that is retrieved from the message header",
     )
     status = models.TextField(choices=MailReadStatuses.choices, default=MailReadStatuses.UNREAD, db_index=True)
     mailbox = models.ForeignKey(MailboxConfig, on_delete=models.CASCADE)

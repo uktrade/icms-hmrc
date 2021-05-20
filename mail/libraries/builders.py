@@ -1,3 +1,4 @@
+import logging
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 import json
@@ -143,17 +144,27 @@ def build_email_message(email_message_dto: EmailMessageDto) -> MIMEMultipart:
 
     file = unidecode(email_message_dto.attachment[1], errors="replace")
 
+    if email_message_dto.attachment[1] != file:
+        logging.info(
+            f"""File content different after transliteration\n
+            Before: {email_message_dto.attachment[1]}\n
+            After: {file}\n"""
+        )
+
     multipart_msg = MIMEMultipart()
     multipart_msg["From"] = settings.EMAIL_USER  # the SMTP server only allows sending as itself
     multipart_msg["To"] = email_message_dto.receiver
     multipart_msg["Subject"] = email_message_dto.subject
+    multipart_msg["name"] = email_message_dto.subject
     payload = MIMEApplication(file)
     payload.set_payload(file)
     payload.add_header(
         "Content-Disposition", "attachment; filename= %s" % email_message_dto.attachment[0],
     )
     payload.add_header("Content-Transfer-Encoding", "7bit")
+    payload.add_header("name", email_message_dto.subject)
     multipart_msg.attach(payload)
+    logging.info(f"Message headers: {multipart_msg.items()}, Payload headers: {payload.items()}")
     return multipart_msg
 
 
