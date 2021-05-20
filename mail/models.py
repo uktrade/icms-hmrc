@@ -184,7 +184,7 @@ class MailReadStatus(TimeStampedModel):
         help_text="Sequence number of the message as assigned by pop3 when the messages list is requested from the mailbox",
     )
     message_id = models.TextField(
-        default=str(uuid.uuid4),
+        default=uuid.uuid4,
         unique=True,
         help_text="Unique Message-ID of the message that is retrieved from the message header",
     )
