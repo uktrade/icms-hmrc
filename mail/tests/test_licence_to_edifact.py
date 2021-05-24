@@ -42,7 +42,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         expected = (
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
-            + "\\1234\\Y"
+            + "\\1234\\N"
             + "\n2\\licence\\20200000001P\\insert\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
             + f"\n3\\trader\\\\{trader['eori_number']}\\20200602\\20220602\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Farnborough\\GU40 2LX"
             + "\n4\\country\\GB\\\\D"
@@ -94,7 +94,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         expected = (
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
-            + "\\1234\\Y"
+            + "\\1234\\N"
             + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
             + "\n3\\end\\licence\\2"
             + "\n4\\licence\\20200000001Pa\\insert\\GBSIEL/2020/0000001/P/a\\SIE\\E\\20200602\\20220703"
@@ -122,7 +122,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         expected = (
             "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
-            + "\\1234\\Y"
+            + "\\1234\\N"
             + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
             + "\n3\\end\\licence\\2"
             + "\n4\\fileTrailer\\1"
