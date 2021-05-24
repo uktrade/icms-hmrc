@@ -50,7 +50,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             + "\n6\\restrictions\\Provisos may apply please see licence"
             + "\n7\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\10\\\\\\\\\\\\"
             + "\n8\\end\\licence\\7"
-            + "\n9\\fileTrailer\\1"
+            + "\n9\\fileTrailer\\1\n"
         )
 
         self.assertEqual(result, expected)
@@ -104,7 +104,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             + "\n8\\restrictions\\Provisos may apply please see licence"
             + "\n9\\line\\1\\\\\\\\\\Sporting shotgun\\Q\\\\030\\\\15\\\\\\\\\\\\"
             + "\n10\\end\\licence\\7"
-            + "\n11\\fileTrailer\\2"
+            + "\n11\\fileTrailer\\2\n"
         )
 
         self.assertEqual(result, expected)
@@ -125,7 +125,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             + "\\1234\\N"
             + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
             + "\n3\\end\\licence\\2"
-            + "\n4\\fileTrailer\\1"
+            + "\n4\\fileTrailer\\1\n"
         )
 
         self.assertEqual(result, expected)

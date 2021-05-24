@@ -144,7 +144,7 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
         line_no += 1
         edifact_file += "\n{}\\end\\licence\\{}".format(line_no, line_no - start_line)
     line_no += 1
-    edifact_file += "\n{}\\fileTrailer\\{}".format(
+    edifact_file += "\n{}\\fileTrailer\\{}\n".format(
         line_no, licences.count() + licences.filter(action=LicenceActionEnum.UPDATE).count()
     )
 
