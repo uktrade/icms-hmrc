@@ -22,7 +22,7 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
     now = timezone.now()
     time_stamp = "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
 
-    reset_run_number_indicator = "Y"
+    reset_run_number_indicator = "N"
     edifact_file = f"1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\{time_stamp}\\{run_number}\\{reset_run_number_indicator}"
 
     line_no = 1
@@ -144,7 +144,7 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
         line_no += 1
         edifact_file += "\n{}\\end\\licence\\{}".format(line_no, line_no - start_line)
     line_no += 1
-    edifact_file += "\n{}\\fileTrailer\\{}".format(
+    edifact_file += "\n{}\\fileTrailer\\{}\n".format(
         line_no, licences.count() + licences.filter(action=LicenceActionEnum.UPDATE).count()
     )
 
@@ -168,9 +168,6 @@ def sanitize_foreign_trader_address(trader):
     break them in chunks of 35 chars and populate them as address lines
     """
     address = trader["address"]
-    # line_1 contains the complete address at this point
-    if len(address["line_1"]) <= FOREIGN_TRADER_ADDR_LINE_MAX_LEN:
-        return trader
 
     addr_line = address.pop("line_1")
     addr_line = addr_line.replace("\n", " ").replace("\r", " ")

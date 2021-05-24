@@ -1,6 +1,7 @@
 import logging
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import json
 
 from unidecode import unidecode
@@ -156,10 +157,11 @@ def build_email_message(email_message_dto: EmailMessageDto) -> MIMEMultipart:
     multipart_msg["To"] = email_message_dto.receiver
     multipart_msg["Subject"] = email_message_dto.subject
     multipart_msg["name"] = email_message_dto.subject
+    multipart_msg.attach(MIMEText("\n\n", "plain", "iso-8859-1"))
     payload = MIMEApplication(file)
     payload.set_payload(file)
     payload.add_header(
-        "Content-Disposition", "attachment; filename= %s" % email_message_dto.attachment[0],
+        "Content-Disposition", f'attachment; filename="{email_message_dto.attachment[0]}"',
     )
     payload.add_header("Content-Transfer-Encoding", "7bit")
     payload.add_header("name", email_message_dto.subject)
