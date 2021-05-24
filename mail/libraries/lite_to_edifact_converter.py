@@ -168,9 +168,6 @@ def sanitize_foreign_trader_address(trader):
     break them in chunks of 35 chars and populate them as address lines
     """
     address = trader["address"]
-    # line_1 contains the complete address at this point
-    if len(address["line_1"]) <= FOREIGN_TRADER_ADDR_LINE_MAX_LEN:
-        return trader
 
     addr_line = address.pop("line_1")
     addr_line = addr_line.replace("\n", " ").replace("\r", " ")
