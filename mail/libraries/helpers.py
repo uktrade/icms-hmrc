@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 
+from dateutil.parser import parse
 from django.conf import settings
 from email.message import Message
 from email.parser import Parser
@@ -74,10 +75,12 @@ def to_mail_message_dto(mail_data) -> EmailMessageDto:
     msg_obj = Parser().parsestr(contents)
     msg = body_contents_of(msg_obj)
     file_name, file_data = get_attachment(msg_obj)
+    msg_date = parse(msg_obj.get("Date"))
     return EmailMessageDto(
         subject=msg_obj.get("Subject"),
         sender=msg_obj.get("From"),
         receiver=msg_obj.get("To"),
+        date=msg_date,
         body=msg,
         attachment=[file_name, file_data],
         run_number=get_run_number(msg_obj.get("Subject")),
@@ -289,3 +292,7 @@ def get_country_id(country):
             return json.loads(country)["id"]
     except (TypeError, JSONDecodeError):
         return country
+
+
+def sort_dtos_by_date(input_dtos):
+    return sorted(input_dtos, key=lambda d: d[0].date)

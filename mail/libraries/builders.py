@@ -53,6 +53,7 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
         run_number=run_number,
         sender=sender,
         receiver=receiver,
+        date="",
         subject=attachment[0],
         body=None,
         attachment=attachment,

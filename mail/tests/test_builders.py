@@ -15,6 +15,7 @@ class BuildEmailMessageTest(testcases.TestCase):
             run_number=1,
             sender=settings.HMRC_ADDRESS,
             receiver=settings.SPIRE_ADDRESS,
+            date="Mon, 17 May 2021 14:20:18 +0100",
             body=None,
             subject="Some subject",
             attachment=["some filename", attachment],

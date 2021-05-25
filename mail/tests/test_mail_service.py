@@ -14,13 +14,19 @@ from mail.tests.libraries.client import LiteHMRCTestClient
 class MailServiceTests(LiteHMRCTestClient):
     @parameterized.expand(
         [
-            ([b"1 1234"], {b"1": [b"OK", [b"Subject: mock", b"hello"], "\r\n.\r\n"]},),
-            ([b"0 1234"], {b"0": [b"OK", [b"Subject: mock", b"hello"], "\r\n.\r\n"]},),
+            (
+                [b"1 1234"],
+                {b"1": [b"OK", [b"Subject: mock", b"Date: Mon, 17 May 2021 14:20:18 +0100", b"hello"], "\r\n.\r\n"]},
+            ),
+            (
+                [b"0 1234"],
+                {b"0": [b"OK", [b"Subject: mock", b"Date: Mon, 17 May 2021 14:20:18 +0100", b"hello"], "\r\n.\r\n"]},
+            ),
             (
                 [b"0 1234", b"1 4321"],
                 {
-                    b"0": [b"OK", [b"Subject: mock", b"hello"], "\r\n.\r\n"],
-                    b"1": [b"OK", [b"Subject: mock", b"hello"], "\r\n.\r\n"],
+                    b"0": [b"OK", [b"Subject: mock", b"Date: Mon, 17 May 2021 14:20:18 +0100", b"hello"], "\r\n.\r\n"],
+                    b"1": [b"OK", [b"Subject: mock", b"Date: Mon, 17 May 2021 14:20:18 +0100", b"hello"], "\r\n.\r\n"],
                 },
             ),
         ]
@@ -40,8 +46,16 @@ class MailServiceTests(LiteHMRCTestClient):
                 [b"0 1234", b"1 4321"],
                 OrderedDict(
                     {
-                        "0": [b"OK", [b"Subject: mock0", b"hello"], "\r\n.\r\n"],
-                        "1": [b"OK", [b"Subject: mock1", b"hello"], "\r\n.\r\n"],
+                        "0": [
+                            b"OK",
+                            [b"Subject: mock0", b"Date: Mon, 17 May 2021 14:20:18 +0100", b"hello"],
+                            "\r\n.\r\n",
+                        ],
+                        "1": [
+                            b"OK",
+                            [b"Subject: mock1", b"Date: Mon, 17 May 2021 14:20:18 +0100", b"hello"],
+                            "\r\n.\r\n",
+                        ],
                     }
                 ),
             ),
@@ -49,9 +63,21 @@ class MailServiceTests(LiteHMRCTestClient):
                 [b"0 1234", b"1 4321", b"4 4444"],
                 OrderedDict(
                     {
-                        "0": [b"OK", [b"Subject: mock0", b"hello"], "\r\n.\r\n"],
-                        "1": [b"OK", [b"Subject: mock1", b"hello"], "\r\n.\r\n"],
-                        "4": [b"OK", [b"Subject: mock4", b"hello"], "\r\n.\r\n"],
+                        "0": [
+                            b"OK",
+                            [b"Subject: mock0", b"Date: Mon, 17 May 2021 14:20:18 +0100", b"hello"],
+                            "\r\n.\r\n",
+                        ],
+                        "1": [
+                            b"OK",
+                            [b"Subject: mock1", b"Date: Mon, 17 May 2021 14:20:18 +0100", b"hello"],
+                            "\r\n.\r\n",
+                        ],
+                        "4": [
+                            b"OK",
+                            [b"Subject: mock4", b"Date: Mon, 17 May 2021 14:20:18 +0100", b"hello"],
+                            "\r\n.\r\n",
+                        ],
                     }
                 ),
             ),
@@ -59,10 +85,26 @@ class MailServiceTests(LiteHMRCTestClient):
                 [b"2 1234", b"1 4321", b"4 4444", b"5 5555"],
                 OrderedDict(
                     {
-                        "2": [b"OK", [b"Subject: mock2", b"hello"], "\r\n.\r\n"],
-                        "1": [b"OK", [b"Subject: mock1", b"hello"], "\r\n.\r\n"],
-                        "4": [b"OK", [b"Subject: mock4", b"hello"], "\r\n.\r\n"],
-                        "5": [b"OK", [b"Subject: mock5", b"hello"], "\r\n.\r\n"],
+                        "2": [
+                            b"OK",
+                            [b"Subject: mock2", b"Date: Mon, 17 May 2021 14:20:18 +0100", b"hello"],
+                            "\r\n.\r\n",
+                        ],
+                        "1": [
+                            b"OK",
+                            [b"Subject: mock1", b"Date: Mon, 17 May 2021 14:20:18 +0100", b"hello"],
+                            "\r\n.\r\n",
+                        ],
+                        "4": [
+                            b"OK",
+                            [b"Subject: mock4", b"Date: Mon, 17 May 2021 14:20:18 +0100", b"hello"],
+                            "\r\n.\r\n",
+                        ],
+                        "5": [
+                            b"OK",
+                            [b"Subject: mock5", b"Date: Mon, 17 May 2021 14:20:18 +0100", b"hello"],
+                            "\r\n.\r\n",
+                        ],
                     }
                 ),
             ),

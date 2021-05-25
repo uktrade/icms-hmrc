@@ -16,7 +16,7 @@ from mail.libraries.data_processors import (
     lock_db_for_sending_transaction,
 )
 from mail.libraries.email_message_dto import EmailMessageDto
-from mail.libraries.helpers import select_email_for_sending
+from mail.libraries.helpers import select_email_for_sending, sort_dtos_by_date
 from mail.libraries.mailbox_service import send_email, get_message_iterator
 from mail.models import Mail
 from mail.servers import MailServer
@@ -78,13 +78,19 @@ def check_and_route_emails():
     logger.info("Checking for emails")
     hmrc_to_dit_server = get_hmrc_to_dit_mailserver()
     email_message_dtos = _get_email_message_dtos(hmrc_to_dit_server, number=None)
+    email_message_dtos = sort_dtos_by_date(email_message_dtos)
+    logging.info("Incoming message dtos sorted by date: %s" % email_message_dtos)
 
     spire_to_dit_server = get_spire_to_dit_mailserver()
     if hmrc_to_dit_server != spire_to_dit_server:
         # if the config for the return path is different to outgoing mail path
         # then check the return path otherwise don't bother as it will contain the
         # same emails.
-        email_message_dtos.extend(_get_email_message_dtos(spire_to_dit_server))
+        reply_message_dtos = _get_email_message_dtos(spire_to_dit_server)
+        reply_message_dtos = sort_dtos_by_date(reply_message_dtos)
+        logging.info("Reply message dtos sorted by date: %s" % reply_message_dtos)
+
+        email_message_dtos.extend(reply_message_dtos)
 
     if not email_message_dtos:
         logger.info(f"No new emails found from {hmrc_to_dit_server.user} or {spire_to_dit_server.user}")
