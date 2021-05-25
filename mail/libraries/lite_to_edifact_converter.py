@@ -22,8 +22,11 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
     now = timezone.now()
     time_stamp = "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
 
+    # Setting this to Y will override the hmrc run number with the run number in this file.
+    # This is usually set to N in almost all cases
     reset_run_number_indicator = "N"
     edifact_file = f"1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\{time_stamp}\\{run_number}\\{reset_run_number_indicator}"
+    logging.info(f"File header:{edifact_file}")
 
     line_no = 1
     for licence in licences:
@@ -151,7 +154,10 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
     errors = validate_edifact_file(edifact_file)
     if errors:
         logging.error(f"File content not as per specification, {errors}")
+        logging.info(f"Generated file content: {edifact_file}")
         raise EdifactValidationError
+
+    logging.debug(f"Generated file content: {edifact_file}")
 
     return edifact_file
 
