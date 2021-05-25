@@ -138,15 +138,25 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         with self.assertRaises(EdifactValidationError) as context:
             licences_to_edifact(LicencePayload.objects.filter(is_processed=False), 1234)
 
-    def test_foreign_trader_address_sanitize(self):
+    @parameterized.expand(
+        [
+            (
+                "50 Industrial Estate\nVery long address line_2 exceeding 35 chars\nVery long address line_3 exceeding 35 chars\nQueensland\nNSW 42551",
+                "5\\foreignTrader\\Advanced Firearms Limited\\50 Industrial Estate Very long\\address line_2 exceeding 35 chars\\Very long address line_3 exceeding\\35 chars Queensland NSW 42551\\\\\\GB",
+            ),
+            (
+                "50\nIndustrial\nEstate\nQueensland\nNSW 42551",
+                "5\\foreignTrader\\Advanced Firearms Limited\\50 Industrial Estate Queensland NSW\\42551\\\\\\\\\\GB",
+            ),
+        ]
+    )
+    def test_foreign_trader_address_sanitize(self, address_line_1, expected_trader_line):
         lp = LicencePayload.objects.get()
         lp.is_processed = True
         lp.save()
         payload = self.licence_payload_json.copy()
         payload["licence"]["end_user"]["name"] = "Advanced Firearms Limited"
-        payload["licence"]["end_user"]["address"][
-            "line_1"
-        ] = "50 Industrial Estate\nVery long address line_2 exceeding 35 chars\nVery long address line_3 exceeding 35 chars\nQueensland\nNSW 42551"
+        payload["licence"]["end_user"]["address"]["line_1"] = address_line_1
         LicencePayload.objects.create(
             reference="GBSIEL/2021/0000001/P",
             data=payload["licence"],
@@ -157,8 +167,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         edifact_file = licences_to_edifact(licences, 1234)
         foreign_trader_line = edifact_file.split("\n")[4]
         self.assertEqual(
-            foreign_trader_line,
-            "5\\foreignTrader\\Advanced Firearms Limited\\50 Industrial Estate Very long\\address line_2 exceeding 35 chars\\Very long address line_3 exceeding\\35 chars Queensland NSW 42551\\\\\\GB",
+            foreign_trader_line, expected_trader_line,
         )
 
 

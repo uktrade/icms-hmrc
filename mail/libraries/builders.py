@@ -45,6 +45,10 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
                 build_sent_file_data(file, run_number),
             ]
 
+    logging.info(
+        f"Preparing request Mail dto of extract type {mail.extract_type}, sender {sender}, receiver {receiver} with filename {attachment[0]}"
+    )
+
     return EmailMessageDto(
         run_number=run_number,
         sender=sender,
@@ -82,10 +86,16 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
         licence_data = LicenceData.objects.get(mail=mail)
         run_number = licence_data.source_run_number
         receiver = convert_source_to_sender(licence_data.source)
+        logging.info(
+            f"[{mail.extract_type}] Source {licence_data.source} run number: {run_number}, HMRC run number: {licence_data.hmrc_run_number}"
+        )
     elif mail.extract_type == ExtractTypeEnum.LICENCE_REPLY:
         licence_data = LicenceData.objects.get(mail=mail)
         run_number = licence_data.source_run_number
         receiver = convert_source_to_sender(licence_data.source)
+        logging.info(
+            f"[{mail.extract_type}] Source {licence_data.source} run number: {run_number}, HMRC run number: {licence_data.hmrc_run_number}"
+        )
     elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
         usage_data = UsageData.objects.get(mail=mail)
         run_number = usage_data.hmrc_run_number
@@ -97,6 +107,10 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
         build_sent_filename(mail.response_filename, run_number),
         build_sent_file_data(mail.response_data, run_number),
     ]
+
+    logging.info(
+        f"Preparing reply Mail dto of extract type {mail.extract_type}, sender {sender}, receiver {receiver} with filename {attachment[0]}"
+    )
 
     return EmailMessageDto(
         run_number=run_number,
@@ -119,6 +133,7 @@ def build_licence_data_mail(licences) -> Mail:
         extract_type=ExtractTypeEnum.LICENCE_DATA,
         raw_data="See Licence Payload",
     )
+    logging.info(f"New Mail instance ({mail.id}) created for filename {file_name}")
     licence_ids = json.dumps([licence.reference for licence in licences])
     LicenceData.objects.create(hmrc_run_number=run_number, source=SourceEnum.LITE, mail=mail, licence_ids=licence_ids)
 
@@ -130,6 +145,7 @@ def build_licence_data_file(licences, run_number) -> (str, str):
     file_name = "CHIEF_LIVE_SPIRE_licenceData_{}_{:04d}{:02d}{:02d}{:02d}{:02d}".format(
         run_number, now.year, now.month, now.day, now.hour, now.minute
     )
+    logging.info(f"Building licenceData file {file_name} for {len(licences)} licences")
 
     file_content = licences_to_edifact(licences, run_number)
 
@@ -143,6 +159,7 @@ def build_email_message(email_message_dto: EmailMessageDto) -> MIMEMultipart:
     """
     _validate_dto(email_message_dto)
 
+    logging.info("Building email message...")
     file = unidecode(email_message_dto.attachment[1], errors="replace")
 
     if email_message_dto.attachment[1] != file:

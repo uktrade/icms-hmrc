@@ -210,12 +210,17 @@ def send_licence_data_to_hmrc():
             mail = build_licence_data_mail(licences)
             mail_dto = build_request_mail_message_dto(mail)
             licence_references = list(licences.values_list("reference", flat=True))
-            logging.info(f"Created Mail [{mail.id}] from licences [{licence_references}]")
+            logging.info(
+                f"Created Mail [{mail.id}] with subject {mail_dto.subject} from licences [{licence_references}]"
+            )
 
             server = MailServer()
             send(server, mail_dto)
             update_mail(mail, mail_dto)
+
             licences.update(is_processed=True)
+            logging.info(f"Licence references [{licence_references}] marked as processed")
+
     except EdifactValidationError as err:  # noqa
         raise err
     except Exception as exc:  # noqa

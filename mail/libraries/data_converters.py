@@ -15,6 +15,9 @@ from mail.libraries.helpers import (
 
 def convert_data_for_licence_data(dto: EmailMessageDto) -> dict:
     source = convert_sender_to_source(dto.sender)
+
+    logging.info(f"Email sender ({dto.sender}) is determined as coming from {source}")
+
     data = {"licence_data": {}}
     data["licence_data"]["source"] = source
     data["licence_data"]["hmrc_run_number"] = (
@@ -76,4 +79,4 @@ def _log_result(data):
     output = ""
     for k, v in data.items():
         output += "{}->[{}] ".format(k, str(v))
-    logging.debug(output)
+    logging.info(output)

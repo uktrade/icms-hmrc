@@ -34,23 +34,31 @@ def serialize_email_message(dto: EmailMessageDto) -> Mail or None:
         logging.info(f"Extract type not supported ({dto.subject}), skipping")
         return
 
+    logging.info(f"Extract type is identified as {extract_type.upper()}")
+
     instance = get_mail_instance(extract_type, dto.run_number)
     if not instance and extract_type in [ExtractTypeEnum.USAGE_REPLY]:
         return
 
     partial = True if instance else False
+    if partial:
+        logging.info("LITE-HMRC has seen this message before")
+    else:
+        logging.info("[NEW EMAIL] LITE-HMRC has not seen this message before")
+
     data = convert_dto_data_for_serialization(dto, extract_type)
     serializer_class = get_serializer_for_dto(extract_type)
     serializer = serializer_class(instance=instance, data=data, partial=partial)
 
     if not serializer.is_valid():
-        logging.error(f"Failed to serialize email -> {serializer.errors}")
+        logging.error(f"Failed to serialize email (subject: {dto.subject}) -> {serializer.errors}")
         raise ValidationError(serializer.errors)
+
     _mail = serializer.save()
     if data["extract_type"] in ["licence_reply", "usage_reply"]:
         _mail.set_response_date_time()
 
-    logging.info("Successfully serialized email")
+    logging.info(f"Successfully serialized email (subject: {dto.subject})")
 
     return _mail
 
