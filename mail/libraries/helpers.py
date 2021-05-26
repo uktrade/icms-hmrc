@@ -127,16 +127,15 @@ def get_run_number(patterned_text: str) -> int:
 def convert_sender_to_source(sender: str) -> str:
     if "<" in sender and ">" in sender:
         sender = sender.split("<")[1].split(">")[0]
+
     if sender == settings.SPIRE_ADDRESS:
         return SourceEnum.SPIRE
     elif sender == SourceEnum.LITE:
         return SourceEnum.LITE
     elif sender == settings.HMRC_ADDRESS:
         return SourceEnum.HMRC
-    if sender == settings.SPIRE_ADDRESS_PARALLEL_RUN:
-        return SourceEnum.SPIRE
 
-    if sender == settings.INCOMING_EMAIL_USER:
+    if sender in [settings.SPIRE_INCOMING_EMAIL_ADDRESS, settings.INCOMING_EMAIL_USER]:
         return SourceEnum.SPIRE
 
     return sender
