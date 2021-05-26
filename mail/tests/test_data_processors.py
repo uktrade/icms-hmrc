@@ -1,5 +1,6 @@
 import logging
 
+from datetime import datetime
 from django.test import tag
 from rest_framework.exceptions import ValidationError
 
@@ -72,6 +73,7 @@ class TestDataProcessors(LiteHMRCTestClient):
         self.assertEqual("ILBDOTI_live_CHIEF_licenceReply_49543_201902080025", self.mail.edi_filename)
         self.assertEqual("ILBDOTI_live_CHIEF_licenceReply_49543_201902080025", self.mail.edi_filename)
         self.assertEqual(dto.receiver, SPIRE_ADDRESS)
+        self.assertTrue(isinstance(dto.date, datetime))
         self.assertEqual(dto.body, None)
         self.assertEqual(dto.raw_data, None)
 
