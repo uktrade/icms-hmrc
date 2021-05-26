@@ -1,4 +1,6 @@
 import logging
+
+from datetime import datetime
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -53,7 +55,7 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
         run_number=run_number,
         sender=sender,
         receiver=receiver,
-        date="",
+        date=datetime.now(),
         subject=attachment[0],
         body=None,
         attachment=attachment,
@@ -118,6 +120,7 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
         sender=sender,
         receiver=receiver,
         subject=attachment[0],
+        date=datetime.now(),
         body=None,
         attachment=attachment,
         raw_data=None,
