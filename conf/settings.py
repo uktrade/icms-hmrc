@@ -15,6 +15,7 @@ import sys
 import uuid
 
 from environ import Env
+from django_log_formatter_ecs import ECSFormatter
 
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -47,7 +48,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DJANGO_SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DEBUG", False)
 
 ALLOWED_HOSTS = "*"
 
@@ -187,17 +188,14 @@ if "test" not in sys.argv:
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {
-            "json": {
-                "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
-                "format": "(asctime)(levelname)(message)(filename)(lineno)(threadName)(name)(thread)(created)(process)(processName)(relativeCreated)(module)(funcName)(levelno)(msecs)(pathname)",  # noqa
-            },
-            "ecs_formatter": {"class": "django_log_formatter_ecs.ECSFormatter"},
+            "simple": {"format": "{asctime} {levelname} {message}", "style": "{"},
+            "ecs_formatter": {"()": ECSFormatter},
         },
         "handlers": {
-            "console": {"class": "logging.StreamHandler", "formatter": "json"},
+            "stdout": {"class": "logging.StreamHandler", "formatter": "simple"},
             "ecs": {"class": "logging.StreamHandler", "formatter": "ecs_formatter"},
         },
-        "loggers": {"": {"handlers": ["console", "ecs"], "level": env("LOG_LEVEL").upper()}},
+        "root": {"handlers": ["stdout", "ecs"], "level": env("LOG_LEVEL").upper()},
     }
 else:
     LOGGING = {"version": 1, "disable_existing_loggers": True}
