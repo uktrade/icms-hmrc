@@ -159,9 +159,6 @@ class GoodIdMapping(models.Model):
     licence_reference = models.CharField(null=False, blank=False, max_length=35, unique=False)
     line_number = models.PositiveIntegerField()
 
-    class Meta:
-        unique_together = [["lite_id", "licence_reference"]]
-
 
 class TransactionMapping(models.Model):
     licence_reference = models.CharField(null=False, blank=False, max_length=35, unique=False)
