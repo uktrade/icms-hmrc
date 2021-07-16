@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/uktrade/lite-hmrc.svg?style=svg)](https://circleci.com/gh/uktrade/lite-hmrc)
+
 ## Introduction
 This project is meant for sending license updates to HMRC and receiving usage reporting. Information like license updates
 and usage are exchanged as mail attachment between Lite and HMRC
@@ -8,10 +10,10 @@ and usage are exchanged as mail attachment between Lite and HMRC
 ##### Without Docker
 - To build and run a local Postfix [mail server](https://github.com/uktrade/mailserver)
 - To initilize database
-`pipenv run ./manage.py migrate`
+`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py migrate`
 - To create database superuser `pipenv run ./manage.py createsuperuser`
 - To start the application
-`pipenv run ./manage.py runserver`
+`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py runserver`
 
 ##### With Docker 
 
@@ -45,9 +47,9 @@ Run the following command
 
 The python code formatter [Black](https://black.readthedocs.io/en/stable/) is used in this project.
 
-To run it: `pipenv run black .`
+To run it: `PIPENV_DOTENV_LOCATION=.env pipenv run black .`
 
-To check the format `pipenv run black --check .`
+To check the format `PIPENV_DOTENV_LOCATION=.env pipenv run black --check .`
 
 - Code analysis tool
 
@@ -59,7 +61,7 @@ The tool 'bandit' is used. To run it `pipenv run bandit -r .`
 
 #### Test
 
-All test files locate at `mail/tests`. To run all tests `pipenv run ./manage.py test -v 2`
+All test files locate at `mail/tests`. To run all tests `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py test -v 2`
 
 To skip tagged tests e.g. `tag('ignore')`. 
-`pipenv run ./manage.py test --exclude-tag=ignore` 
+`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py test --exclude-tag=ignore`
