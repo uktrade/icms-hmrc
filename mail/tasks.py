@@ -5,6 +5,7 @@ from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+import django.db
 from background_task import background
 from background_task.models import Task
 from django.db import transaction
@@ -241,8 +242,11 @@ def _is_email_slot_free() -> bool:
 
 
 def _get_pending_mail() -> []:
-    return list(Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT).values_list("id", flat=True))
-
+    try:
+        return list(Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT).values_list("id", flat=True))
+    except django.db.ProgrammingError as e:
+        print(e)
+        return []
 
 def _get_rejected_mail() -> []:
     return list(

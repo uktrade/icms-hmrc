@@ -61,7 +61,12 @@ The tool 'bandit' is used. To run it `pipenv run bandit -r .`
 
 #### Test
 
-All test files locate at `mail/tests`. To run all tests `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py test -v 2`
+The tests require a live postgres server. They will create a database called
+`test_postgres` as part of the test run.
 
-To skip tagged tests e.g. `tag('ignore')`. 
-`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py test --exclude-tag=ignore`
+You may encounter `AssertionError: database connection isn't set to UTC` when running. To work around this set 
+`USE_TZ = False` in `conf/settings.py`.
+
+Tests are located in `mail/tests`. To run all tests 
+`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py test --exclude-tag=end-to-end --exclude-tag=skip`
+
