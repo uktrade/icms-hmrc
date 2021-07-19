@@ -11,7 +11,7 @@ and usage are exchanged as mail attachment between Lite and HMRC
 - To build and run a local Postfix [mail server](https://github.com/uktrade/mailserver)
 - To initilize database
 `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py migrate`
-- To create database superuser `pipenv run ./manage.py createsuperuser`
+- To create database superuser `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py createsuperuser`
 - To start the application
 `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py runserver`
 

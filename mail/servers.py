@@ -58,7 +58,7 @@ class MailServer(object):
         self.smtp_connection = smtplib.SMTP(self.hostname, str(self.smtp_port), timeout=60)
         logging.info("smtp connection established")
         logging.info("starting tls...")
-        self.smtp_connection.starttls()
+        # self.smtp_connection.starttls()
         logging.info("tls started")
         logging.info("logging in...")
         self.smtp_connection.login(self.user, self.password)
