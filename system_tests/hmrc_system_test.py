@@ -1,12 +1,15 @@
 import json
+import string
+import uuid
+import random
 
 import requests
-import psycopg2
 
 url_root = "http://localhost:8000"
 
-def get(url):
-    requests.get(url_root + url)
+
+def put(url):
+    requests.put(url_root + url)
 
 
 def post(url, data=None):
@@ -27,31 +30,18 @@ def get_smtp_body():
     return response.json()['items'][0]['MIME']['Parts'][1]['Body']
 
 
-def clear_mail_tables():
-    connection = psycopg2.connect(user="postgres",
-                                  password="password",
-                                  host="localhost",
-                                  port="5432",
-                                  database="postgres")
-    cursor = connection.cursor()
-    cursor.execute("delete from mail_licencepayload;")
-    cursor.execute("delete from mail_licencedata;")
-    cursor.execute("delete from mail;")
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
 def test_send_license():
     clear_stmp_mailbox()
-    clear_mail_tables()
+    put("/mail/set-all-to-reply-sent/")
     with open("licence_payload_file.json") as f:
         data = json.load(f)
+    data["licence"]["id"] = str(uuid.uuid4())
+    data["licence"]["reference"] = f"GBSIEL/2020/{''.join(random.sample(string.ascii_lowercase, 7))}/P"
     post("/mail/update-licence/", data=data)
-    get("/mail/send-licence-updates-to-hmrc/")
+    put("/mail/send-licence-updates-to-hmrc/")
     body = get_smtp_body().replace("\r", "")
-    # Remove the first line as it contains a date that changes every time
-    body = "\n".join(body.split("\n")[1:])
+    # Remove the first and second line as it contains data that changes every time
+    body = "\n".join(body.split("\n")[2:])
     with open("expected_mail_body.txt") as f:
         expected_mail_body = f.read()
     assert body.replace("\r", "") == expected_mail_body
