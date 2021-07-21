@@ -6,7 +6,6 @@ import random
 import requests
 
 
-
 url_root = "http://localhost:8000"
 
 
