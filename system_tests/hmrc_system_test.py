@@ -46,4 +46,4 @@ def test_send_license():
     body = "\n".join(body.split("\n")[2:])
     with open("expected_mail_body.txt") as f:
         expected_mail_body = f.read()
-    assert body.replace("\r", "") == expected_mail_body
+    assert body.replace("\r", "") == expected_mail_body  # nosec
