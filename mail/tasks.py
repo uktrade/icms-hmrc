@@ -248,6 +248,7 @@ def _get_pending_mail() -> []:
         print(e)
         return []
 
+
 def _get_rejected_mail() -> []:
     return list(
         Mail.objects.filter(

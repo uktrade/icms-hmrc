@@ -5,6 +5,8 @@ import random
 
 import requests
 
+
+
 url_root = "http://localhost:8000"
 
 
@@ -24,10 +26,11 @@ def clear_stmp_mailbox():
         print(f"delete {id}")
         requests.delete(f"http://localhost:8025/api/v1/messages/{id}")
 
+
 def get_smtp_body():
     response = requests.get("http://localhost:8025/api/v2/messages")
     print(response)
-    return response.json()['items'][0]['MIME']['Parts'][1]['Body']
+    return response.json()["items"][0]["MIME"]["Parts"][1]["Body"]
 
 
 def test_send_license():
