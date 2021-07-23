@@ -8,6 +8,7 @@ from conf.settings import (
     EMAIL_USER,
     EMAIL_POP3_PORT,
     EMAIL_SMTP_PORT,
+    EMAIL_USE_TLS
 )
 
 
@@ -19,6 +20,7 @@ class MailServer(object):
         password: str = EMAIL_PASSWORD,
         pop3_port: int = EMAIL_POP3_PORT,
         smtp_port: int = EMAIL_SMTP_PORT,
+        use_tls: bool = EMAIL_USE_TLS,
     ):
         self.smtp_port = smtp_port
         self.pop3_port = pop3_port
@@ -27,6 +29,7 @@ class MailServer(object):
         self.hostname = hostname
         self.pop3_connection = None
         self.smtp_connection = None
+        self.use_tls = use_tls
 
     def __eq__(self, other):
 
@@ -57,9 +60,10 @@ class MailServer(object):
         logging.info("establishing an smtp connection...")
         self.smtp_connection = smtplib.SMTP(self.hostname, str(self.smtp_port), timeout=60)
         logging.info("smtp connection established")
-        logging.info("starting tls...")
-        # self.smtp_connection.starttls()
-        logging.info("tls started")
+        if self.use_tls:
+            logging.info("starting tls...")
+            self.smtp_connection.starttls()
+            logging.info("tls started")
         logging.info("logging in...")
         self.smtp_connection.login(self.user, self.password)
         logging.info("logged in")

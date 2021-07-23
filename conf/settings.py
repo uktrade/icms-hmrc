@@ -145,6 +145,7 @@ EMAIL_POP3_PORT = env("EMAIL_POP3_PORT")
 EMAIL_SMTP_PORT = env("EMAIL_SMTP_PORT")
 SPIRE_ADDRESS = env("SPIRE_ADDRESS")
 HMRC_ADDRESS = env("HMRC_ADDRESS")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", True)
 
 SPIRE_ADDRESS_PARALLEL_RUN = env("SPIRE_ADDRESS_PARALLEL_RUN")
 
@@ -181,7 +182,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = False
+USE_TZ = env.bool("USE_TZ", True)
 
 if "test" not in sys.argv:
     LOGGING = {
