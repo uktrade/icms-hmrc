@@ -242,11 +242,7 @@ def _is_email_slot_free() -> bool:
 
 
 def _get_pending_mail() -> []:
-    try:
-        return list(Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT).values_list("id", flat=True))
-    except django.db.ProgrammingError as e:
-        print(e)
-        return []
+    return list(Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT).values_list("id", flat=True))
 
 
 def _get_rejected_mail() -> []:
