@@ -2,14 +2,7 @@ import logging
 import poplib
 import smtplib
 
-from conf.settings import (
-    EMAIL_PASSWORD,
-    EMAIL_HOSTNAME,
-    EMAIL_USER,
-    EMAIL_POP3_PORT,
-    EMAIL_SMTP_PORT,
-    EMAIL_USE_TLS
-)
+from conf.settings import EMAIL_PASSWORD, EMAIL_HOSTNAME, EMAIL_USER, EMAIL_POP3_PORT, EMAIL_SMTP_PORT, EMAIL_USE_TLS
 
 
 class MailServer(object):
