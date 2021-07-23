@@ -5,7 +5,6 @@ from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-import django.db
 from background_task import background
 from background_task.models import Task
 from django.db import transaction
