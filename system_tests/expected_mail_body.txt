@@ -1,7 +1,0 @@
-3\trader\\GB123456789000\20200602\20220602\Organisation\might\248 James Key Apt. 515\Apt. 942\West Ashleyton\Farnborough\GU40 2LX
-4\country\GB\\D
-5\foreignTrader\End User\42 Road, London, Buckinghamshire\\\\\\GB
-6\restrictions\Provisos may apply please see licence
-7\line\1\\\\\Sporting shotgun\Q\\030\\10\\\\\\
-8\end\licence\7
-9\fileTrailer\1
