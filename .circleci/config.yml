@@ -12,12 +12,14 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
       - image: mailhog/mailhog
+        environment:
+          MH_SMTP_BIND_ADDR: 10255
 
     environment:
       DEBUG: 'True'
       PIPENV_VENV_IN_PROJECT: 'enabled'
       MAILHOG_URL: 'http://localhost:8025'
-      EMAIL_SMTP_PORT: 1025
+      EMAIL_SMTP_PORT: 10255
       EMAIL_HOSTNAME: localhost
       EMAIL_USE_TLS: 'False'
 
