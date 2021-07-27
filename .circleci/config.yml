@@ -18,6 +18,7 @@ jobs:
       PIPENV_VENV_IN_PROJECT: 'enabled'
       MAILHOG_URL: 'http://localhost:8025'
       EMAIL_SMTP_PORT: 1025
+      EMAIL_HOSTNAME: localhost
       EMAIL_USE_TLS: False
 
     working_directory: ~/lite-hmrc
