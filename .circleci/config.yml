@@ -14,7 +14,7 @@ jobs:
       - image: mailhog/mailhog
 
     environment:
-      DEBUG: 'True'
+      DEBUG: True
       PIPENV_VENV_IN_PROJECT: 'enabled'
 
     working_directory: ~/lite-hmrc
