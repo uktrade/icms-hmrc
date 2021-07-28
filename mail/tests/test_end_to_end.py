@@ -22,11 +22,11 @@ class EndToEndTests(LiteHMRCTestClient):
 
     def test_send_email_to_hmrc_e2e(self):
         self.clear_stmp_mailbox()
-        self.client.put(reverse("mail:set_all_to_reply_sent"))
+        self.client.get(reverse("mail:set_all_to_reply_sent"))
         self.client.post(
             reverse("mail:update_licence"), data=self.licence_payload_json, content_type="application/json"
         )
-        self.client.put(reverse("mail:send_updates_to_hmrc"))
+        self.client.get(reverse("mail:send_updates_to_hmrc"))
         body = self.get_smtp_body().replace("\r", "")
         ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
         run_number = body.split("\n")[0].split("\\")[6]

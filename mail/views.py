@@ -89,25 +89,25 @@ class LicenceDataIngestView(APIView):
 
 
 class ManageInbox(APIView):
-    def put(self, _):
+    def get(self, _):
         manage_inbox.now()
         return HttpResponse(status=HTTP_200_OK)
 
 
 class SendLicenceUpdatesToHmrc(APIView):
-    def put(self, _):
+    def get(self, _):
         send_licence_data_to_hmrc.now()
         return HttpResponse(status=HTTP_200_OK)
 
 
 class SendUsageUpdatesToLiteApi(APIView):
-    def put(self, _):
+    def get(self, _):
         usage_data = UsageData.objects.last()
         send_licence_usage_figures_to_lite_api.now(str(usage_data.id))
         return HttpResponse(status=HTTP_200_OK)
 
 
 class SetAllToReplySent(APIView):
-    def put(self, _):
+    def get(self, _):
         Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
         return HttpResponse(status=HTTP_200_OK)
