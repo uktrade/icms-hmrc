@@ -253,6 +253,37 @@ def select_email_for_sending() -> Mail or None:
     return
 
 
+def check_for_pending_messages():
+    """
+    Checks for any licenceData or usageData messages with "pending" status
+
+    We send one licenceData mail and wait for the reply before sending the next one.
+    However HMRC sends us usageData mails along with replies. In a given polling interval if we get
+    licenceReply and usageData at the same time then we process both of them (serialize and save)
+    but we only send one of them. The other one remains with "pending" status.
+    There is a deadlock situation if the pending mail is of type licenceData because in the next polling
+    interval there won't be any new emails and we exit early. The pending mail gets stuck in the queue
+    and is never sent to HMRC. Because of this we won't get reply also from HMRC and SPIRE won't send
+    us the next mail and the queue gets blocked.
+
+    To fix this we are going to look for pending mails when there are no new mails. Following the same
+    order as they are created, if there is a pending licenceData mail (should not be more than one if present)
+    then we send that otherwise if there is a pending usageData mails (can be multiple) we just
+    send the oldest. Because this is repeated in each polling interval all the pending mails gets cleared
+    and the queue gets unblocked.
+    """
+
+    ld_pending_count = Mail.objects.filter(
+        extract_type=ExtractTypeEnum.LICENCE_DATA, status=ReceptionStatusEnum.PENDING
+    ).count()
+    if ld_pending_count and ld_pending_count > 1:
+        raise Exception("More than 1 licenceData pending mails found")
+
+    pending = Mail.objects.filter(status=ReceptionStatusEnum.PENDING).order_by("created_at").first()
+    if pending:
+        return pending
+
+
 def get_good_id(line_number, licence_reference) -> str or None:
     """
     Returns the LITE API Good ID or None (Good IDs for Open Licences are not mapped as they are not needed)
