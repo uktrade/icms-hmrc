@@ -16,7 +16,7 @@ from mail.libraries.data_processors import (
     lock_db_for_sending_transaction,
 )
 from mail.libraries.email_message_dto import EmailMessageDto
-from mail.libraries.helpers import select_email_for_sending, sort_dtos_by_date
+from mail.libraries.helpers import select_email_for_sending, sort_dtos_by_date, check_for_pending_messages
 from mail.libraries.mailbox_service import send_email, get_message_iterator
 from mail.models import Mail
 from mail.servers import MailServer
@@ -93,6 +93,13 @@ def check_and_route_emails():
         email_message_dtos.extend(reply_message_dtos)
 
     if not email_message_dtos:
+        pending_message = check_for_pending_messages()
+        if pending_message:
+            logging.info(
+                f"Found pending mail ({pending_message.id}) of extract type {pending_message.extract_type} for sending"
+            )
+            _collect_and_send(pending_message)
+
         logger.info(f"No new emails found from {hmrc_to_dit_server.user} or {spire_to_dit_server.user}")
         return
 
