@@ -48,7 +48,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DJANGO_SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool("DEBUG", False)
+DEBUG = env.bool("DEBUG", default=False)
 
 ALLOWED_HOSTS = "*"
 
@@ -145,6 +145,8 @@ EMAIL_POP3_PORT = env("EMAIL_POP3_PORT")
 EMAIL_SMTP_PORT = env("EMAIL_SMTP_PORT")
 SPIRE_ADDRESS = env("SPIRE_ADDRESS")
 HMRC_ADDRESS = env("HMRC_ADDRESS")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", True)
+MAILHOG_URL = env.str("MAILHOG_URL", "http://localhost:8025")
 
 SPIRE_ADDRESS_PARALLEL_RUN = env("SPIRE_ADDRESS_PARALLEL_RUN")
 
@@ -181,7 +183,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = env.bool("USE_TZ", True)
 
 if "test" not in sys.argv:
     LOGGING = {

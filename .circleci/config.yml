@@ -11,9 +11,10 @@ jobs:
         environment:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
+      - image: mailhog/mailhog
 
     environment:
-      DEBUG: 'True'
+      DEBUG: True
       PIPENV_VENV_IN_PROJECT: 'enabled'
 
     working_directory: ~/lite-hmrc

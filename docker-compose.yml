@@ -26,28 +26,15 @@ services:
       - 8000:8000
     depends_on:
       - lite-hmrc-postgres
-      - lite-hmrc-ditmail
     expose:
       - 8000
     command: pipenv run ./manage.py runserver 0.0.0.0:8000
 
-  lite-hmrc-ditmail:
-    container_name: "lite-hmrc-ditmail"
-    build: ../mailserver
+  mailhog:
     ports:
-      - "2525:25"
-      - "25587:587"
-      - "25995:995"
-      - "2580:80"
-    volumes:
-       - ./mailserver/maildata:/var/vmail
-    environment:
-      EMAIL_DOMAIN: example.com
-      RELAY_ADDRESS: api:10025
-      CERTBOT_EMAIL: test@test.com
-      USE_LETSENCRYPT: "no"
-      MAIL_USERNAME: username
-      MAIL_PASSWORD: password
+      - 8025:8025  # HTTP
+      - 587:1025  # SMTP
+    image: mailhog/mailhog
 
 volumes:
   maildata:
