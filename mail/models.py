@@ -166,9 +166,6 @@ class TransactionMapping(models.Model):
     usage_transaction = models.CharField(null=False, blank=False, max_length=35)
     usage_data = models.ForeignKey(UsageData, on_delete=models.DO_NOTHING)
 
-    class Meta:
-        unique_together = [["licence_reference", "line_number", "usage_data"]]
-
 
 class MailboxConfig(TimeStampedModel):
     username = models.TextField(null=False, blank=False, primary_key=True, help_text="Username of the POP3 mailbox")
