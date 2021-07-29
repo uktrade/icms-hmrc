@@ -1,7 +1,7 @@
 [![CircleCI](https://circleci.com/gh/uktrade/lite-hmrc.svg?style=svg)](https://circleci.com/gh/uktrade/lite-hmrc)
 
 ## Introduction
-This project is meant for sending license updates to HMRC and receiving usage reporting. Information like license updates
+This project is meant for sending licence updates to HMRC and receiving usage reporting. Information like licence updates
 and usage are exchanged as mail attachment between Lite and HMRC
 
 #### Build and Run

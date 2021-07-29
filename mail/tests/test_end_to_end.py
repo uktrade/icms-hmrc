@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from conf.settings import MAILHOG_URL
 
 import requests
@@ -40,3 +42,6 @@ class EndToEndTests(LiteHMRCTestClient):
 8\end\licence\7
 9\fileTrailer\1"""
         assert body == expected_mail_body  # nosec
+        encoded_reference_code = quote("GBSIEL/2020/0000001/P", safe="")
+        response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
+        assert response.json()["status"] == "reply_pending"  # nosec

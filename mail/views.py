@@ -1,16 +1,16 @@
 import logging
-
 from django.http import JsonResponse, HttpResponse
 from rest_framework import status
 from rest_framework.views import APIView
 
 from conf.authentication import HawkOnlyAuthentication
 from mail.enums import LicenceTypeEnum, LicenceActionEnum, ReceptionStatusEnum
-from mail.models import LicencePayload, LicenceIdMapping, UsageData, Mail
+from mail.models import LicencePayload, LicenceIdMapping, UsageData, Mail, LicenceData
 from mail.serializers import (
     LiteLicenceDataSerializer,
     ForiegnTraderSerializer,
     GoodSerializer,
+    MailSerializer,
 )
 from mail.tasks import (
     manage_inbox,
@@ -111,3 +111,11 @@ class SetAllToReplySent(APIView):
     def get(self, _):
         Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
         return HttpResponse(status=HTTP_200_OK)
+
+
+class Licence(APIView):
+    def get(self, request):
+        license_id = request.GET.get("id", "")
+        mail = LicenceData.objects.get(licence_ids__contains=license_id).mail
+        serializer = MailSerializer(mail)
+        return JsonResponse(serializer.data)

@@ -7,6 +7,12 @@ from mail.enums import LicenceActionEnum
 from mail.models import Mail, LicenceData, UsageData, LicenceIdMapping
 
 
+class MailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Mail
+        fields = ["status"]
+
+
 class LicenceDataSerializer(serializers.ModelSerializer):
     mail = serializers.PrimaryKeyRelatedField(queryset=Mail.objects.all(), required=False)
 

@@ -198,7 +198,7 @@ def get_licence_ids(file_body) -> str:
     for line in lines:
         if line and "licence" in line.split("\\")[1]:
             ids.append(line.split("\\")[4])
-    logging.debug(f"license ids in the file: {ids}")
+    logging.debug(f"licence ids in the file: {ids}")
     return json.dumps(ids)
 
 
