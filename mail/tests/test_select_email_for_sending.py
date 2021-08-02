@@ -366,3 +366,74 @@ class EmailSelectTests(LiteHMRCTestClient):
         mail = Mail.objects.get(id=pending_mail.id)
         send_mail.assert_called_once()
         self.assertEqual(mail.status, ReceptionStatusEnum.REPLY_PENDING)
+
+    @mock.patch("mail.libraries.routing_controller.send")
+    @mock.patch("mail.libraries.routing_controller._get_email_message_dtos")
+    def test_case4_sending_of_pending_licencedata_when_waiting_for_reply(self, email_dtos, send_mail):
+        """
+        Another variation of case3 is,
+
+        | Mail id      | edi_filename                                    | status         |
+        + -------------+-------------------------------------------------+----------------+
+        | ac1323b135fb | CHIEF_LIVE_SPIRE_licenceData_98720_202106180855 | reply_sent     |
+        | d2d9b8d1f582 | CHIEF_LIVE_SPIRE_licenceData_98721_202106180855 | reply_pending  |
+        | dc1323b1abcd | CHIEF_LIVE_SPIRE_usageData_5050_202106180855    | reply_sent     |
+        | 541323b18976 | CHIEF_LIVE_SPIRE_licenceData_98721_202106180855 | pending        |
+        """
+        mails_status = [ReceptionStatusEnum.REPLY_SENT, ReceptionStatusEnum.REPLY_PENDING]
+        start_run_number = 78120
+        usage_run_number = 5050
+        email_dtos.return_value = []
+        send_mail.wraps = lambda x: x
+        for i, status in enumerate(mails_status):
+            mail = Mail.objects.create(extract_type=ExtractTypeEnum.LICENCE_DATA, status=status)
+            LicenceData.objects.create(
+                mail=mail,
+                source_run_number=start_run_number + i,
+                hmrc_run_number=start_run_number + i,
+                source=SourceEnum.SPIRE,
+                licence_ids=f"{i}",
+            )
+
+        filename_template = "CHIEF_LIVE_CHIEF_usageData_{run_number}_202104070888"
+        filename = filename_template.format(run_number=usage_run_number)
+        mail_body = self.licence_usage_file_body.decode("utf-8")
+        mail = Mail.objects.create(
+            extract_type=ExtractTypeEnum.USAGE_DATA,
+            edi_filename=filename,
+            edi_data=mail_body,
+            status=ReceptionStatusEnum.REPLY_SENT,
+        )
+        UsageData.objects.create(
+            mail=mail,
+            spire_run_number=usage_run_number,
+            hmrc_run_number=usage_run_number,
+            licence_ids=f"{usage_run_number}",
+        )
+
+        licence_data_run_number = start_run_number + len(mails_status)
+        filename = self.licence_data_file_name
+        mail_body = self.licence_data_file_body.decode("utf-8")
+        pending_mail = Mail.objects.create(
+            extract_type=ExtractTypeEnum.LICENCE_DATA,
+            edi_filename=filename,
+            edi_data=mail_body,
+            status=ReceptionStatusEnum.PENDING,
+        )
+        LicenceData.objects.create(
+            mail=pending_mail,
+            source_run_number=licence_data_run_number,
+            hmrc_run_number=licence_data_run_number,
+            source=SourceEnum.SPIRE,
+            licence_ids=f"{licence_data_run_number}",
+        )
+
+        with self.assertRaises(Exception) as err:
+            check_and_route_emails()
+
+        self.assertEqual(str(err.exception), "Received another licenceData mail while waiting for reply")
+
+        # assert that the pending mail is sent and status updated
+        mail = Mail.objects.get(id=pending_mail.id)
+        send_mail.assert_not_called()
+        self.assertEqual(mail.status, ReceptionStatusEnum.PENDING)
