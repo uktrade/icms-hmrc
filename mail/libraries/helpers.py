@@ -281,6 +281,15 @@ def check_for_pending_messages():
 
     pending = Mail.objects.filter(status=ReceptionStatusEnum.PENDING).order_by("created_at").first()
     if pending:
+        # check if we are waiting for reply for any licenceData mail sent previously
+        # if yes then don't send this pending mail as we have to send only after receiving reply
+        # usageData mails can be sent to SPIRE without any issues
+        reply_pending = Mail.objects.filter(
+            extract_type=ExtractTypeEnum.LICENCE_DATA, status=ReceptionStatusEnum.REPLY_PENDING
+        )
+        if reply_pending and pending.extract_type == ExtractTypeEnum.LICENCE_DATA:
+            raise Exception("Received another licenceData mail while waiting for reply")
+
         return pending
 
 
