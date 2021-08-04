@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from django.test import tag
 from unittest import mock
 
@@ -145,6 +146,7 @@ class EmailSelectTests(LiteHMRCTestClient):
             edi_filename=filename,
             edi_data=mail_body,
             status=ReceptionStatusEnum.PENDING,
+            sent_at=datetime.now(timezone.utc),
         )
         LicenceData.objects.create(
             mail=pending_mail,

@@ -1,9 +1,10 @@
 import json
 import logging
 
+from datetime import datetime
 from rest_framework import serializers
 
-from mail.enums import LicenceActionEnum
+from mail import enums
 from mail.models import Mail, LicenceData, UsageData, LicenceIdMapping
 
 
@@ -181,14 +182,58 @@ class LiteLicenceDataSerializer(serializers.Serializer):
     old_id = serializers.CharField(required=False)
 
     def validate(self, attrs):
-        if self.initial_data.get("action") == LicenceActionEnum.UPDATE and not attrs.get("old_id"):
+        if self.initial_data.get("action") == enums.LicenceActionEnum.UPDATE and not attrs.get("old_id"):
             raise serializers.ValidationError("old_id is a required field for action - update")
         return attrs
 
     def validate_old_id(self, value):
         if (
-            self.initial_data.get("action") == LicenceActionEnum.UPDATE
+            self.initial_data.get("action") == enums.LicenceActionEnum.UPDATE
             and not LicenceIdMapping.objects.filter(lite_id=value).exists()
         ):
             raise serializers.ValidationError("This licence does not exist in HMRC integration records")
         return value
+
+
+class LicenceDataStatusSerializer(serializers.ModelSerializer):
+    licence_data_status = serializers.SerializerMethodField()
+    reply_pending_count = serializers.SerializerMethodField()
+    processing_time = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LicenceData
+        fields = ("licence_data_status", "reply_pending_count", "processing_time")
+
+    def get_licence_data_status(self, instance):
+        if instance.mail.status == enums.ReceptionStatusEnum.PENDING:
+            return f"The mail with run number {instance.hmrc_run_number} is not yet sent to HMRC (which is {instance.source_run_number} for {instance.source})"
+        elif instance.mail.status == enums.ReceptionStatusEnum.REPLY_PENDING:
+            return f"Reply pending, waiting for reply for HMRC run number {instance.hmrc_run_number} (which is {instance.source_run_number} for {instance.source})"  # noqa
+        elif instance.mail.status == enums.ReceptionStatusEnum.REPLY_SENT:
+            return f"Reply sent for run number {instance.hmrc_run_number} (which is {instance.source_run_number} for {instance.source}). Waiting for next mail from SPIRE/LITE"  # noqa
+
+    def get_reply_pending_count(self, instance):
+        return Mail.objects.filter(
+            extract_type=enums.ExtractTypeEnum.LICENCE_DATA, status=enums.ReceptionStatusEnum.REPLY_PENDING
+        ).count()
+
+    def get_processing_time(self, instance):
+        if instance.mail.status == enums.ReceptionStatusEnum.REPLY_PENDING:
+            if instance.mail.sent_at:
+                return int(datetime.now().timestamp() - instance.mail.sent_at.timestamp()) // 60
+        elif instance.mail.status == enums.ReceptionStatusEnum.REPLY_SENT:
+            if instance.mail.sent_at and instance.mail.response_date:
+                return int((instance.mail.response_date - instance.mail.sent_at).total_seconds()) // 60
+
+        return 0
+
+
+class UsageDataStatusSerializer(serializers.ModelSerializer):
+    usage_data_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UsageData
+        fields = ("usage_data_status", "has_lite_data")
+
+    def get_usage_data_status(self, instance):
+        return f"Run number of last usage data processed is {instance.hmrc_run_number}"

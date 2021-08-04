@@ -16,7 +16,12 @@ from mail.libraries.data_processors import (
     lock_db_for_sending_transaction,
 )
 from mail.libraries.email_message_dto import EmailMessageDto
-from mail.libraries.helpers import select_email_for_sending, sort_dtos_by_date, check_for_pending_messages
+from mail.libraries.helpers import (
+    select_email_for_sending,
+    sort_dtos_by_date,
+    check_for_pending_messages,
+    publish_queue_status,
+)
 from mail.libraries.mailbox_service import send_email, get_message_iterator
 from mail.models import Mail
 from mail.servers import MailServer
@@ -101,6 +106,9 @@ def check_and_route_emails():
             _collect_and_send(pending_message)
 
         logger.info(f"No new emails found from {hmrc_to_dit_server.user} or {spire_to_dit_server.user}")
+
+        publish_queue_status()
+
         return
 
     for email, mark_status in email_message_dtos:
@@ -120,6 +128,8 @@ def check_and_route_emails():
             f"Selected mail ({mail.id}) for sending, extract type {mail.extract_type}, current status {mail.status}"
         )
         _collect_and_send(mail)
+
+    publish_queue_status()
 
 
 def update_mail(mail: Mail, mail_dto: EmailMessageDto):
