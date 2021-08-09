@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import sentry_sdk
 
 from dateutil.parser import parse
 from django.conf import settings
@@ -11,6 +12,7 @@ from json.decoder import JSONDecodeError
 from mail.enums import SourceEnum, ExtractTypeEnum, UnitMapping, ReceptionStatusEnum
 from mail.libraries.email_message_dto import EmailMessageDto, HmrcEmailMessageDto
 from mail.models import LicenceData, UsageData, Mail, GoodIdMapping, LicenceIdMapping
+from mail import serializers
 
 ALLOWED_FILE_MIMETYPES = ["application/octet-stream", "text/plain"]
 
@@ -335,3 +337,77 @@ def get_country_id(country):
 
 def sort_dtos_by_date(input_dtos):
     return sorted(input_dtos, key=lambda d: d[0].date)
+
+
+def log_to_sentry(message, extra=None, level="info"):
+    extra = extra or {}
+    with sentry_sdk.push_scope() as scope:
+        for key, value in extra.items():
+            scope.set_extra(key, value)
+        sentry_sdk.capture_message(message, level=level)
+
+
+def get_licence_data_status():
+    mail = (
+        Mail.objects.filter(extract_type__in=[ExtractTypeEnum.LICENCE_DATA, ExtractTypeEnum.LICENCE_REPLY])
+        .order_by("created_at")
+        .last()
+    )
+    licence_data_qs = LicenceData.objects.filter(mail=mail)
+    if not licence_data_qs:
+        return {}
+
+    licence_data = licence_data_qs.first()
+    status = serializers.LicenceDataStatusSerializer(licence_data).data
+
+    # usually we should receive reply in 20-30 min
+    processing_time_min = status.get("processing_time")
+    if mail.status == ReceptionStatusEnum.REPLY_PENDING:
+        status["waiting_time"] = f"Reply waiting time {processing_time_min} min"
+    elif mail.status == ReceptionStatusEnum.REPLY_SENT:
+        status["round_trip_time"] = f"Total round trip time {processing_time_min} min"
+
+    return status
+
+
+def get_usage_data_status():
+    mail = Mail.objects.filter(extract_type=ExtractTypeEnum.USAGE_DATA).order_by("created_at").last()
+    usage_data_qs = UsageData.objects.filter(mail=mail)
+    if not usage_data_qs:
+        return {}
+
+    usage_data = usage_data_qs.first()
+    return serializers.UsageDataStatusSerializer(usage_data).data
+
+
+def publish_queue_status():
+    """
+    Uses the last Licence data mail and Usage data to get the status of the queue.
+
+    Since we shouldn't sent next licence data mail without receiving reply for the previous one
+    checking the last mail is sufficient to detect any anamolies.
+    """
+    queue_status = {}
+    queue_status["licence_data"] = get_licence_data_status()
+    queue_status["usage_data"] = get_usage_data_status()
+
+    ## In the increasing order of severity
+    queue_state = "HEALTHY"
+    extra_state = {}
+
+    licence_data_status = queue_status.get("licence_data")
+    if licence_data_status:
+        processing_time = licence_data_status.get("processing_time")
+        if "waiting_time" in licence_data_status and processing_time > 30:
+            queue_state = "RESPONSE TIMEOUT"
+
+        # we should only be waiting for reply for one licence data mail
+        if licence_data_status["reply_pending_count"] > 1:
+            queue_state = "REQUIRES ATTENTION"
+
+        extra_state = {**queue_status["licence_data"]}
+
+    if "usage_data" in queue_status:
+        extra_state = {**extra_state, **queue_status["usage_data"]}
+
+    log_to_sentry(f"Mail queue status: {queue_state} (see additional data below)", extra=extra_state)
