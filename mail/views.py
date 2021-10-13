@@ -2,6 +2,7 @@ import logging
 from django.http import JsonResponse, HttpResponse
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.response import Response
 
 from conf.authentication import HawkOnlyAuthentication
 from mail.enums import LicenceTypeEnum, LicenceActionEnum, ReceptionStatusEnum
@@ -115,7 +116,21 @@ class SetAllToReplySent(APIView):
 
 class Licence(APIView):
     def get(self, request):
+        """
+        Fetch existing licence
+        """
         license_id = request.GET.get("id", "")
-        mail = LicenceData.objects.get(licence_ids__contains=license_id).mail
+
+        matching_licences = LicenceData.objects.filter(licence_ids__contains=license_id)
+        matching_licences_count = matching_licences.count()
+        if matching_licences_count > 1:
+            logging.warn(f"Too many matches for licence '{license_id}'")
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        elif matching_licences_count == 0:
+            logging.warn(f"No matches for licence '{license_id}'")
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # Return single matching licence
+        mail = matching_licences.first().mail
         serializer = MailSerializer(mail)
         return JsonResponse(serializer.data)
