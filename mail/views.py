@@ -119,15 +119,15 @@ class Licence(APIView):
         """
         Fetch existing licence
         """
-        license_id = request.GET.get("id", "")
+        license_ref = request.GET.get("id", "")
 
-        matching_licences = LicenceData.objects.filter(licence_ids__contains=license_id)
+        matching_licences = LicenceData.objects.filter(licence_ids__contains=license_ref)
         matching_licences_count = matching_licences.count()
         if matching_licences_count > 1:
-            logging.warn(f"Too many matches for licence '{license_id}'")
+            logging.warn(f"Too many matches for licence '{license_ref}'")
             return Response(status=status.HTTP_400_BAD_REQUEST)
         elif matching_licences_count == 0:
-            logging.warn(f"No matches for licence '{license_id}'")
+            logging.warn(f"No matches for licence '{license_ref}'")
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         # Return single matching licence
