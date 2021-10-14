@@ -61,12 +61,13 @@ The tool 'bandit' is used. To run it `pipenv run bandit -r .`
 
 #### Test
 
+> NOTE: A task manager needs to be running locally if you are running E2E tests or similar. Check Procfile
+
 The tests require a live postgres server. They will create a database called
 `test_postgres` as part of the test run.
 
-You may encounter `AssertionError: database connection isn't set to UTC` when running. To work around this set 
+You may encounter `AssertionError: database connection isn't set to UTC` when running. To work around this set
 `USE_TZ = False` in `conf/settings.py`.
 
-Tests are located in `mail/tests`. To run all tests 
+Tests are located in `mail/tests`. To run all tests
 `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py test --exclude-tag=end-to-end --exclude-tag=skip`
-
