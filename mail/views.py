@@ -97,6 +97,9 @@ class ManageInbox(APIView):
 
 class SendLicenceUpdatesToHmrc(APIView):
     def get(self, _):
+        """
+        Force the task of sending licence data to HMRC (I assume for testing?)
+        """
         send_licence_data_to_hmrc.now()
         return HttpResponse(status=HTTP_200_OK)
 
