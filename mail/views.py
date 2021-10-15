@@ -2,6 +2,7 @@ import logging
 from django.http import JsonResponse, HttpResponse
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.response import Response
 
 from conf.authentication import HawkOnlyAuthentication
 from mail.enums import LicenceTypeEnum, LicenceActionEnum, ReceptionStatusEnum
@@ -96,6 +97,9 @@ class ManageInbox(APIView):
 
 class SendLicenceUpdatesToHmrc(APIView):
     def get(self, _):
+        """
+        Force the task of sending licence data to HMRC (I assume for testing?)
+        """
         send_licence_data_to_hmrc.now()
         return HttpResponse(status=HTTP_200_OK)
 
@@ -115,7 +119,21 @@ class SetAllToReplySent(APIView):
 
 class Licence(APIView):
     def get(self, request):
-        license_id = request.GET.get("id", "")
-        mail = LicenceData.objects.get(licence_ids__contains=license_id).mail
+        """
+        Fetch existing licence
+        """
+        license_ref = request.GET.get("id", "")
+
+        matching_licences = LicenceData.objects.filter(licence_ids__contains=license_ref)
+        matching_licences_count = matching_licences.count()
+        if matching_licences_count > 1:
+            logging.warn(f"Too many matches for licence '{license_ref}'")
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        elif matching_licences_count == 0:
+            logging.warn(f"No matches for licence '{license_ref}'")
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # Return single matching licence
+        mail = matching_licences.first().mail
         serializer = MailSerializer(mail)
         return JsonResponse(serializer.data)
