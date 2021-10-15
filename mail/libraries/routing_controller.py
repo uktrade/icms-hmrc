@@ -135,7 +135,7 @@ def check_and_route_emails():
 def update_mail(mail: Mail, mail_dto: EmailMessageDto):
     """Update status of mail
 
-        'pending' -> 'reply_pending' -> 'reply_sent'
+        'pending' -> 'reply_pending' -> 'reply_received' -> 'reply_sent'
     """
     previous_status = mail.status
 
