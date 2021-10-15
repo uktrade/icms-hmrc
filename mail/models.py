@@ -49,6 +49,9 @@ class Mail(models.Model):
         db_table = "mail"
         ordering = ["created_at"]
 
+    def __str__(self):
+        return f"{self.__class__.__name__} object (id={self.id}, status={self.status})"
+
     def save(self, *args, **kwargs):
         super(Mail, self).save(*args, **kwargs)
 
