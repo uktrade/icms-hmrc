@@ -191,7 +191,10 @@ def _handle_exception(message, lite_usage_data_id):
 
 @background(queue=LICENCE_DATA_TASK_QUEUE, schedule=0)
 def send_licence_data_to_hmrc():
-    """Sends LITE licence updates to HMRC"""
+    """Sends LITE licence updates to HMRC
+
+    Return: True if successful
+    """
 
     logging.info("Sending LITE licence updates to HMRC")
 
@@ -229,6 +232,7 @@ def send_licence_data_to_hmrc():
         )
     else:
         logging.info(f"Successfully sent LITE licences updates in Mail [{mail.id}] to HMRC")
+        return True
 
 
 def _is_email_slot_free() -> bool:

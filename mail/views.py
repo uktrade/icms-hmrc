@@ -18,7 +18,7 @@ from mail.tasks import (
     send_licence_data_to_hmrc,
     send_licence_usage_figures_to_lite_api,
 )
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR
 
 
 class LicenceDataIngestView(APIView):
@@ -100,8 +100,11 @@ class SendLicenceUpdatesToHmrc(APIView):
         """
         Force the task of sending licence data to HMRC (I assume for testing?)
         """
-        send_licence_data_to_hmrc.now()
-        return HttpResponse(status=HTTP_200_OK)
+        success = send_licence_data_to_hmrc.now()
+        if success:
+            return HttpResponse(status=HTTP_200_OK)
+        else:
+            return HttpResponse(status=HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class SendUsageUpdatesToLiteApi(APIView):
@@ -112,6 +115,9 @@ class SendUsageUpdatesToLiteApi(APIView):
 
 
 class SetAllToReplySent(APIView):
+    """
+    Updates status of all emails to REPLY_SENT
+    """
     def get(self, _):
         Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
         return HttpResponse(status=HTTP_200_OK)
