@@ -118,6 +118,7 @@ class SetAllToReplySent(APIView):
     """
     Updates status of all emails to REPLY_SENT
     """
+
     def get(self, _):
         Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
         return HttpResponse(status=HTTP_200_OK)
