@@ -177,6 +177,8 @@ def sanitize_foreign_trader_address(trader):
 
     addr_line = address.pop("line_1")
     addr_line = addr_line.replace("\n", " ").replace("\r", " ")
+    # replace special characters
+    addr_line = addr_line.replace("#", "")
     addr_lines = textwrap.wrap(addr_line, width=FOREIGN_TRADER_ADDR_LINE_MAX_LEN, break_long_words=False)
     if len(addr_lines) > FOREIGN_TRADER_NUM_ADDR_LINES:
         addr_lines = addr_lines[:FOREIGN_TRADER_NUM_ADDR_LINES]
