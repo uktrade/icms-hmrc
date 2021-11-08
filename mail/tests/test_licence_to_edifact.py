@@ -148,6 +148,10 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
                 "50\nIndustrial\nEstate\nQueensland\nNSW 42551",
                 "5\\foreignTrader\\Advanced Firearms Limited\\50 Industrial Estate Queensland NSW\\42551\\\\\\\\\\GB",
             ),
+            (
+                "50\nIndustrial\nEstate#\nQueensland#\nNSW 42551",
+                "5\\foreignTrader\\Advanced Firearms Limited\\50 Industrial Estate Queensland NSW\\42551\\\\\\\\\\GB",
+            ),
         ]
     )
     def test_foreign_trader_address_sanitize(self, address_line_1, expected_trader_line):
