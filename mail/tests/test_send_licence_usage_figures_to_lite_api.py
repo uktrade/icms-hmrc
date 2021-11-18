@@ -1,9 +1,10 @@
 from unittest import mock
+from uuid import uuid4
 
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_207_MULTI_STATUS, HTTP_208_ALREADY_REPORTED
 
 from conf.settings import LITE_API_URL, HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS, LITE_API_REQUEST_TIMEOUT, MAX_ATTEMPTS
-from mail.models import Mail, UsageData, LicencePayload
+from mail.models import GoodIdMapping, LicenceIdMapping, Mail, UsageData, LicencePayload
 from mail.tasks import send_licence_usage_figures_to_lite_api, schedule_max_tried_task_as_new_task
 from mail.tests.libraries.client import LiteHMRCTestClient
 
@@ -175,3 +176,99 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
         schedule_max_tried_task_as_new_task(str(self.usage_data.id))
 
         send_licence_usage_figures.assert_called_with(str(self.usage_data.id), schedule=mock.ANY)
+
+    @mock.patch("mail.tasks.put")
+    def test_licence_usage_ignore_licence_completion(self, put_request):
+        """
+        Test that ensures that licenceUsage transaction that has a completion date
+        value are not reported to LITE-API because this is an additional transaction
+        that is sent when all the allowed quantity of all items on that licence are used.
+        Sending it again results in double counting of the recorded usage.
+        """
+        licence = LicenceIdMapping.objects.create(
+            lite_id="5678d9b2-09a9-4e86-840f-236d186e1234", reference="GBSIEL/2020/0000025/P"
+        )
+        good_mappings = [
+            GoodIdMapping.objects.create(
+                line_number=(i + 1), lite_id=str(uuid4()), licence_reference="GBSIEL/2020/0000025/P"
+            )
+            for i in range(3)
+        ]
+
+        mail = Mail.objects.create(
+            edi_data=(
+                "1\\fileHeader\\CHIEF\\SPIRE\\usageData\\201901130300\\49543\\\n"
+                "2\\licenceUsage\\LU04148/00001\\insert\\GBSIEL/2020/0000025/P\\O\\\n"
+                "3\\line\\1\\2\\0\\\n"
+                "4\\usage\\O\\9GB000001328000-PE112345\\R\\20190112\\2\\0\\\\000262\\\\\\\\\n"
+                "5\\end\\line\\5\n"
+                "6\\line\\2\\5\\0\\\n"
+                "7\\usage\\O\\9GB000001328000-PE112345\\R\\20190112\\5\\0\\\\000262\\\\\\\\\n"
+                "8\\end\\line\\5\n"
+                "9\\line\\3\\10\\0\\\n"
+                "10\\usage\\O\\9GB000001328000-PE112345\\R\\20190112\\10\\0\\\\000262\\\\\\\\\n"
+                "11\\end\\line\\5\n"
+                "12\\end\\licenceUsage\\10\n"
+                "13\\licenceUsage\\LU04148/00002\\insert\\GBSIEL/2020/0000025/P\\C\\20211110\n"
+                "14\\line\\1\\2\\0\\\n"
+                "15\\end\\line\\2\n"
+                "16\\line\\2\\5\\0\\\n"
+                "17\\end\\line\\2\n"
+                "18\\line\\3\\10\\0\\\n"
+                "19\\end\\line\\2\n"
+                "20\\end\\licenceUsage\\8\n"
+                "21\\fileTrailer\\2"
+            )
+        )
+        usage_data = UsageData.objects.create(
+            mail=mail, licence_ids='["GBSIEL/2020/0000025/P"]', hmrc_run_number=0, spire_run_number=0,
+        )
+
+        expected_payload = {
+            "usage_data_id": str(usage_data.id),
+            "licences": [
+                {
+                    "id": str(licence.lite_id),
+                    "goods": [
+                        {"id": str(good_mappings[0].lite_id), "usage": "2", "value": "0", "currency": ""},
+                        {"id": str(good_mappings[1].lite_id), "usage": "5", "value": "0", "currency": ""},
+                        {"id": str(good_mappings[2].lite_id), "usage": "10", "value": "0", "currency": ""},
+                    ],
+                    "action": "open",
+                    "completion_date": "",
+                }
+            ],
+        }
+
+        put_request.return_value = MockResponse(
+            json={
+                "licences": {
+                    "accepted": [
+                        {
+                            "id": str(licence.lite_id),
+                            "goods": [
+                                {"id": str(good_mappings[0].lite_id), "usage": "2"},
+                                {"id": str(good_mappings[1].lite_id), "usage": "5"},
+                                {"id": str(good_mappings[2].lite_id), "usage": "10"},
+                            ],
+                        }
+                    ],
+                    "rejected": [],
+                }
+            },
+            status_code=HTTP_207_MULTI_STATUS,
+        )
+
+        send_licence_usage_figures_to_lite_api.now(str(usage_data.id))
+
+        usage_data.refresh_from_db()
+        put_request.assert_called_with(
+            f"{LITE_API_URL}/licences/hmrc-integration/",
+            expected_payload,
+            hawk_credentials=HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
+            timeout=LITE_API_REQUEST_TIMEOUT,
+        )
+        usage_data.refresh_from_db()
+        self.assertIsNotNone(usage_data.lite_sent_at)
+        self.assertEqual(usage_data.lite_accepted_licences, ["GBSIEL/2020/0000025/P"])
+        self.assertEqual(usage_data.lite_rejected_licences, [])

@@ -112,6 +112,13 @@ def build_json_payload_from_data_blocks(data_blocks: list) -> dict:
 
         payload.append(licence_payload)
 
+        """
+        Filter blocks that has a completion date because this is an additional transaction
+        that is sent when all the allowed quantity of all items on that licence are used.
+        Sending it again results in double counting of the recorded usage
+        """
+        payload = [item for item in payload if not item["completion_date"]]
+
     return {"licences": payload}
 
 
