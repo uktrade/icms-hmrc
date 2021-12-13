@@ -7,20 +7,11 @@ from email.mime.text import MIMEText
 
 from background_task import background
 from background_task.models import Task
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from rest_framework.status import HTTP_207_MULTI_STATUS, HTTP_208_ALREADY_REPORTED
 
-from conf.settings import (
-    EMAIL_USER,
-    NOTIFY_USERS,
-)
-from conf.settings import (
-    LITE_API_URL,
-    HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
-    LITE_API_REQUEST_TIMEOUT,
-    MAX_ATTEMPTS,
-)
 from mail.enums import ReceptionStatusEnum, ReplyStatusEnum
 from mail.libraries.builders import build_licence_data_mail
 from mail.libraries.data_processors import build_request_mail_message_dto
@@ -64,10 +55,10 @@ def send_licence_usage_figures_to_lite_api(lite_usage_data_id):
     try:
         build_lite_payload(lite_usage_data)
         response = put(
-            f"{LITE_API_URL}/licences/hmrc-integration/",
+            f"{settings.LITE_API_URL}/licences/hmrc-integration/",
             lite_usage_data.lite_payload,
-            hawk_credentials=HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
-            timeout=LITE_API_REQUEST_TIMEOUT,
+            hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
+            timeout=settings.LITE_API_REQUEST_TIMEOUT,
         )
     except Exception as exc:  # noqa
         _handle_exception(
@@ -156,7 +147,7 @@ def schedule_max_tried_task_as_new_task(lite_usage_data_id):
     Abstracted from 'send_licence_usage_figures_to_lite_api' to enable unit testing of a recursive operation
     """
 
-    logging.warning(f"Maximum attempts of {MAX_ATTEMPTS} for LITE UsageData [{lite_usage_data_id}] has been reached")
+    logging.warning(f"Maximum attempts of {settings.MAX_ATTEMPTS} for LITE UsageData [{lite_usage_data_id}] has been reached")
 
     schedule_datetime = timezone.now() + timedelta(seconds=TASK_BACK_OFF)
     logging.info(f"Scheduling new task for LITE UsageData [{lite_usage_data_id}] to commence at [{schedule_datetime}]")
@@ -178,7 +169,7 @@ def _handle_exception(message, lite_usage_data_id):
         # HMRC Integration tasks need to be resilient and keep retrying post-failure indefinitely.
         # This logic will make MAX_ATTEMPTS attempts to send licence changes according to the Django Background Task
         # Runner scheduling, then wait TASK_BACK_OFF seconds before starting the process again.
-        if current_attempt >= MAX_ATTEMPTS:
+        if current_attempt >= settings.MAX_ATTEMPTS:
             schedule_max_tried_task_as_new_task(lite_usage_data_id)
 
     # Raise an exception
@@ -267,8 +258,8 @@ def notify_users_of_rejected_mail(mail_id, mail_response_date):
 
     try:
         multipart_msg = MIMEMultipart()
-        multipart_msg["From"] = EMAIL_USER
-        multipart_msg["To"] = ",".join(NOTIFY_USERS)
+        multipart_msg["From"] = settings.EMAIL_USER
+        multipart_msg["To"] = ",".join(settings.NOTIFY_USERS)
         multipart_msg["Subject"] = "Mail rejected"
         body = MIMEText(f"Mail [{mail_id}] received at [{mail_response_date}] was rejected")
         multipart_msg.attach(body)

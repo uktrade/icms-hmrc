@@ -1,6 +1,6 @@
 from unittest import mock
 
-from django.test import tag
+from django.test import override_settings, tag
 
 from mail.enums import ReceptionStatusEnum
 from mail.models import LicencePayload, Mail
@@ -9,7 +9,7 @@ from mail.tests.libraries.client import LiteHMRCTestClient
 from mail.libraries.lite_to_edifact_converter import EdifactValidationError
 
 
-@mock.patch("mail.apps.BACKGROUND_TASK_ENABLED", False)  # Disable task from being run on app initialization
+@override_settings(BACKGROUND_TASK_ENABLED=False)  # Disable task from being run on app initialization
 class TaskTests(LiteHMRCTestClient):
     @tag("missed-timing")
     @mock.patch("mail.tasks.send")
