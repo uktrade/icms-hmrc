@@ -1,9 +1,10 @@
 from unittest import mock
 from uuid import uuid4
 
+from django.conf import settings
+from django.test import override_settings
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_207_MULTI_STATUS, HTTP_208_ALREADY_REPORTED
 
-from conf.settings import LITE_API_URL, HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS, LITE_API_REQUEST_TIMEOUT, MAX_ATTEMPTS
 from mail.models import GoodIdMapping, LicenceIdMapping, Mail, UsageData, LicencePayload
 from mail.tasks import send_licence_usage_figures_to_lite_api, schedule_max_tried_task_as_new_task
 from mail.tests.libraries.client import LiteHMRCTestClient
@@ -28,7 +29,7 @@ class MockResponse:
         return self.json_data
 
 
-@mock.patch("mail.apps.BACKGROUND_TASK_ENABLED", False)  # Disable task from being run on app initialization
+@override_settings(BACKGROUND_TASK_ENABLED=False)  # Disable task from being run on app initialization
 class UpdateUsagesTaskTests(LiteHMRCTestClient):
     def setUp(self):
         super().setUp()
@@ -99,10 +100,10 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
 
         self.usage_data.refresh_from_db()
         put_request.assert_called_with(
-            f"{LITE_API_URL}/licences/hmrc-integration/",
+            f"{settings.LITE_API_URL}/licences/hmrc-integration/",
             self.usage_data.lite_payload,
-            hawk_credentials=HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
-            timeout=LITE_API_REQUEST_TIMEOUT,
+            hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
+            timeout=settings.LITE_API_REQUEST_TIMEOUT,
         )
         self.usage_data.refresh_from_db()
         self.assertIsNotNone(self.usage_data.lite_sent_at)
@@ -120,10 +121,10 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
 
         self.usage_data.refresh_from_db()
         put_request.assert_called_with(
-            f"{LITE_API_URL}/licences/hmrc-integration/",
+            f"{settings.LITE_API_URL}/licences/hmrc-integration/",
             self.usage_data.lite_payload,
-            hawk_credentials=HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
-            timeout=LITE_API_REQUEST_TIMEOUT,
+            hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
+            timeout=settings.LITE_API_REQUEST_TIMEOUT,
         )
         self.usage_data.refresh_from_db()
         self.assertEqual(self.usage_data.lite_sent_at, original_sent_at)
@@ -139,10 +140,10 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
 
         self.usage_data.refresh_from_db()
         put_request.assert_called_with(
-            f"{LITE_API_URL}/licences/hmrc-integration/",
+            f"{settings.LITE_API_URL}/licences/hmrc-integration/",
             self.usage_data.lite_payload,
-            hawk_credentials=HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
-            timeout=LITE_API_REQUEST_TIMEOUT,
+            hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
+            timeout=settings.LITE_API_REQUEST_TIMEOUT,
         )
         self.usage_data.refresh_from_db()
         self.assertIsNone(self.usage_data.lite_sent_at)
@@ -152,7 +153,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
     @mock.patch("mail.tasks.put")
     def test_schedule_usages_for_lite_api_max_tried_task(self, put_request, get_task, schedule_new_task):
         put_request.return_value = MockResponse(status_code=HTTP_400_BAD_REQUEST)
-        get_task.return_value = MockTask(MAX_ATTEMPTS - 1)
+        get_task.return_value = MockTask(settings.MAX_ATTEMPTS - 1)
         schedule_new_task.return_value = None
 
         with self.assertRaises(Exception) as error:
@@ -160,10 +161,10 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
 
         self.usage_data.refresh_from_db()
         put_request.assert_called_with(
-            f"{LITE_API_URL}/licences/hmrc-integration/",
+            f"{settings.LITE_API_URL}/licences/hmrc-integration/",
             self.usage_data.lite_payload,
-            hawk_credentials=HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
-            timeout=LITE_API_REQUEST_TIMEOUT,
+            hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
+            timeout=settings.LITE_API_REQUEST_TIMEOUT,
         )
         schedule_new_task.assert_called_with(str(self.usage_data.id))
         self.usage_data.refresh_from_db()
@@ -263,10 +264,10 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
 
         usage_data.refresh_from_db()
         put_request.assert_called_with(
-            f"{LITE_API_URL}/licences/hmrc-integration/",
+            f"{settings.LITE_API_URL}/licences/hmrc-integration/",
             expected_payload,
-            hawk_credentials=HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
-            timeout=LITE_API_REQUEST_TIMEOUT,
+            hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
+            timeout=settings.LITE_API_REQUEST_TIMEOUT,
         )
         usage_data.refresh_from_db()
         self.assertIsNotNone(usage_data.lite_sent_at)

@@ -2,18 +2,18 @@ import logging
 import poplib
 import smtplib
 
-from conf.settings import EMAIL_PASSWORD, EMAIL_HOSTNAME, EMAIL_USER, EMAIL_POP3_PORT, EMAIL_SMTP_PORT, EMAIL_USE_TLS
+from django.conf import settings
 
 
 class MailServer(object):
     def __init__(
         self,
-        hostname: str = EMAIL_HOSTNAME,
-        user: str = EMAIL_USER,
-        password: str = EMAIL_PASSWORD,
-        pop3_port: int = EMAIL_POP3_PORT,
-        smtp_port: int = EMAIL_SMTP_PORT,
-        use_tls: bool = EMAIL_USE_TLS,
+        hostname: str = settings.EMAIL_HOSTNAME,
+        user: str = settings.EMAIL_USER,
+        password: str = settings.EMAIL_PASSWORD,
+        pop3_port: int = settings.EMAIL_POP3_PORT,
+        smtp_port: int = settings.EMAIL_SMTP_PORT,
+        use_tls: bool = settings.EMAIL_USE_TLS,
     ):
         self.smtp_port = smtp_port
         self.pop3_port = pop3_port

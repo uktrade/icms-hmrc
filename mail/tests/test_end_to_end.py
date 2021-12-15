@@ -1,8 +1,7 @@
 from urllib.parse import quote
 
-from conf.settings import MAILHOG_URL
-
 import requests
+from django.conf import settings
 from django.urls import reverse
 
 from mail.tests.libraries.client import LiteHMRCTestClient
@@ -10,15 +9,15 @@ from mail.tests.libraries.client import LiteHMRCTestClient
 
 class EndToEndTests(LiteHMRCTestClient):
     def clear_stmp_mailbox(self):
-        response = requests.get(f"{MAILHOG_URL}/api/v2/messages")
+        response = requests.get(f"{settings.MAILHOG_URL}/api/v2/messages")
         print(response)
         for message in response.json()["items"]:
             id = message["ID"]
             print(f"delete {id}")
-            requests.delete(f"{MAILHOG_URL}/api/v1/messages/{id}")
+            requests.delete(f"{settings.MAILHOG_URL}/api/v1/messages/{id}")
 
     def get_smtp_body(self):
-        response = requests.get(f"{MAILHOG_URL}/api/v2/messages")
+        response = requests.get(f"{settings.MAILHOG_URL}/api/v2/messages")
         print(response)
         return response.json()["items"][0]["MIME"]["Parts"][1]["Body"]
 

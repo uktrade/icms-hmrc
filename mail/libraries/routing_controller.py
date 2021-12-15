@@ -7,7 +7,6 @@ from itertools import islice
 from django.conf import settings
 from django.utils import timezone
 
-from conf.settings import SPIRE_ADDRESS
 from mail.enums import ReceptionStatusEnum, SourceEnum, ExtractTypeEnum, MailReadStatuses
 from mail.libraries.builders import build_email_message
 from mail.libraries.data_processors import (
@@ -189,7 +188,7 @@ def _collect_and_send(mail: Mail):
         else:
             update_mail(mail, message_to_send_dto)
 
-        if message_to_send_dto.receiver == SPIRE_ADDRESS and mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
+        if message_to_send_dto.receiver == settings.SPIRE_ADDRESS and mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
             # Pick up any LITE licence updates once we send a licence update reply email to SPIRE
             # so LITE does not get locked out of the queue by SPIRE
             send_licence_data_to_hmrc(schedule=0)  # noqa
