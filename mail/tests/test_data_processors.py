@@ -1,10 +1,10 @@
 import logging
 
 from datetime import datetime
+from django.conf import settings
 from django.test import tag
 from rest_framework.exceptions import ValidationError
 
-from conf.settings import SPIRE_ADDRESS, HMRC_ADDRESS, EMAIL_USER
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.builders import build_sent_filename, build_sent_file_data
 from mail.libraries.data_processors import (
@@ -43,8 +43,8 @@ class TestDataProcessors(LiteHMRCTestClient):
     def test_mail_data_serialized_successfully(self):
         email_message_dto = EmailMessageDto(
             run_number=self.source_run_number,
-            sender=HMRC_ADDRESS,
-            receiver=SPIRE_ADDRESS,
+            sender=settings.HMRC_ADDRESS,
+            receiver=settings.SPIRE_ADDRESS,
             date="Mon, 17 May 2021 14:20:18 +0100",
             body="body",
             subject=self.licence_usage_file_name,
@@ -69,10 +69,10 @@ class TestDataProcessors(LiteHMRCTestClient):
         dto = to_email_message_dto_from(self.mail)
 
         self.assertEqual(dto.run_number, self.usage_data.spire_run_number)
-        self.assertEqual(dto.sender, HMRC_ADDRESS)
+        self.assertEqual(dto.sender, settings.HMRC_ADDRESS)
         self.assertEqual("ILBDOTI_live_CHIEF_licenceReply_49543_201902080025", self.mail.edi_filename)
         self.assertEqual("ILBDOTI_live_CHIEF_licenceReply_49543_201902080025", self.mail.edi_filename)
-        self.assertEqual(dto.receiver, SPIRE_ADDRESS)
+        self.assertEqual(dto.receiver, settings.SPIRE_ADDRESS)
         self.assertTrue(isinstance(dto.date, datetime))
         self.assertEqual(dto.body, None)
         self.assertEqual(dto.raw_data, None)
@@ -84,8 +84,8 @@ class TestDataProcessors(LiteHMRCTestClient):
 
         email_message_dto = EmailMessageDto(
             run_number=self.source_run_number + 1,
-            sender=HMRC_ADDRESS,
-            receiver=SPIRE_ADDRESS,
+            sender=settings.HMRC_ADDRESS,
+            receiver=settings.SPIRE_ADDRESS,
             date="Mon, 17 May 2021 14:20:18 +0100",
             body="body",
             subject=self.licence_data_reply_name,
@@ -104,8 +104,8 @@ class TestDataProcessors(LiteHMRCTestClient):
         self.mail.save()
         email_message_dto = EmailMessageDto(
             run_number=self.source_run_number + 1,
-            sender=SPIRE_ADDRESS,
-            receiver=HMRC_ADDRESS,
+            sender=settings.SPIRE_ADDRESS,
+            receiver=settings.HMRC_ADDRESS,
             date="Mon, 17 May 2021 14:20:18 +0100",
             body="body",
             subject=self.usage_data_reply_name,
@@ -133,8 +133,8 @@ class TestDataProcessors(LiteHMRCTestClient):
 
         email_message_dto = EmailMessageDto(
             run_number=self.hmrc_run_number,
-            sender=HMRC_ADDRESS,
-            receiver=EMAIL_USER,
+            sender=settings.HMRC_ADDRESS,
+            receiver=settings.EMAIL_USER,
             date="Mon, 17 May 2021 14:20:18 +0100",
             body="body",
             subject=self.licence_data_reply_name,
