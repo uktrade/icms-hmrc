@@ -15,7 +15,7 @@ and usage are exchanged as mail attachment between Lite and HMRC
 - To start the application
 `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py runserver`
 
-##### With Docker 
+##### With Docker
 
 An `.env` file is expected at the root of project. An example provided below
 ```properties
@@ -31,15 +31,27 @@ LOCK_INTERVAL=120
 SPIRE_ADDRESS=test@spire.com
 HMRC_ADDRESS=HMRC
 ```
-- check out [mailserver](https://github.com/uktrade/mailserver) to a local folder 
-has the same parent folder of this repo 
+- check out [mailserver](https://github.com/uktrade/mailserver) to a local folder
+has the same parent folder of this repo
 - `docker-compose up --build -d`
 
-if it is the first time building the local environment, a database migration is required to be carried out. 
+if it is the first time building the local environment, a database migration is required to be carried out.
 Run the following command
 
 - `docker exec -it lite-hmrc-intg pipenv run ./manage.py migrate`
 - `docker exec -it lite-hmrc-intg pipenv run ./manage.py createsuperuser`
+
+#### Deploying to production
+
+Important settings:
+
+- SPIRE_ADDRESS: email address used by SPIRE system (legacy).
+- SPIRE_INCOMING_EMAIL_ADDRESS: same as SPIRE_ADDRESS?
+- HMRC_ADDRESS: email address used by HMRC / CHIEF to process licenses.
+- LITE_HMRC_INTEGRATION_HAWK_KEY: part of Hawk authentication protocol.
+- LITE_API_HAWK_KEY: part of Hawk authentication protocol.
+- LITE_API_URL: base URL for API to send usage response data.
+- EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_HOST, EMAIL_USE_TLS: default SMTP settings configured with EMAIL_URL environment variable.
 
 #### Linting
 
@@ -55,7 +67,7 @@ To check the format `PIPENV_DOTENV_LOCATION=.env pipenv run black --check .`
 
 The tool `prospector` is used. To run it `pipenv run prospector .`
 
-- Security and vulnerability linter 
+- Security and vulnerability linter
 
 The tool 'bandit' is used. To run it `pipenv run bandit -r .`
 
@@ -70,4 +82,4 @@ You may encounter `AssertionError: database connection isn't set to UTC` when ru
 `USE_TZ = False` in `conf/settings.py`.
 
 Tests are located in `mail/tests`. To run all tests
-`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py test --exclude-tag=end-to-end --exclude-tag=skip`
+`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py test`
