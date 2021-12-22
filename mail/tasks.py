@@ -23,7 +23,7 @@ from mail.libraries.usage_data_decomposition import build_json_payload_from_data
 from mail.models import LicencePayload, Mail
 from mail.models import UsageData, LicenceIdMapping
 from mail.requests import put
-from mail.servers import MailServer
+from mail.servers import MailServer, get_smtp_connection
 
 MANAGE_INBOX_TASK_QUEUE = "manage_inbox_queue"
 NOTIFY_USERS_TASK_QUEUE = "notify_users_queue"
@@ -210,8 +210,8 @@ def send_licence_data_to_hmrc():
                 f"Created Mail [{mail.id}] with subject {mail_dto.subject} from licences [{licence_references}]"
             )
 
-            server = MailServer()
-            send(server, mail_dto)
+            smtp_connection = get_smtp_connection()
+            send(smtp_connection, mail_dto)
             update_mail(mail, mail_dto)
 
             licences.update(is_processed=True)
