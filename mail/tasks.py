@@ -55,7 +55,8 @@ def send_licence_usage_figures_to_lite_api(lite_usage_data_id):
     try:
         build_lite_payload(lite_usage_data)
         response = put(
-            f"{settings.LITE_API_URL}/licences/hmrc-integration/",
+            # For lite-hmrc the path was hard-coded to '/licences/hmrc-integration/'.
+            f"{settings.LITE_API_URL}",
             lite_usage_data.lite_payload,
             hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
             timeout=settings.LITE_API_REQUEST_TIMEOUT,

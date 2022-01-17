@@ -50,7 +50,7 @@ Important settings:
 - HMRC_ADDRESS: email address used by HMRC / CHIEF to process licenses.
 - LITE_HMRC_INTEGRATION_HAWK_KEY: part of Hawk authentication protocol.
 - LITE_API_HAWK_KEY: part of Hawk authentication protocol.
-- LITE_API_URL: base URL for API to send usage response data.
+- LITE_API_URL: full URL for API to send usage response data.
 - EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_HOST, EMAIL_USE_TLS: default SMTP settings configured with EMAIL_URL environment variable.
 
 #### Linting

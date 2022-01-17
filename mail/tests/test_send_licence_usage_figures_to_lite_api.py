@@ -30,6 +30,7 @@ class MockResponse:
 
 
 @override_settings(BACKGROUND_TASK_ENABLED=False)  # Disable task from being run on app initialization
+@override_settings(LITE_API_URL="http://example.com/licences/hmrc-integration/")
 class UpdateUsagesTaskTests(LiteHMRCTestClient):
     def setUp(self):
         super().setUp()
@@ -100,7 +101,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
 
         self.usage_data.refresh_from_db()
         put_request.assert_called_with(
-            f"{settings.LITE_API_URL}/licences/hmrc-integration/",
+            "http://example.com/licences/hmrc-integration/",
             self.usage_data.lite_payload,
             hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
             timeout=settings.LITE_API_REQUEST_TIMEOUT,
@@ -121,7 +122,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
 
         self.usage_data.refresh_from_db()
         put_request.assert_called_with(
-            f"{settings.LITE_API_URL}/licences/hmrc-integration/",
+            "http://example.com/licences/hmrc-integration/",
             self.usage_data.lite_payload,
             hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
             timeout=settings.LITE_API_REQUEST_TIMEOUT,
@@ -140,7 +141,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
 
         self.usage_data.refresh_from_db()
         put_request.assert_called_with(
-            f"{settings.LITE_API_URL}/licences/hmrc-integration/",
+            "http://example.com/licences/hmrc-integration/",
             self.usage_data.lite_payload,
             hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
             timeout=settings.LITE_API_REQUEST_TIMEOUT,
@@ -161,7 +162,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
 
         self.usage_data.refresh_from_db()
         put_request.assert_called_with(
-            f"{settings.LITE_API_URL}/licences/hmrc-integration/",
+            "http://example.com/licences/hmrc-integration/",
             self.usage_data.lite_payload,
             hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
             timeout=settings.LITE_API_REQUEST_TIMEOUT,
@@ -264,7 +265,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
 
         usage_data.refresh_from_db()
         put_request.assert_called_with(
-            f"{settings.LITE_API_URL}/licences/hmrc-integration/",
+            "http://example.com/licences/hmrc-integration/",
             expected_payload,
             hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
             timeout=settings.LITE_API_REQUEST_TIMEOUT,
