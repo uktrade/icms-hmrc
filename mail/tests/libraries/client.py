@@ -38,9 +38,10 @@ class LiteHMRCTestClient(testcases.TestCase):
 
         self.licence_data_file_name = "CHIEF_LIVE_SPIRE_licenceData_49543_201902080025"
         self.licence_data_file_name = "ILBDOTI_live_CHIEF_licenceData_49543_201902080025"
+        self.licence_reply_file_name = "ILBDOTI_live_CHIEF_licenceReply_49543_201902080025"
 
         self.licence_data_file_body = read_file("mail/tests/files/license_update_file", mode="rb")
-        self.licence_data_file_body = read_file("mail/tests/files/license_update_file", mode="rb")
+        self.licence_reply_file_body = read_file("mail/tests/files/license_update_reply_file", mode="rb")
 
         self.licence_payload_json = json.loads(read_file("mail/tests/files/licence_payload_file", encoding="utf-8"))
 
