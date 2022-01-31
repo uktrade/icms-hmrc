@@ -236,7 +236,6 @@ class FileDeconstruction(LiteHMRCTestClient):
         self.assertEqual(spire_data, spire_data_expected)
         self.assertEqual(lite_data, lite_data_expected)
 
-    @tag("1022", "carriage-return-line-endings")
     def test_usage_data_split_according_to_licence_ids_with_carriage_returns(self):
         licence_usage_file_body_with_carriage_returns = read_file(
             "mail/tests/files/license_usage_file_with_carriage_returns", mode="rb"
