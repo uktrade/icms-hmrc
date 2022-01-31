@@ -79,6 +79,7 @@ class LicenceDataIngestView(APIView):
                     data=licence,
                     old_lite_id=licence.get("old_id"),
                     old_reference=licence.get("old_reference"),
+                    skip=False,
                 ),
             )
 
