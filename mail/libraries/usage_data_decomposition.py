@@ -12,6 +12,7 @@ def split_edi_data_by_id(data, usage_data: UsageData = None) -> (list, list):
     licence_id = None
     transaction_id = None
     for line in lines:
+        line = line.strip()
         if "licenceUsage" in line and "end" not in line:
             licence_id = line.split("\\")[4]
             licence_owner = id_owner(licence_id)
