@@ -1,3 +1,5 @@
+import os
+
 from typing import MutableMapping, Tuple, List
 
 import logging
@@ -7,6 +9,7 @@ from email.mime.text import MIMEText
 
 from background_task import background
 from background_task.models import Task
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from rest_framework.status import HTTP_207_MULTI_STATUS, HTTP_208_ALREADY_REPORTED
@@ -316,3 +319,10 @@ def manage_inbox():
             "An unexpected error occurred when polling inbox for updates -> %s", {type(exc).__name__}, exc_info=True,
         )
         raise exc
+
+
+@background(queue="test_queue", schedule=0)
+def emit_test_file():
+    test_file_path = os.path.join(settings.BASE_DIR, ".background-tasks-is-ready")
+    with open(test_file_path, "w") as test_file:
+        test_file.write("OK")
