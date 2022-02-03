@@ -47,12 +47,3 @@ services:
       true
     depends_on:
       - lite-hmrc-intg
-
-  mailhog:
-    ports:
-      - 8025:8025  # HTTP
-      - 587:1025  # SMTP
-    image: mailhog/mailhog
-
-volumes:
-  maildata:
