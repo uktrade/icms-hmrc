@@ -228,7 +228,9 @@ def send_licence_data_to_hmrc():
         raise err
     except Exception as exc:  # noqa
         logging.error(
-            f"An unexpected error occurred when sending LITE licence updates to HMRC -> {type(exc).__name__}: {exc}"
+            "An unexpected error occurred when sending LITE licence updates to HMRC -> %s",
+            type(exc).__name__,
+            exc_info=True,
         )
     else:
         logging.info(f"Successfully sent LITE licences updates in Mail [{mail.id}] to HMRC")
@@ -302,5 +304,7 @@ def manage_inbox():
     try:
         check_and_route_emails()
     except Exception as exc:  # noqa
-        logging.error(f"An unexpected error occurred when polling inbox for updates -> {type(exc).__name__}: {exc}")
+        logging.error(
+            "An unexpected error occurred when polling inbox for updates -> %s", {type(exc).__name__}, exc_info=True,
+        )
         raise exc
