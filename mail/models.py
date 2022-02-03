@@ -1,5 +1,7 @@
 import json
+import logging
 import uuid
+
 from datetime import timedelta
 from typing import List
 
@@ -16,6 +18,9 @@ from mail.enums import (
     ReplyStatusEnum,
     MailReadStatuses,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class Mail(models.Model):
@@ -53,6 +58,14 @@ class Mail(models.Model):
         return f"{self.__class__.__name__} object (id={self.id}, status={self.status})"
 
     def save(self, *args, **kwargs):
+        if not self.edi_data or not self.edi_filename:
+            logger.error(
+                "Setting `edi_data` or `edi_filename` to null or blank: self=%s, edi_data=%s edi_filename=%s",
+                self,
+                self.edi_data,
+                self.edi_filename,
+            )
+
         super(Mail, self).save(*args, **kwargs)
 
         if self.response_data and ReplyStatusEnum.REJECTED in self.response_data:

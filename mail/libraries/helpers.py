@@ -17,6 +17,9 @@ from mail import serializers
 ALLOWED_FILE_MIMETYPES = ["application/octet-stream", "text/plain"]
 
 
+logger = logging.getLogger(__name__)
+
+
 def guess_charset(msg: Message) -> str:
     """
     Guest charset of given
@@ -152,13 +155,14 @@ def convert_source_to_sender(source) -> str:
 
 
 def process_attachment(attachment):
-    file_name = ""
-    file_data = ""
+    if len(attachment) != 2:
+        logger.error("Length of attachment is incorrect: attachment=%s", attachment)
 
-    if len(attachment) == 2:
-        file_name = attachment[0]
-        file_data = attachment[1]
-        file_data = file_data.decode("utf-8")
+        return "", ""
+
+    file_name = attachment[0]
+    file_data = attachment[1]
+    file_data = file_data.decode("utf-8")
 
     logging.debug(f"attachment filename: {file_name}, filedata:\n{file_data}")
     return file_name, file_data
