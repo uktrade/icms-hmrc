@@ -34,6 +34,10 @@ from mail.models import UsageData, LicenceIdMapping
 from mail.requests import put
 from mail.servers import MailServer
 
+
+logger = logging.getLogger(__name__)
+
+
 MANAGE_INBOX_TASK_QUEUE = "manage_inbox_queue"
 NOTIFY_USERS_TASK_QUEUE = "notify_users_queue"
 LICENCE_DATA_TASK_QUEUE = "licences_updates_queue"
@@ -145,6 +149,10 @@ def save_response(lite_usage_data: UsageData, accepted_licences, rejected_licenc
 def build_lite_payload(lite_usage_data: UsageData):
     _, data = split_edi_data_by_id(lite_usage_data.mail.edi_data, lite_usage_data)
     payload = build_json_payload_from_data_blocks(data)
+    if not payload["licences"]:
+        logger.error(
+            "Licences is blank in payload for %s", lite_usage_data, stack_info=True,
+        )
     payload["usage_data_id"] = str(lite_usage_data.id)
     lite_usage_data.lite_payload = payload
     lite_usage_data.save()
@@ -228,7 +236,9 @@ def send_licence_data_to_hmrc():
         raise err
     except Exception as exc:  # noqa
         logging.error(
-            f"An unexpected error occurred when sending LITE licence updates to HMRC -> {type(exc).__name__}: {exc}"
+            "An unexpected error occurred when sending LITE licence updates to HMRC -> %s",
+            type(exc).__name__,
+            exc_info=True,
         )
     else:
         logging.info(f"Successfully sent LITE licences updates in Mail [{mail.id}] to HMRC")
@@ -302,5 +312,7 @@ def manage_inbox():
     try:
         check_and_route_emails()
     except Exception as exc:  # noqa
-        logging.error(f"An unexpected error occurred when polling inbox for updates -> {type(exc).__name__}: {exc}")
+        logging.error(
+            "An unexpected error occurred when polling inbox for updates -> %s", {type(exc).__name__}, exc_info=True,
+        )
         raise exc
