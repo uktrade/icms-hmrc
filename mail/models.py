@@ -64,7 +64,7 @@ class Mail(models.Model):
                 self,
                 self.edi_data,
                 self.edi_filename,
-                stack_info=True,
+                exc_info=True,
             )
 
         super(Mail, self).save(*args, **kwargs)

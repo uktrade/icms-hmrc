@@ -151,7 +151,7 @@ def build_lite_payload(lite_usage_data: UsageData):
     payload = build_json_payload_from_data_blocks(data)
     if not payload["licences"]:
         logger.error(
-            "Licences is blank in payload for %s", lite_usage_data, stack_info=True,
+            "Licences is blank in payload for %s", lite_usage_data, exc_info=True,
         )
     payload["usage_data_id"] = str(lite_usage_data.id)
     lite_usage_data.lite_payload = payload
