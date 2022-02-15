@@ -35,7 +35,7 @@ def get_message_id(pop3_connection, listing_msg):
     hmrc_dit_reply_address = settings.HMRC_TO_DIT_REPLY_ADDRESS.encode("utf-8")
 
     if spire_from_address not in msg_header[1] and hmrc_dit_reply_address not in msg_header[1]:
-        logging.error(
+        logging.warning(
             f"Found mail with message_num {msg_num} that is not from SPIRE ({spire_from_address}) or HMRC ({hmrc_dit_reply_address}), skipping ..."
         )
         return None, msg_num
