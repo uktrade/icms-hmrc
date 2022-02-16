@@ -94,7 +94,9 @@ class HelpersTests(LiteHMRCTestClient):
     def test_action_reference_for_usage(self, reference, action):
         self.assertEqual(get_action(reference), action)
 
-    @parameterized.expand([("GB", "GB"), ('{"id": "GB"}', "GB"), ({"id": "GB"}, "GB")])
+    @parameterized.expand(
+        [("GB", "GB"), ('{"id": "GB"}', "GB"), ({"id": "GB"}, "GB"), ("AE-DU", "AE"), ({"id": "AE-DU"}, "AE"),]
+    )
     @tag("country-id")
     def test_get_country_id(self, country, id):
         self.assertEqual(get_country_id(country), id)

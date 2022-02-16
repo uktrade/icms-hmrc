@@ -334,11 +334,13 @@ def get_action(reference) -> str:
 def get_country_id(country):
     try:
         if type(country) == dict:
-            return country["id"]
+            country_code = country["id"]
         else:
-            return json.loads(country)["id"]
+            country_code = json.loads(country)["id"]
+        # skip territory code, if exists
+        return country_code.split("-")[0]
     except (TypeError, JSONDecodeError):
-        return country
+        return country.split("-")[0]
 
 
 def sort_dtos_by_date(input_dtos):
