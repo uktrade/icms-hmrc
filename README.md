@@ -15,7 +15,7 @@ and usage are exchanged as mail attachment between Lite and HMRC
 - To start the application
 `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py runserver`
 
-##### With Docker 
+##### With Docker
 
 An `.env` file is expected at the root of project. An example provided below
 ```properties
@@ -31,11 +31,11 @@ LOCK_INTERVAL=120
 SPIRE_ADDRESS=test@spire.com
 HMRC_ADDRESS=HMRC
 ```
-- check out [mailserver](https://github.com/uktrade/mailserver) to a local folder 
-has the same parent folder of this repo 
+- check out [mailserver](https://github.com/uktrade/mailserver) to a local folder
+has the same parent folder of this repo
 - `docker-compose up --build -d`
 
-if it is the first time building the local environment, a database migration is required to be carried out. 
+if it is the first time building the local environment, a database migration is required to be carried out.
 Run the following command
 
 - `docker exec -it lite-hmrc-intg pipenv run ./manage.py migrate`
@@ -55,9 +55,15 @@ To check the format `PIPENV_DOTENV_LOCATION=.env pipenv run black --check .`
 
 The tool `prospector` is used. To run it `pipenv run prospector .`
 
-- Security and vulnerability linter 
+- Security and vulnerability linter
 
 The tool 'bandit' is used. To run it `pipenv run bandit -r .`
+
+#### Git Hub pre-commit setup
+- Install pre-commit (e.g MAC pip install pre-commit)
+- pre-commit install
+* run following to scan all files for issues
+  - pre-commit run --all-files
 
 #### Test
 

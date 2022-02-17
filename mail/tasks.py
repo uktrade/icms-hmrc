@@ -62,7 +62,8 @@ def send_licence_usage_figures_to_lite_api(lite_usage_data_id):
         licences = UsageData.licence_ids
     except UsageData.DoesNotExist:  # noqa
         _handle_exception(
-            f"LITE UsageData [{lite_usage_data_id}] does not exist.", lite_usage_data_id,
+            f"LITE UsageData [{lite_usage_data_id}] does not exist.",
+            lite_usage_data_id,
         )
         return
 
@@ -154,7 +155,9 @@ def build_lite_payload(lite_usage_data: UsageData):
     payload = build_json_payload_from_data_blocks(data)
     if not payload["licences"]:
         logger.error(
-            "Licences is blank in payload for %s", lite_usage_data, exc_info=True,
+            "Licences is blank in payload for %s",
+            lite_usage_data,
+            exc_info=True,
         )
     payload["usage_data_id"] = str(lite_usage_data.id)
     lite_usage_data.lite_payload = payload
@@ -264,7 +267,8 @@ def _get_pending_mail() -> []:
 def _get_rejected_mail() -> []:
     return list(
         Mail.objects.filter(
-            status=ReceptionStatusEnum.REPLY_SENT, response_data__icontains=ReplyStatusEnum.REJECTED,
+            status=ReceptionStatusEnum.REPLY_SENT,
+            response_data__icontains=ReplyStatusEnum.REJECTED,
         ).values_list("id", flat=True)
     )
 
@@ -316,7 +320,9 @@ def manage_inbox():
         check_and_route_emails()
     except Exception as exc:  # noqa
         logging.error(
-            "An unexpected error occurred when polling inbox for updates -> %s", {type(exc).__name__}, exc_info=True,
+            "An unexpected error occurred when polling inbox for updates -> %s",
+            {type(exc).__name__},
+            exc_info=True,
         )
         raise exc
 

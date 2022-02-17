@@ -20,7 +20,11 @@ class Command(BaseCommand):
         dry_run = options.pop("dry_run")
 
         server = MailServer(
-            hostname=settings.EMAIL_HOSTNAME, user=email_user, password=email_password, pop3_port=995, smtp_port=587,
+            hostname=settings.EMAIL_HOSTNAME,
+            user=email_user,
+            password=email_password,
+            pop3_port=995,
+            smtp_port=587,
         )
         pop3_connection = server.connect_to_pop3()
         self.stdout.write(self.style.SUCCESS(f"Connected to {email_user}"))
@@ -41,7 +45,9 @@ class Command(BaseCommand):
                     continue
 
                 read_status, _ = models.MailReadStatus.objects.get_or_create(
-                    message_id=message_id, message_num=message_num, mailbox=mailbox_config,
+                    message_id=message_id,
+                    message_num=message_num,
+                    mailbox=mailbox_config,
                 )
                 read_status.status = enums.MailReadStatuses.READ
                 read_status.save()

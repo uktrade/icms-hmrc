@@ -42,7 +42,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="MailReadStatus",
@@ -64,6 +66,8 @@ class Migration(migrations.Migration):
                 ("status", models.TextField(choices=[("READ", "Read"), ("UNREAD", "Unread")], default="UNREAD")),
                 ("mailbox", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="mail.MailboxConfig")),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
     ]

@@ -171,7 +171,8 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         edifact_file = licences_to_edifact(licences, 1234)
         foreign_trader_line = edifact_file.split("\n")[4]
         self.assertEqual(
-            foreign_trader_line, expected_trader_line,
+            foreign_trader_line,
+            expected_trader_line,
         )
 
 
@@ -302,14 +303,22 @@ class LicenceToEdifactValidationTests(LiteHMRCTestClient):
         self.assertEqual(len(errors), num_errors)
 
     @parameterized.expand(
-        [("10\\end\\licence\\9", 0), ("10\\end\\licence", 1), ("10\\ending\\licence\\9", 1),]
+        [
+            ("10\\end\\licence\\9", 0),
+            ("10\\end\\licence", 1),
+            ("10\\ending\\licence\\9", 1),
+        ]
     )
     def test_end_line_validation(self, line, num_errors):
         errors = edifact_validator.validate_end_line(line)
         self.assertEqual(len(errors), num_errors)
 
     @parameterized.expand(
-        [("11\\fileTrailer\\1", 0), ("11\\fileTrailer", 1), ("11\\fileTrailers\\1", 1),]
+        [
+            ("11\\fileTrailer\\1", 0),
+            ("11\\fileTrailer", 1),
+            ("11\\fileTrailers\\1", 1),
+        ]
     )
     def test_file_trailer_validation(self, line, num_errors):
         errors = edifact_validator.validate_file_trailer(line)

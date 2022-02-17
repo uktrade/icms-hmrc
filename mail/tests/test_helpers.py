@@ -33,12 +33,20 @@ class HelpersTests(LiteHMRCTestClient):
     def test_new_hmrc_run_number(self, source, old, new):
         mail = self._setup_mail()
         LicenceData.objects.create(
-            mail=mail, hmrc_run_number=old, source_run_number=old, source=SourceEnum.SPIRE,
+            mail=mail,
+            hmrc_run_number=old,
+            source_run_number=old,
+            source=SourceEnum.SPIRE,
         )
         self.assertEqual(new_hmrc_run_number(source), new)
 
     @parameterized.expand(
-        [[["name", b"data"], "name", "data"], [[], "", ""], [["something"], "", ""], ["something", "", ""],]
+        [
+            [["name", b"data"], "name", "data"],
+            [[], "", ""],
+            [["something"], "", ""],
+            ["something", "", ""],
+        ]
     )
     def test_process_attachment(self, attachment, attachment_name, attachment_data):
         self.assertEqual((attachment_name, attachment_data), process_attachment(attachment))
@@ -70,14 +78,32 @@ class HelpersTests(LiteHMRCTestClient):
         )
 
     @parameterized.expand(
-        [("NAR", 30), ("GRM", 21), ("KGM", 23), ("MTK", 45), ("MTR", 57), ("LTR", 94), ("MTQ", 2), ("ITG", 30),]
+        [
+            ("NAR", 30),
+            ("GRM", 21),
+            ("KGM", 23),
+            ("MTK", 45),
+            ("MTR", 57),
+            ("LTR", 94),
+            ("MTQ", 2),
+            ("ITG", 30),
+        ]
     )
     @tag("2448", "unit")
     def test_convert(self, lite_input, output):
         self.assertEqual(output, UnitMapping.convert(lite_input))
 
     @parameterized.expand(
-        [("NAR", 30), ("GRM", 21), ("KGM", 23), ("MTK", 45), ("MTR", 57), ("LTR", 94), ("MTQ", 2), ("ITG", 30),]
+        [
+            ("NAR", 30),
+            ("GRM", 21),
+            ("KGM", 23),
+            ("MTK", 45),
+            ("MTR", 57),
+            ("LTR", 94),
+            ("MTQ", 2),
+            ("ITG", 30),
+        ]
     )
     @tag("2448", "mapping")
     def test_mapping(self, lite_input, output):
@@ -95,7 +121,13 @@ class HelpersTests(LiteHMRCTestClient):
         self.assertEqual(get_action(reference), action)
 
     @parameterized.expand(
-        [("GB", "GB"), ('{"id": "GB"}', "GB"), ({"id": "GB"}, "GB"), ("AE-DU", "AE"), ({"id": "AE-DU"}, "AE"),]
+        [
+            ("GB", "GB"),
+            ('{"id": "GB"}', "GB"),
+            ({"id": "GB"}, "GB"),
+            ("AE-DU", "AE"),
+            ({"id": "AE-DU"}, "AE"),
+        ]
     )
     @tag("country-id")
     def test_get_country_id(self, country, id):

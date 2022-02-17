@@ -10,8 +10,15 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameModel(old_name="UsageUpdate", new_name="UsageData",),
-        migrations.RenameField(model_name="transactionmapping", old_name="usage_update", new_name="usage_data",),
+        migrations.RenameModel(
+            old_name="UsageUpdate",
+            new_name="UsageData",
+        ),
+        migrations.RenameField(
+            model_name="transactionmapping",
+            old_name="usage_update",
+            new_name="usage_data",
+        ),
         migrations.AlterField(
             model_name="mail",
             name="extract_type",
@@ -27,6 +34,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterUniqueTogether(
-            name="transactionmapping", unique_together={("licence_reference", "line_number", "usage_data")},
+            name="transactionmapping",
+            unique_together={("licence_reference", "line_number", "usage_data")},
         ),
     ]

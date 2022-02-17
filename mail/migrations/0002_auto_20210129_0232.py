@@ -39,6 +39,8 @@ class Migration(migrations.Migration):
                 ),
                 ("mail", models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to="mail.Mail")),
             ],
-            options={"ordering": ["mail__created_at"],},
+            options={
+                "ordering": ["mail__created_at"],
+            },
         ),
     ]

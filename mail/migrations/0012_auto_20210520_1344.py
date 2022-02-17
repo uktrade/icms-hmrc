@@ -7,13 +7,17 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('mail', '0011_auto_20210519_0859'),
+        ("mail", "0011_auto_20210519_0859"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='mailreadstatus',
-            name='message_id',
-            field=models.TextField(default=uuid.uuid4, help_text='Unique Message-ID of the message that is retrieved from the message header', unique=True),
+            model_name="mailreadstatus",
+            name="message_id",
+            field=models.TextField(
+                default=uuid.uuid4,
+                help_text="Unique Message-ID of the message that is retrieved from the message header",
+                unique=True,
+            ),
         ),
     ]

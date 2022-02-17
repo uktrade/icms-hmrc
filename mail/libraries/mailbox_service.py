@@ -133,7 +133,9 @@ def read_last_message(pop3_connection: POP3_SSL) -> EmailMessageDto:
     try:
         message = pop3_connection.retr(message_num)
     except error_proto as err:
-        raise Exception(f"Unable to RETR message num {message_num} with Message-ID {message_id}",) from err
+        raise Exception(
+            f"Unable to RETR message num {message_num} with Message-ID {message_id}",
+        ) from err
 
     return to_mail_message_dto(message)
 
@@ -151,7 +153,9 @@ def read_last_three_emails(pop3connection: POP3_SSL) -> list:
         try:
             emails.append(pop3connection.retr(message_num))
         except error_proto as err:
-            raise Exception(f"Unable to RETR message num {message_num} with Message-ID {message_id}",) from err
+            raise Exception(
+                f"Unable to RETR message num {message_num} with Message-ID {message_id}",
+            ) from err
 
     email_message_dtos = []
     for email in emails:
