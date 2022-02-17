@@ -13,6 +13,8 @@ def handle_replies():
         parse_and_reply_emails()
     except Exception as exc:  # noqa
         logging.error(
-            "An unexpected error occurred when polling inbox for updates -> %s", type(exc).__name__, exc_info=True,
+            "An unexpected error occurred when polling inbox for updates -> %s",
+            type(exc).__name__,
+            exc_info=True,
         )
         raise exc

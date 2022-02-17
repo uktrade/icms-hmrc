@@ -235,7 +235,8 @@ def build_email_message(email_message_dto: EmailMessageDto) -> MIMEMultipart:
     payload = MIMEApplication(file)
     payload.set_payload(file)
     payload.add_header(
-        "Content-Disposition", f'attachment; filename="{email_message_dto.attachment[0]}"',
+        "Content-Disposition",
+        f'attachment; filename="{email_message_dto.attachment[0]}"',
     )
     payload.add_header("Content-Transfer-Encoding", "7bit")
     payload.add_header("name", email_message_dto.subject)

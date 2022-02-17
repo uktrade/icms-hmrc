@@ -19,7 +19,10 @@ class MultipleEmailRetrievalTests(LiteHMRCTestClient):
             date="Mon, 17 May 2021 14:20:18 +0100",
             body="lite licence reply",
             subject="ILBDOTI_live_CHIEF_licenceReply_49543_201901130300",
-            attachment=["ILBDOTI_live_CHIEF_licenceReply_49543_201901130300", self.licence_data_reply_body,],
+            attachment=[
+                "ILBDOTI_live_CHIEF_licenceReply_49543_201901130300",
+                self.licence_data_reply_body,
+            ],
             raw_data="qwerty",
         )
         self.dto_2 = EmailMessageDto(
@@ -29,7 +32,10 @@ class MultipleEmailRetrievalTests(LiteHMRCTestClient):
             date="Mon, 17 May 2021 14:20:18 +0100",
             body="spire licence update",
             subject="ILBDOTI_live_CHIEF_licenceData_17_201901130300",
-            attachment=["ILBDOTI_live_CHIEF_licenceData_49543_201901130300", self.licence_data_file_body,],
+            attachment=[
+                "ILBDOTI_live_CHIEF_licenceData_49543_201901130300",
+                self.licence_data_file_body,
+            ],
             raw_data="qwerty",
         )
         self.dto_3 = EmailMessageDto(

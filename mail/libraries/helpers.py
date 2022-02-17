@@ -157,7 +157,9 @@ def convert_source_to_sender(source) -> str:
 def process_attachment(attachment):
     if len(attachment) != 2:
         logger.error(
-            "Length of attachment is incorrect: attachment=%s", attachment, exc_info=True,
+            "Length of attachment is incorrect: attachment=%s",
+            attachment,
+            exc_info=True,
         )
 
         return "", ""

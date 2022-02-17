@@ -37,7 +37,9 @@ class TestDataProcessors(LiteHMRCTestClient):
         )
 
         self.usage_data = UsageData.objects.create(
-            mail=self.mail, spire_run_number=self.source_run_number, hmrc_run_number=self.hmrc_run_number,
+            mail=self.mail,
+            spire_run_number=self.source_run_number,
+            hmrc_run_number=self.hmrc_run_number,
         )
 
     def test_mail_data_serialized_successfully(self):
@@ -89,7 +91,10 @@ class TestDataProcessors(LiteHMRCTestClient):
             date="Mon, 17 May 2021 14:20:18 +0100",
             body="body",
             subject=self.licence_data_reply_name,
-            attachment=[self.licence_data_reply_name, self.licence_data_reply_body,],
+            attachment=[
+                self.licence_data_reply_name,
+                self.licence_data_reply_body,
+            ],
             raw_data="qwerty",
         )
 
@@ -120,7 +125,8 @@ class TestDataProcessors(LiteHMRCTestClient):
         self.assertIsNotNone(self.mail.response_date)
 
         self.assertIn(
-            self.mail.response_data, self.usage_data_reply_body.decode("utf-8"),
+            self.mail.response_data,
+            self.usage_data_reply_body.decode("utf-8"),
         )
 
     @tag("serialize")

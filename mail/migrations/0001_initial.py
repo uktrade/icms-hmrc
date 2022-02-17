@@ -68,7 +68,10 @@ class Migration(migrations.Migration):
                 ("currently_processed_by", models.CharField(max_length=100, null=True)),
                 ("retry", models.BooleanField(default=False)),
             ],
-            options={"db_table": "mail", "ordering": ["created_at"],},
+            options={
+                "db_table": "mail",
+                "ordering": ["created_at"],
+            },
         ),
         migrations.CreateModel(
             name="OrganisationIdMapping",
@@ -97,7 +100,9 @@ class Migration(migrations.Migration):
                 ("lite_response", jsonfield.fields.JSONField(default=dict)),
                 ("mail", models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to="mail.Mail")),
             ],
-            options={"ordering": ["mail__created_at"],},
+            options={
+                "ordering": ["mail__created_at"],
+            },
         ),
         migrations.CreateModel(
             name="LicenceUpdate",
@@ -112,7 +117,9 @@ class Migration(migrations.Migration):
                 ),
                 ("mail", models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to="mail.Mail")),
             ],
-            options={"ordering": ["mail__created_at"],},
+            options={
+                "ordering": ["mail__created_at"],
+            },
         ),
         migrations.CreateModel(
             name="LicencePayload",
@@ -132,7 +139,10 @@ class Migration(migrations.Migration):
                 ("old_lite_id", models.UUIDField(null=True)),
                 ("old_reference", models.CharField(max_length=35, null=True)),
             ],
-            options={"ordering": ["received_at"], "unique_together": {("lite_id", "action")},},
+            options={
+                "ordering": ["received_at"],
+                "unique_together": {("lite_id", "action")},
+            },
         ),
         migrations.CreateModel(
             name="GoodIdMapping",
@@ -142,7 +152,9 @@ class Migration(migrations.Migration):
                 ("licence_reference", models.CharField(max_length=35)),
                 ("line_number", models.PositiveIntegerField()),
             ],
-            options={"unique_together": {("lite_id", "licence_reference")},},
+            options={
+                "unique_together": {("lite_id", "licence_reference")},
+            },
         ),
         migrations.CreateModel(
             name="TransactionMapping",
@@ -156,6 +168,8 @@ class Migration(migrations.Migration):
                     models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to="mail.UsageUpdate"),
                 ),
             ],
-            options={"unique_together": {("licence_reference", "line_number", "usage_update")},},
+            options={
+                "unique_together": {("licence_reference", "line_number", "usage_update")},
+            },
         ),
     ]

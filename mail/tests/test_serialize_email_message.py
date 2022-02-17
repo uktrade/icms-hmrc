@@ -58,7 +58,10 @@ class SerializeEmailMessageTests(DataProcessorsTestBase):
             body=None,
             date="Mon, 17 May 2021 14:20:18 +0100",
             subject=self.licence_data_file_name,
-            attachment=[self.licence_data_file_name, self.licence_data_file_body,],
+            attachment=[
+                self.licence_data_file_name,
+                self.licence_data_file_body,
+            ],
             raw_data="qwerty",
         )
 

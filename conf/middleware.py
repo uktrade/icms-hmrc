@@ -47,7 +47,8 @@ class HawkSigningMiddleware:
             # does not expect clients to validate the nonce, these values are included to workaround an issue
             # in mohawk that meant a nonce checking warning was being unavoidably logged on the client side
             response_header = '{header}, nonce="{nonce}"'.format(
-                header=response_header, nonce=prepare_header_val(request.auth.parsed_header["nonce"]),
+                header=response_header,
+                nonce=prepare_header_val(request.auth.parsed_header["nonce"]),
             )
             response_header = '{header}, ts="{nonce}"'.format(
                 header=response_header, nonce=prepare_header_val(str(utc_now()))

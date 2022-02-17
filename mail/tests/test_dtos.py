@@ -25,7 +25,9 @@ class TestDtos(LiteHMRCTestClient):
         self.assertEqual(101, email_message_dto.run_number, "Run-number did not match")
         self.assertEqual("test@example.com", email_message_dto.sender, "sender email did not match")
         self.assertEqual(
-            "receiver@example.com", email_message_dto.receiver, "receiver email did not match",
+            "receiver@example.com",
+            email_message_dto.receiver,
+            "receiver email did not match",
         )
 
     @parameterized.expand(

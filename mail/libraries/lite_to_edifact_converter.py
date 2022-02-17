@@ -142,8 +142,8 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
                     )
             if licence_payload.get("type") in LicenceTypeEnum.OPEN_LICENCES:
                 line_no += 1
-                edifact_file += "\n{}\\line\\1\\\\\\\\\\Open Licence goods - see actual licence for information\\".format(
-                    line_no
+                edifact_file += (
+                    "\n{}\\line\\1\\\\\\\\\\Open Licence goods - see actual licence for information\\".format(line_no)
                 )
         line_no += 1
         edifact_file += "\n{}\\end\\licence\\{}".format(line_no, line_no - start_line)

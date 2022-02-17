@@ -47,7 +47,9 @@ def combine_lite_and_spire_usage_responses(mail) -> str:  # noqa
                 else:
                     licence_reference = LicenceIdMapping.objects.get(lite_id=licence["id"]).reference
                     transaction_id = TransactionMapping.objects.get(
-                        licence_reference=licence_reference, line_number=None, usage_data=usage_data,
+                        licence_reference=licence_reference,
+                        line_number=None,
+                        usage_data=usage_data,
                     ).usage_transaction
                     edifact_file += "{}\\accepted\\{}\n".format(i, transaction_id)
                     i += 1

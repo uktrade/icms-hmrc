@@ -85,10 +85,18 @@ class LITEHMRCResendEmailTests(LiteHMRCTestClient):
             body=None,
             date=datetime.now(),
             subject=self.licence_reply_file_name,
-            attachment=[self.licence_reply_file_name, self.licence_reply_file_body,],
+            attachment=[
+                self.licence_reply_file_name,
+                self.licence_reply_file_body,
+            ],
             raw_data="qwerty",
         )
-        email_dtos.side_effect = [[(email_message_dto, lambda x: x),], []]
+        email_dtos.side_effect = [
+            [
+                (email_message_dto, lambda x: x),
+            ],
+            [],
+        ]
 
         check_and_route_emails()
 
@@ -135,10 +143,18 @@ class LITEHMRCResendEmailTests(LiteHMRCTestClient):
             body=None,
             date=datetime.now(),
             subject=self.licence_usage_file_name,
-            attachment=[self.licence_usage_file_name, self.licence_usage_file_body,],
+            attachment=[
+                self.licence_usage_file_name,
+                self.licence_usage_file_body,
+            ],
             raw_data="qwerty",
         )
-        email_dtos.side_effect = [[(email_message_dto, lambda x: x),], []]
+        email_dtos.side_effect = [
+            [
+                (email_message_dto, lambda x: x),
+            ],
+            [],
+        ]
 
         check_and_route_emails()
 

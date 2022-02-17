@@ -111,7 +111,12 @@ class FileDeconstruction(LiteHMRCTestClient):
                     "action": "open",
                     "completion_date": "",
                     "goods": [
-                        {"id": "00000000-0000-0000-0000-000000000001", "usage": "17", "value": "0", "currency": "",}
+                        {
+                            "id": "00000000-0000-0000-0000-000000000001",
+                            "usage": "17",
+                            "value": "0",
+                            "currency": "",
+                        }
                     ],
                 },
                 {
@@ -325,10 +330,14 @@ class FileDeconstruction(LiteHMRCTestClient):
             "line\\1\\1000000\\0\\",
         ]
         GoodIdMapping.objects.create(
-            licence_reference="GBOGE2011/56789", line_number=2, lite_id="00000000-0000-0000-0000-000000000001",
+            licence_reference="GBOGE2011/56789",
+            line_number=2,
+            lite_id="00000000-0000-0000-0000-000000000001",
         )
         GoodIdMapping.objects.create(
-            licence_reference="GBOGE2015/87654", line_number=1, lite_id="00000000-0000-0000-0000-000000000002",
+            licence_reference="GBOGE2015/87654",
+            line_number=1,
+            lite_id="00000000-0000-0000-0000-000000000002",
         )
         lite_payload = build_json_payload_from_data_blocks(self.lite_data_expected)
 
@@ -337,7 +346,12 @@ class FileDeconstruction(LiteHMRCTestClient):
     @tag("no-good-mapping")
     def test_lite_json_payload_create_open_licence(self):
         LicencePayload.objects.create(reference="GBOGE2011/56789", lite_id="00000000-0000-0000-0000-000000000001")
-        lite_data = [["licenceUsage\\LU04148/00005\\insert\\GBOGE2011/56789\\O\\", "line\\1\\17\\0\\",]]
+        lite_data = [
+            [
+                "licenceUsage\\LU04148/00005\\insert\\GBOGE2011/56789\\O\\",
+                "line\\1\\17\\0\\",
+            ]
+        ]
         lite_payload = build_json_payload_from_data_blocks(lite_data)
 
         expected_lite_json_payload = {
@@ -346,7 +360,14 @@ class FileDeconstruction(LiteHMRCTestClient):
                     "id": "00000000-0000-0000-0000-000000000001",
                     "action": "open",
                     "completion_date": "",
-                    "goods": [{"id": None, "usage": "17", "value": "0", "currency": "",}],
+                    "goods": [
+                        {
+                            "id": None,
+                            "usage": "17",
+                            "value": "0",
+                            "currency": "",
+                        }
+                    ],
                 }
             ]
         }
