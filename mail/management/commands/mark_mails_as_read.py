@@ -24,7 +24,6 @@ class Command(BaseCommand):
             user=email_user,
             password=email_password,
             pop3_port=995,
-            smtp_port=587,
         )
         pop3_connection = server.connect_to_pop3()
         self.stdout.write(self.style.SUCCESS(f"Connected to {email_user}"))

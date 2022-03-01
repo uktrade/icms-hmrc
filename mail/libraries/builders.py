@@ -217,7 +217,9 @@ def build_email_message(email_message_dto: EmailMessageDto) -> mail.EmailMessage
 
     if content != encoded_content:
         logging.info(
-            "File content different after transliteration\nBefore: %r\nAfter: %r", content, encoded_content,
+            "File content different after transliteration\nBefore: %r\nAfter: %r",
+            content,
+            encoded_content,
         )
 
     part1 = MIMEText("\n\n", _charset="iso-8859-1")

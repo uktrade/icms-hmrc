@@ -1,13 +1,12 @@
 import logging
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from mail.models import LicenceData, UsageData
 from mail.enums import SourceEnum, ExtractTypeEnum, ReceptionStatusEnum
 from mail.libraries.builders import _build_request_mail_message_dto_internal
 from mail.libraries.routing_controller import send
-from mail.servers import MailServer
+from mail.servers import get_smtp_connection
 
 logger = logging.getLogger(__name__)
 
@@ -127,13 +126,7 @@ class Command(BaseCommand):
             return
 
         if not dry_run:
-            server = MailServer(
-                hostname=settings.EMAIL_HOSTNAME,
-                user=settings.EMAIL_USER,
-                password=settings.EMAIL_PASSWORD,
-                pop3_port=settings.EMAIL_POP3_PORT,
-                smtp_port=settings.EMAIL_SMTP_PORT,
-            )
-            send(server, message_to_send_dto)
+            conn = get_smtp_connection()
+            send(conn, message_to_send_dto)
 
         logger.info(f"Mail {0} resent to {1} successfully".format(message_to_send_dto.subject, destination))
