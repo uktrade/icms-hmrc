@@ -1,3 +1,6 @@
+import enum
+
+
 LITE_HMRC_LICENCE_TYPE_MAPPING = {
     "siel": "SIE",
     "sicl": "SIE",
@@ -194,3 +197,7 @@ class MailReadStatuses:
     UNPROCESSABLE = "UNPROCESSABLE"
 
     choices = [(READ, "Read"), (UNREAD, "Unread"), (UNPROCESSABLE, "Unprocessable")]
+
+
+# Used to select from multiple SMTP outgoing server settings.
+SMTPConnection = enum.Enum("SMTPConnection", ["SPIRE", "INCOMING", "MOCK", "HMRC"])

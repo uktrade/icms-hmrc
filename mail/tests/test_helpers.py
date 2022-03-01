@@ -1,9 +1,9 @@
 import logging
 
+from django.conf import settings
 from django.test import tag
 from parameterized import parameterized
 
-from conf.settings import SPIRE_ADDRESS
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum, UnitMapping
 from mail.libraries.helpers import (
     convert_sender_to_source,
@@ -21,11 +21,11 @@ from mail.tests.libraries.client import LiteHMRCTestClient
 
 
 class HelpersTests(LiteHMRCTestClient):
-    @parameterized.expand([[SPIRE_ADDRESS, SourceEnum.SPIRE], ["LITE", "LITE"]])
+    @parameterized.expand([[settings.SPIRE_ADDRESS, SourceEnum.SPIRE], ["LITE", "LITE"]])
     def test_convert_sender_to_source(self, sender, source):
         self.assertEqual(convert_sender_to_source(sender), source)
 
-    @parameterized.expand([[SPIRE_ADDRESS, SourceEnum.SPIRE], ["LITE", "LITE"]])
+    @parameterized.expand([[settings.SPIRE_ADDRESS, SourceEnum.SPIRE], ["LITE", "LITE"]])
     def test_convert_source_to_sender(self, sender, source):
         self.assertEqual(convert_source_to_sender(source), sender)
 

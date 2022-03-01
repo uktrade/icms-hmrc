@@ -41,6 +41,18 @@ Run the following command
 - `docker exec -it lite-hmrc-intg pipenv run ./manage.py migrate`
 - `docker exec -it lite-hmrc-intg pipenv run ./manage.py createsuperuser`
 
+#### Deploying to production
+
+Important settings:
+
+- SPIRE_ADDRESS: email address used by SPIRE system (legacy).
+- SPIRE_INCOMING_EMAIL_ADDRESS: same as SPIRE_ADDRESS?
+- HMRC_ADDRESS: email address used by HMRC / CHIEF to process licenses.
+- LITE_HMRC_INTEGRATION_HAWK_KEY: part of Hawk authentication protocol.
+- LITE_API_HAWK_KEY: part of Hawk authentication protocol.
+- LITE_API_URL: full URL for API to send usage response data.
+- EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_HOST, EMAIL_USE_TLS: default SMTP settings configured with EMAIL_URL environment variable.
+
 #### Linting
 
 - Code formatting and conventions
@@ -76,4 +88,4 @@ You may encounter `AssertionError: database connection isn't set to UTC` when ru
 `USE_TZ = False` in `conf/settings.py`.
 
 Tests are located in `mail/tests`. To run all tests
-`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py test --exclude-tag=end-to-end --exclude-tag=skip`
+`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py test`

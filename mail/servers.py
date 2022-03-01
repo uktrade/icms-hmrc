@@ -1,27 +1,54 @@
 import logging
 import poplib
-import smtplib
+import typing
 
-from conf.settings import EMAIL_PASSWORD, EMAIL_HOSTNAME, EMAIL_USER, EMAIL_POP3_PORT, EMAIL_SMTP_PORT, EMAIL_USE_TLS
+from django.conf import settings
+from django.core import mail
+
+from mail import enums
+
+
+def get_smtp_connection(name: typing.Optional[enums.SMTPConnection] = None):
+    """Return the Django mail backend configured for use."""
+    # By using Django's mail stuff, we get the Django mail testing stuff too.
+    configs = {
+        enums.SMTPConnection.INCOMING: "INCOMING_",
+        enums.SMTPConnection.HMRC: "HMRC_TO_DIT_",
+        enums.SMTPConnection.MOCK: "MOCK_HMRC_",
+        enums.SMTPConnection.SPIRE: "SPIRE_STANDIN_",
+    }
+
+    if name in configs:
+        # Map to the custom settings names, e.g. HMRC_TO_DIT_EMAIL_HOSTNAME.
+        prefix = configs[name]
+        kwargs = {
+            "EMAIL_HOST": getattr(settings, prefix + "EMAIL_HOSTNAME"),
+            "EMAIL_HOST_USER": getattr(settings, prefix + "EMAIL_USER"),
+            "EMAIL_HOST_PASSWORD": getattr(settings, prefix + "EMAIL_PASSWORD"),
+            "EMAIL_USE_TLS": True,
+            "EMAIL_PORT": getattr(settings, prefix + "EMAIL_SMTP_PORT"),
+        }
+    else:
+        # Use Django's default config settings names.
+        kwargs = {}
+
+    return mail.get_connection(**kwargs)
 
 
 class MailServer(object):
     def __init__(
         self,
-        hostname: str = EMAIL_HOSTNAME,
-        user: str = EMAIL_USER,
-        password: str = EMAIL_PASSWORD,
-        pop3_port: int = EMAIL_POP3_PORT,
-        smtp_port: int = EMAIL_SMTP_PORT,
-        use_tls: bool = EMAIL_USE_TLS,
+        hostname: str = settings.EMAIL_HOSTNAME,
+        user: str = settings.EMAIL_USER,
+        password: str = settings.EMAIL_PASSWORD,
+        pop3_port: int = settings.EMAIL_POP3_PORT,
+        use_tls: bool = settings.EMAIL_USE_TLS,
     ):
-        self.smtp_port = smtp_port
         self.pop3_port = pop3_port
         self.password = password
         self.user = user
         self.hostname = hostname
         self.pop3_connection = None
-        self.smtp_connection = None
         self.use_tls = use_tls
 
     def __eq__(self, other):
@@ -35,7 +62,6 @@ class MailServer(object):
             and self.user == other.user
             and self.password == other.password
             and self.pop3_port == other.pop3_port
-            and self.smtp_port == other.smtp_port
         )
 
     def connect_to_pop3(self) -> poplib.POP3_SSL:
@@ -48,19 +74,3 @@ class MailServer(object):
 
     def quit_pop3_connection(self):
         self.pop3_connection.quit()
-
-    def connect_to_smtp(self) -> smtplib.SMTP:
-        logging.info("establishing an smtp connection...")
-        self.smtp_connection = smtplib.SMTP(self.hostname, str(self.smtp_port), timeout=60)
-        logging.info("smtp connection established")
-        if self.use_tls:
-            logging.info("starting tls...")
-            self.smtp_connection.starttls()
-            logging.info("tls started")
-        logging.info("logging in...")
-        self.smtp_connection.login(self.user, self.password)
-        logging.info("logged in")
-        return self.smtp_connection
-
-    def quit_smtp_connection(self):
-        self.smtp_connection.quit()
