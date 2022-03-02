@@ -1,5 +1,7 @@
 import json
+import logging
 import uuid
+
 from datetime import timedelta
 from typing import List
 
@@ -16,6 +18,9 @@ from mail.enums import (
     ReplyStatusEnum,
     MailReadStatuses,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class Mail(models.Model):
@@ -53,6 +58,15 @@ class Mail(models.Model):
         return f"{self.__class__.__name__} object (id={self.id}, status={self.status})"
 
     def save(self, *args, **kwargs):
+        if not self.edi_data or not self.edi_filename:
+            logger.error(
+                "Setting `edi_data` or `edi_filename` to null or blank: self=%s, edi_data=%s edi_filename=%s",
+                self,
+                self.edi_data,
+                self.edi_filename,
+                exc_info=True,
+            )
+
         super(Mail, self).save(*args, **kwargs)
 
         if self.response_data and ReplyStatusEnum.REJECTED in self.response_data:
@@ -133,6 +147,12 @@ class LicencePayload(models.Model):
     data = JSONField()
     received_at = models.DateTimeField(default=timezone.now)
     is_processed = models.BooleanField(default=False)
+    # TODO: This is a temporary fix to get around the licenses that are blocking the queue.
+    # Fixing this problem properly would require us to generate EDIFACT content per license
+    # and also checking the validity of said content per-license. This is a larger ticket
+    # that needs to be addressed as part of the tech-debt epis. When this is done, we should
+    # remove the "skip" field in the following line.
+    skip = models.BooleanField(default=False)
 
     # For updates only
     old_lite_id = models.UUIDField(null=True, blank=False, unique=False)

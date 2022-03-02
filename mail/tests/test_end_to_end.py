@@ -26,7 +26,7 @@ class EndToEndTests(LiteHMRCTestClient):
         body = self.get_smtp_body().replace("\r", "")
         ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
         run_number = body.split("\n")[0].split("\\")[6]
-        expected_mail_body = fr"""1\fileHeader\SPIRE\CHIEF\licenceData\{ymdhm_timestamp}\{run_number}\N
+        expected_mail_body = rf"""1\fileHeader\SPIRE\CHIEF\licenceData\{ymdhm_timestamp}\{run_number}\N
 2\licence\20200000001P\insert\GBSIEL/2020/0000001/P\SIE\E\20200602\20220602
 3\trader\\GB123456789000\20200602\20220602\Organisation\might\248 James Key Apt. 515\Apt. 942\West Ashleyton\Farnborough\GU40 2LX
 4\country\GB\\D

@@ -71,6 +71,12 @@ The tool `prospector` is used. To run it `pipenv run prospector .`
 
 The tool 'bandit' is used. To run it `pipenv run bandit -r .`
 
+#### Git Hub pre-commit setup
+- Install pre-commit (e.g MAC pip install pre-commit)
+- pre-commit install
+* run following to scan all files for issues
+  - pre-commit run --all-files
+
 #### Test
 
 > NOTE: A task manager needs to be running locally if you are running E2E tests or similar. Check Procfile

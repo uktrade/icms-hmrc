@@ -103,7 +103,8 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
             elif licence_payload.get("type") in LicenceTypeEnum.STANDARD_LICENCES:
                 if licence_payload.get("end_user"):
                     # In the absence of country_group or countries use country of End user
-                    country_id = licence_payload.get("end_user").get("address").get("country").get("id")
+                    country = licence_payload.get("end_user").get("address").get("country")
+                    country_id = get_country_id(country)
                     line_no += 1
                     edifact_file += "\n{}\\country\\{}\\\\{}".format(line_no, country_id, "D")
 
@@ -141,8 +142,8 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
                     )
             if licence_payload.get("type") in LicenceTypeEnum.OPEN_LICENCES:
                 line_no += 1
-                edifact_file += "\n{}\\line\\1\\\\\\\\\\Open Licence goods - see actual licence for information\\".format(
-                    line_no
+                edifact_file += (
+                    "\n{}\\line\\1\\\\\\\\\\Open Licence goods - see actual licence for information\\".format(line_no)
                 )
         line_no += 1
         edifact_file += "\n{}\\end\\licence\\{}".format(line_no, line_no - start_line)

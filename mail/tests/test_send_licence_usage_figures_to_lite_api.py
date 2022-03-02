@@ -223,7 +223,10 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
             )
         )
         usage_data = UsageData.objects.create(
-            mail=mail, licence_ids='["GBSIEL/2020/0000025/P"]', hmrc_run_number=0, spire_run_number=0,
+            mail=mail,
+            licence_ids='["GBSIEL/2020/0000025/P"]',
+            hmrc_run_number=0,
+            spire_run_number=0,
         )
 
         expected_payload = {

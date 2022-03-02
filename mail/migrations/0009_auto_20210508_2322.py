@@ -10,8 +10,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(model_name="mailboxconfig", name="start_message_id",),
-        migrations.RemoveField(model_name="mailreadstatus", name="message_id",),
+        migrations.RemoveField(
+            model_name="mailboxconfig",
+            name="start_message_id",
+        ),
+        migrations.RemoveField(
+            model_name="mailreadstatus",
+            name="message_id",
+        ),
         migrations.AddField(
             model_name="mailreadstatus",
             name="message_num",

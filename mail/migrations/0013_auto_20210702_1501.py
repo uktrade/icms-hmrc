@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('mail', '0012_auto_20210520_1344'),
+        ("mail", "0012_auto_20210520_1344"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='goodidmapping',
+            name="goodidmapping",
             unique_together=set(),
         ),
     ]

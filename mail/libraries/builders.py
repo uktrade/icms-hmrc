@@ -63,6 +63,59 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
     )
 
 
+def _build_request_mail_message_dto_internal(mail: Mail) -> EmailMessageDto:
+    sender = None
+    receiver = None
+    attachment = [None, None]
+    run_number = 0
+
+    if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
+        """
+        This is the case where we sent a licence_data email earlier which hasn't reached HMRC
+        and so we are resending it
+        """
+        sender = settings.EMAIL_USER
+        receiver = settings.OUTGOING_EMAIL_USER
+        attachment = [mail.sent_filename, mail.sent_data]
+    elif mail.extract_type == ExtractTypeEnum.LICENCE_REPLY:
+        """
+        This is the case where we sent the licence_reply email to SPIRE but they haven't
+        received it and so we are resending it
+        """
+        sender = settings.EMAIL_USER
+        receiver = settings.SPIRE_ADDRESS
+        attachment = [mail.sent_response_filename, mail.sent_response_data]
+    elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
+        sender = settings.EMAIL_USER
+        receiver = settings.SPIRE_ADDRESS
+        update = UsageData.objects.get(mail=mail)
+        run_number = update.spire_run_number
+        spire_data, _ = split_edi_data_by_id(mail.edi_data)
+        if len(spire_data) > 2:  # if SPIRE blocks contain more than just a header & footer
+            file = build_edifact_file_from_data_blocks(spire_data)
+            attachment = [
+                build_sent_filename(mail.edi_filename, run_number),
+                build_sent_file_data(file, run_number),
+            ]
+    else:
+        return None
+
+    logging.info(
+        f"Preparing request Mail dto of extract type {mail.extract_type}, sender {sender}, receiver {receiver} with filename {attachment[0]}"
+    )
+
+    return EmailMessageDto(
+        run_number=run_number,
+        sender=sender,
+        receiver=receiver,
+        date=datetime.now(),
+        subject=attachment[0],
+        body=None,
+        attachment=attachment,
+        raw_data=None,
+    )
+
+
 def build_sent_filename(filename: str, run_number: int) -> str:
     filename = filename.split("_")
     filename[4] = str(run_number)
@@ -164,7 +217,9 @@ def build_email_message(email_message_dto: EmailMessageDto) -> mail.EmailMessage
 
     if content != encoded_content:
         logging.info(
-            "File content different after transliteration\nBefore: %r\nAfter: %r", content, encoded_content,
+            "File content different after transliteration\nBefore: %r\nAfter: %r",
+            content,
+            encoded_content,
         )
 
     part1 = MIMEText("\n\n", _charset="iso-8859-1")

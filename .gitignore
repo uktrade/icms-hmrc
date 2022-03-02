@@ -75,3 +75,6 @@ target/
 mailserver/*
 
 .vscode/
+
+# pii file
+.pii-secret-hook
