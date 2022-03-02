@@ -26,13 +26,13 @@ def get_mail_extract(hmrc_run_number):
         licence_data = LicenceData.objects.get(hmrc_run_number=hmrc_run_number)
         mail = licence_data.mail
     except LicenceData.DoesNotExist:
-        logger.info("No licence data instance found for given run number {0}".format(hmrc_run_number))
+        logger.info("No licence data instance found for given run number %s", hmrc_run_number)
 
     try:
         usage_data = UsageData.objects.get(hmrc_run_number=hmrc_run_number)
         mail = usage_data.mail
     except UsageData.DoesNotExist:
-        logger.error("No usage data instance found for given run number {0}".format(hmrc_run_number))
+        logger.error("No usage data instance found for given run number %s", hmrc_run_number)
 
     return mail
 
@@ -84,9 +84,7 @@ class Command(BaseCommand):
         destination = None
         mail = get_mail_extract(hmrc_run_number)
         if not mail:
-            logger.error(
-                "Given run number {0} does not belong to Licence data or Usage data mail".format(hmrc_run_number)
-            )
+            logger.error("Given run number %s does not belong to Licence data or Usage data mail", hmrc_run_number)
             return
 
         """
@@ -98,32 +96,26 @@ class Command(BaseCommand):
         if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
             destination = SourceEnum.HMRC
             if mail.status != ReceptionStatusEnum.REPLY_PENDING:
-                logger.error(
-                    "Mail is expected to be in 'reply_pending' status but current status is {0}".format(mail.status)
-                )
+                logger.error("Mail is expected to be in 'reply_pending' status but current status is %s", mail.status)
                 return
         # this does happen occassionally
         elif mail.extract_type == ExtractTypeEnum.LICENCE_REPLY:
             destination = SourceEnum.SPIRE
             if mail.status != ReceptionStatusEnum.REPLY_SENT:
-                logger.error(
-                    f"Mail is expected to be in 'reply_sent' status but current status is {0}".format(mail.status)
-                )
+                logger.error("Mail is expected to be in 'reply_sent' status but current status is %s", mail.status)
                 return
         elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
             destination = SourceEnum.SPIRE
             if mail.status != ReceptionStatusEnum.REPLY_SENT:
-                logger.error(
-                    f"Mail is expected to be in 'reply_sent' status but current status is {0}".format(mail.status)
-                )
+                logger.error("Mail is expected to be in 'reply_sent' status but current status is %s", mail.status)
                 return
         else:
-            logger.error(f"Unexpected extract_type for the mail {0}".format(mail.edi_filename))
+            logger.error("Unexpected extract_type for the mail %s", mail.edi_filename)
             return
 
         message_to_send_dto = _build_request_mail_message_dto_internal(mail)
         if not message_to_send_dto:
-            logger.error(f"Unexpected extract_type for the mail {0}".format(mail.edi_filename))
+            logger.error("Unexpected extract_type for the mail %s", mail.edi_filename)
             return
 
         if not dry_run:
@@ -136,4 +128,4 @@ class Command(BaseCommand):
             )
             send(server, message_to_send_dto)
 
-        logger.info(f"Mail {0} resent to {1} successfully".format(message_to_send_dto.subject, destination))
+        logger.info("Mail %s resent to %s successfully", message_to_send_dto.subject, destination)
