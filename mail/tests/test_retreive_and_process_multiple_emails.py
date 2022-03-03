@@ -1,6 +1,6 @@
+from django.conf import settings
 from django.test import tag
 
-from conf.settings import HMRC_ADDRESS, SPIRE_ADDRESS, EMAIL_USER
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.data_processors import serialize_email_message
 from mail.libraries.email_message_dto import EmailMessageDto
@@ -14,8 +14,8 @@ class MultipleEmailRetrievalTests(LiteHMRCTestClient):
         super().setUp()
         self.dto_1 = EmailMessageDto(
             run_number=49543,
-            sender=HMRC_ADDRESS,
-            receiver=EMAIL_USER,
+            sender=settings.HMRC_ADDRESS,
+            receiver=settings.EMAIL_USER,
             date="Mon, 17 May 2021 14:20:18 +0100",
             body="lite licence reply",
             subject="ILBDOTI_live_CHIEF_licenceReply_49543_201901130300",
@@ -27,8 +27,8 @@ class MultipleEmailRetrievalTests(LiteHMRCTestClient):
         )
         self.dto_2 = EmailMessageDto(
             run_number=17,
-            sender=SPIRE_ADDRESS,
-            receiver=EMAIL_USER,
+            sender=settings.SPIRE_ADDRESS,
+            receiver=settings.EMAIL_USER,
             date="Mon, 17 May 2021 14:20:18 +0100",
             body="spire licence update",
             subject="ILBDOTI_live_CHIEF_licenceData_17_201901130300",
@@ -40,8 +40,8 @@ class MultipleEmailRetrievalTests(LiteHMRCTestClient):
         )
         self.dto_3 = EmailMessageDto(
             run_number=49542,
-            sender=HMRC_ADDRESS,
-            receiver=EMAIL_USER,
+            sender=settings.HMRC_ADDRESS,
+            receiver=settings.EMAIL_USER,
             date="Mon, 17 May 2021 14:20:18 +0100",
             body="spire licence reply",
             subject="ILBDOTI_live_CHIEF_licenceReply_49542_201901130300",
