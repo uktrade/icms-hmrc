@@ -3,17 +3,12 @@ import logging
 import time
 
 from background_task.models import Task
+from django.conf import settings
 from django.shortcuts import render_to_response
 from django.utils import timezone
 from rest_framework.status import HTTP_200_OK, HTTP_503_SERVICE_UNAVAILABLE
 from rest_framework.views import APIView
 
-from conf.settings import (
-    LITE_LICENCE_DATA_POLL_INTERVAL,
-    INBOX_POLL_INTERVAL,
-    EMAIL_AWAITING_REPLY_TIME,
-    EMAIL_AWAITING_CORRECTIONS_TIME,
-)
 from mail.enums import ReceptionStatusEnum, ReplyStatusEnum
 from mail.models import Mail
 from mail.tasks import LICENCE_DATA_TASK_QUEUE, MANAGE_INBOX_TASK_QUEUE
@@ -38,15 +33,18 @@ class HealthCheck(APIView):
         pending_mail = self._get_pending_mail()
         if pending_mail:
             logging.error(
-                f"The following Mail has been pending for over {EMAIL_AWAITING_REPLY_TIME} seconds: {pending_mail}"
+                "The following Mail has been pending for over %s seconds: %s",
+                settings.EMAIL_AWAITING_REPLY_TIME,
+                pending_mail,
             )
             return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
 
         rejected_mail = self._get_rejected_mail()
         if rejected_mail:
             logging.error(
-                f"The following Mail has been rejected for over {EMAIL_AWAITING_CORRECTIONS_TIME} seconds: "
-                f"{rejected_mail}"
+                "The following Mail has been rejected for over %s seconds: %s",
+                settings.EMAIL_AWAITING_CORRECTIONS_TIME,
+                rejected_mail,
             )
             return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
 
@@ -55,32 +53,32 @@ class HealthCheck(APIView):
 
     @staticmethod
     def _is_lite_licence_update_task_responsive() -> bool:
-        return Task.objects.filter(
-            queue=LICENCE_DATA_TASK_QUEUE,
-            run_at__lte=timezone.now() + datetime.timedelta(seconds=LITE_LICENCE_DATA_POLL_INTERVAL),
-        ).exists()
+        dt = timezone.now() + datetime.timedelta(seconds=settings.LITE_LICENCE_DATA_POLL_INTERVAL)
+
+        return Task.objects.filter(queue=LICENCE_DATA_TASK_QUEUE, run_at__lte=dt).exists()
 
     @staticmethod
     def _is_inbox_polling_task_responsive() -> bool:
-        return Task.objects.filter(
-            queue=MANAGE_INBOX_TASK_QUEUE, run_at__lte=timezone.now() + datetime.timedelta(seconds=INBOX_POLL_INTERVAL)
-        ).exists()
+        dt = timezone.now() + datetime.timedelta(seconds=settings.INBOX_POLL_INTERVAL)
+
+        return Task.objects.filter(queue=MANAGE_INBOX_TASK_QUEUE, run_at__lte=dt).exists()
 
     @staticmethod
     def _get_pending_mail() -> []:
-        return list(
-            Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT)
-            .filter(sent_at__lte=timezone.now() - datetime.timedelta(seconds=EMAIL_AWAITING_REPLY_TIME))
-            .values_list("id", flat=True)
-        )
+        dt = timezone.now() - datetime.timedelta(seconds=settings.EMAIL_AWAITING_REPLY_TIME)
+        qs = Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT).filter(sent_at__lte=dt)
+
+        return list(qs.values_list("id", flat=True))
 
     @staticmethod
     def _get_rejected_mail() -> []:
+        dt = timezone.now() - datetime.timedelta(seconds=settings.EMAIL_AWAITING_CORRECTIONS_TIME)
+
         return list(
             Mail.objects.filter(
                 status=ReceptionStatusEnum.REPLY_SENT,
                 response_data__icontains=ReplyStatusEnum.REJECTED,
-                sent_at__lte=timezone.now() - datetime.timedelta(seconds=EMAIL_AWAITING_CORRECTIONS_TIME),
+                sent_at__lte=dt,
             ).values_list("id", flat=True)
         )
 
