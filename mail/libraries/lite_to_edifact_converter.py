@@ -121,7 +121,7 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
                     trader.get("address").get("line_4", ""),
                     trader.get("address").get("line_5", ""),
                     trader.get("address").get("postcode", ""),
-                    trader.get("address").get("country").get("id"),
+                    get_country_id(trader.get("address").get("country")),
                 )
             line_no += 1
             edifact_file += "\n{}\\restrictions\\{}".format(line_no, "Provisos may apply please see licence")

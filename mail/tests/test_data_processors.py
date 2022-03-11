@@ -1,6 +1,6 @@
 import logging
-
 from datetime import datetime
+
 from django.conf import settings
 from django.test import tag
 from rest_framework.exceptions import ValidationError
