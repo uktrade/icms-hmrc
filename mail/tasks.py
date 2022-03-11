@@ -162,11 +162,13 @@ def schedule_max_tried_task_as_new_task(lite_usage_data_id):
     """
 
     logging.warning(
-        f"Maximum attempts of {settings.MAX_ATTEMPTS} for LITE UsageData [{lite_usage_data_id}] has been reached"
+        "Maximum attempts of %s for LITE UsageData [%s] has been reached", settings.MAX_ATTEMPTS, lite_usage_data_id
     )
 
     schedule_datetime = timezone.now() + timedelta(seconds=TASK_BACK_OFF)
-    logging.info(f"Scheduling new task for LITE UsageData [{lite_usage_data_id}] to commence at [{schedule_datetime}]")
+    logging.info(
+        "Scheduling new task for LITE UsageData [%s] to commence at [%s]", lite_usage_data_id, schedule_datetime
+    )
     send_licence_usage_figures_to_lite_api(lite_usage_data_id, schedule=TASK_BACK_OFF)  # noqa
 
 
@@ -211,7 +213,7 @@ def send_licence_data_to_hmrc():
 
     try:
         with transaction.atomic():
-            licences = LicencePayload.objects.filter(is_processed=False, skip=False).select_for_update(nowait=True)
+            licences = LicencePayload.objects.filter(is_processed=False).select_for_update(nowait=True)
 
             if not licences.exists():
                 logging.info("There are currently no licences to send")
@@ -314,7 +316,7 @@ def manage_inbox():
     except Exception as exc:  # noqa
         logging.error(
             "An unexpected error occurred when polling inbox for updates -> %s",
-            {type(exc).__name__},
+            type(exc).__name__,
             exc_info=True,
         )
         raise exc
