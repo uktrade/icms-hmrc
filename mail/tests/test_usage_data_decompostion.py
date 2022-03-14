@@ -399,3 +399,48 @@ class FileDeconstruction(LiteHMRCTestClient):
             print(t.__dict__)
 
         self.assertEqual(TransactionMapping.objects.count(), 2)
+
+    def test_lite_usage_only_open_licences_are_processed(self):
+        usage_data_from_hmrc = [
+            [
+                "licenceUsage\\LU05234/00318\\insert\\GBSIEL/2021/0000088/P\\C\\20210218",
+                "line\1\\3\\0\\",
+                "end\\line\\2",
+                "line\\2\12\\0\\",
+                "end\\line\\2",
+                "end\\licenceUsage\\6",
+            ],
+            [
+                "licenceUsage\\LU05235/00318\\insert\\GBSIEL/2021/0000090/P\\E\\20210821",
+                "line\1\\3\\0\\",
+                "end\\line\\2",
+                "line\\2\12\\0\\",
+                "end\\line\\2",
+                "line\\3\10\\0\\",
+                "end\\line\\3",
+                "end\\licenceUsage\\8",
+            ],
+        ]
+
+        lite_payload = build_json_payload_from_data_blocks(usage_data_from_hmrc)
+        self.assertEqual(len(lite_payload["licences"]), 0)
+
+        usage_data_from_hmrc += [
+            [
+                "licenceUsage\\LU05233/00180\\insert\\GBSIEL/2021/0000088/P\\O\\",
+                "line\\1\\3\\0\\",
+                "usage\\O\\9GB000004988000-4750437112345\\H\\20220218\\3\\0\\\\GB861460724000\\\\\\\\",
+                "end\\line\\3",
+                "line\\2\\12\\0\\",
+            ],
+            [
+                "licenceUsage\\LU05258/00180\\insert\\SIE22-0000008\\O\\",
+                "line\\1\\3\\0\\",
+                "usage\\O\\9GB000004988000-4750437112345\\H\\20220218\\3\\0\\\\GB861460724000\\\\\\\\",
+                "end\\line\\3",
+                "line\\2\\12\\0\\",
+            ],
+        ]
+
+        lite_payload = build_json_payload_from_data_blocks(usage_data_from_hmrc)
+        self.assertEqual(len(lite_payload["licences"]), 2)

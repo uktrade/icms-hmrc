@@ -57,10 +57,23 @@ def send_licence_usage_figures_to_lite_api(lite_usage_data_id):
         )
         return
 
+    # Extract usage details of Licences issued from LITE
+    _, data = split_edi_data_by_id(lite_usage_data.mail.edi_data, lite_usage_data)
+    payload = build_json_payload_from_data_blocks(data)
+
+    # We only process usage data for active licences so below error is unlikely
+    if len(payload["licences"]) == 0:
+        logger.error("Licences is blank in payload for %s", lite_usage_data, exc_info=True)
+        return
+
+    payload["usage_data_id"] = lite_usage_data_id
+
     logging.info(f"Sending LITE UsageData [{lite_usage_data_id}] figures for Licences [{licences}] to LITE API")
 
     try:
-        build_lite_payload(lite_usage_data)
+        lite_usage_data.lite_payload = payload
+        lite_usage_data.save()
+
         response = put(
             f"{settings.LITE_API_URL}/licences/hmrc-integration/",
             lite_usage_data.lite_payload,
@@ -137,20 +150,6 @@ def save_response(lite_usage_data: UsageData, accepted_licences, rejected_licenc
         lite_usage_data.mail.status = ReceptionStatusEnum.REPLY_RECEIVED
         lite_usage_data.mail.save()
 
-    lite_usage_data.save()
-
-
-def build_lite_payload(lite_usage_data: UsageData):
-    _, data = split_edi_data_by_id(lite_usage_data.mail.edi_data, lite_usage_data)
-    payload = build_json_payload_from_data_blocks(data)
-    if not payload["licences"]:
-        logger.error(
-            "Licences is blank in payload for %s",
-            lite_usage_data,
-            exc_info=True,
-        )
-    payload["usage_data_id"] = str(lite_usage_data.id)
-    lite_usage_data.lite_payload = payload
     lite_usage_data.save()
 
 
