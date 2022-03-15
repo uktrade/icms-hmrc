@@ -75,7 +75,7 @@ class CombiningUsageDataReplies(LiteHMRCTestClient):
             "7\\fileTrailer\\2\\1\\0"
         )
 
-        mail = Mail.objects.create(edi_data=edi_data, response_data=spire_response)
+        mail = Mail.objects.create(edi_filename="filename", edi_data=edi_data, response_data=spire_response)
         usage_data = UsageData.objects.create(
             lite_response=lite_response, spire_run_number=12345, hmrc_run_number=54321, mail=mail
         )
