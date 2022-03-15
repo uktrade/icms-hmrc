@@ -11,7 +11,7 @@ from mail.libraries.helpers import (
     new_hmrc_run_number,
     get_run_number,
     map_unit,
-    get_action,
+    get_licence_status,
     process_attachment,
     get_country_id,
 )
@@ -118,7 +118,7 @@ class HelpersTests(LiteHMRCTestClient):
     @parameterized.expand([("O", "open"), ("E", "exhaust"), ("D", "expire"), ("S", "surrender"), ("C", "cancel")])
     @tag("1917", "action-ref")
     def test_action_reference_for_usage(self, reference, action):
-        self.assertEqual(get_action(reference), action)
+        self.assertEqual(get_licence_status(reference), action)
 
     @parameterized.expand(
         [
