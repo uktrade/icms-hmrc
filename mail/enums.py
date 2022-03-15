@@ -194,3 +194,13 @@ class MailReadStatuses:
     UNPROCESSABLE = "UNPROCESSABLE"
 
     choices = [(READ, "Read"), (UNREAD, "Unread"), (UNPROCESSABLE, "Unprocessable")]
+
+
+class LicenceStatusEnum:
+    OPEN = "open"
+    EXHAUST = "exhaust"
+    SURRENDER = "surrender"
+    EXPIRE = "expire"
+    CANCEL = "cancel"
+
+    choices = [(OPEN, "open"), (EXHAUST, "exhaust"), (SURRENDER, "surrender"), (EXPIRE, "expire"), (CANCEL, "cancel")]

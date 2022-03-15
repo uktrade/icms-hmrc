@@ -1,5 +1,7 @@
-from mail.enums import SourceEnum
-from mail.libraries.helpers import get_good_id, get_licence_id, get_action
+from collections import defaultdict
+
+from mail.enums import LicenceStatusEnum, SourceEnum
+from mail.libraries.helpers import get_good_id, get_licence_id, get_licence_status
 from mail.models import LicenceIdMapping, TransactionMapping, UsageData
 
 
@@ -73,7 +75,7 @@ def build_edifact_file_from_data_blocks(data_blocks: list) -> str:
 
 
 def build_json_payload_from_data_blocks(data_blocks: list) -> dict:
-    payload = []
+    payload = defaultdict(list)
     licence_reference = None
 
     for block in data_blocks:
@@ -95,9 +97,11 @@ def build_json_payload_from_data_blocks(data_blocks: list) -> dict:
             line_array = line.split("\\")
             if "licenceUsage" in line and "end" not in line:
                 licence_reference = line_array[3]
-                action = line_array[4]
-                licence_payload["action"] = get_action(action)
-                if not action == "O" and len(line_array) >= 6:
+                licence_status_code = line_array[4]
+                licence_payload["action"] = get_licence_status(licence_status_code)
+
+                # completion date is only include when licence is complete (i.e., not Open)
+                if licence_status_code != "O" and len(line_array) >= 6:
                     licence_payload["completion_date"] = line_array[5]
                 licence_payload["id"] = get_licence_id(licence_reference)
 
@@ -111,16 +115,16 @@ def build_json_payload_from_data_blocks(data_blocks: list) -> dict:
 
                 licence_payload["goods"].append(good_payload)
 
-        payload.append(licence_payload)
+        payload[licence_payload["action"]].append(licence_payload)
 
-        """
-        Filter blocks that has a completion date because this is an additional transaction
-        that is sent when all the allowed quantity of all items on that licence are used.
-        Sending it again results in double counting of the recorded usage
-        """
-        payload = [item for item in payload if not item["completion_date"]]
+    """
+    We only need to process usage data of licences that are Open, i.e., not all the
+    products on that licence are not completely used and there is usage data to report to.
+    Once the licence is completed then the status is not Open so they can be ignored
+    otherwise it will result in double counting.
+    """
 
-    return {"licences": payload}
+    return {"licences": payload[LicenceStatusEnum.OPEN]}
 
 
 def id_owner(licence_reference) -> str:
