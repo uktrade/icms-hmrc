@@ -5,7 +5,7 @@ import uuid
 from datetime import timedelta
 from typing import List
 
-from django.db import models
+from django.db import models, IntegrityError
 from django.utils import timezone
 from jsonfield import JSONField
 from model_utils.models import TimeStampedModel
@@ -66,6 +66,7 @@ class Mail(models.Model):
                 self.edi_filename,
                 exc_info=True,
             )
+            raise IntegrityError("The field edi_filename or edi_data is empty which is not valid")
 
         super(Mail, self).save(*args, **kwargs)
 

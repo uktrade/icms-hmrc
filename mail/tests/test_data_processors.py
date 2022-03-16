@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from django.db import IntegrityError
 
 from django.conf import settings
 from django.test import tag
@@ -41,6 +42,10 @@ class TestDataProcessors(LiteHMRCTestClient):
             spire_run_number=self.source_run_number,
             hmrc_run_number=self.hmrc_run_number,
         )
+
+    def test_mail_create_fails_with_empty_edi_values(self):
+        with self.assertRaises(IntegrityError):
+            Mail.objects.create()
 
     def test_mail_data_serialized_successfully(self):
         email_message_dto = EmailMessageDto(

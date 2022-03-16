@@ -387,13 +387,12 @@ class FileDeconstruction(LiteHMRCTestClient):
 
     @tag("create-transaction-mapping")
     def test_create_transaction_mapping_for_lite_licences(self):
+        mail = Mail.objects.create(edi_filename="filename", edi_data="1\\fileHeader\\CHIEF\\SPIRE\\")
         usage_data = self.licence_usage_file_body.decode("utf-8")
         LicenceIdMapping.objects.create(
             lite_id="00000000-0000-0000-0000-000000000001", reference="GBSIEL/2020/0000002/P"
         )
-        split_edi_data_by_id(
-            usage_data, UsageData.objects.create(mail=Mail.objects.create(), spire_run_number=1, hmrc_run_number=1)
-        )
+        split_edi_data_by_id(usage_data, UsageData.objects.create(mail=mail, spire_run_number=1, hmrc_run_number=1))
 
         for t in TransactionMapping.objects.all():
             print(t.__dict__)
