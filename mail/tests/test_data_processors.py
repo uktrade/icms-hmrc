@@ -3,7 +3,6 @@ from datetime import datetime
 from django.db import IntegrityError
 
 from django.conf import settings
-from django.test import tag
 from rest_framework.exceptions import ValidationError
 
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
@@ -134,7 +133,6 @@ class TestDataProcessors(LiteHMRCTestClient):
             self.usage_data_reply_body.decode("utf-8"),
         )
 
-    @tag("serialize")
     def test_licence_reply_does_not_throw_exception_if_mail_already_updated(self):
         self.mail.extract_type = ExtractTypeEnum.LICENCE_DATA
         self.mail.status = ReceptionStatusEnum.REPLY_SENT

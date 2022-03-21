@@ -76,4 +76,4 @@ You may encounter `AssertionError: database connection isn't set to UTC` when ru
 `USE_TZ = False` in `conf/settings.py`.
 
 Tests are located in `mail/tests`. To run all tests
-`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py test --exclude-tag=end-to-end --exclude-tag=skip`
+`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py test`

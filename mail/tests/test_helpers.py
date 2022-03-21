@@ -1,7 +1,6 @@
 import logging
 
 from django.conf import settings
-from django.test import tag
 from parameterized import parameterized
 
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum, UnitMapping
@@ -89,7 +88,6 @@ class HelpersTests(LiteHMRCTestClient):
             ("ITG", 30),
         ]
     )
-    @tag("2448", "unit")
     def test_convert(self, lite_input, output):
         self.assertEqual(output, UnitMapping.convert(lite_input))
 
@@ -105,18 +103,15 @@ class HelpersTests(LiteHMRCTestClient):
             ("ITG", 30),
         ]
     )
-    @tag("2448", "mapping")
     def test_mapping(self, lite_input, output):
         data = {"goods": [{"unit": lite_input}]}
         self.assertEqual(output, map_unit(data, 0)["goods"][0]["unit"])
 
     @parameterized.expand([("GB/00001/P", "00001P"), ("GB/001/P/A", "001PA"), ("GB/0/01/P/a", "001Pa")])
-    @tag("1917", "transaction-ref")
     def test_transaction_reference_for_licence_data(self, reference, transaction_reference):
         self.assertEqual(get_transaction_reference(reference), transaction_reference)
 
     @parameterized.expand([("O", "open"), ("E", "exhaust"), ("D", "expire"), ("S", "surrender"), ("C", "cancel")])
-    @tag("1917", "action-ref")
     def test_action_reference_for_usage(self, reference, action):
         self.assertEqual(get_licence_status(reference), action)
 
@@ -129,7 +124,6 @@ class HelpersTests(LiteHMRCTestClient):
             ({"id": "AE-DU"}, "AE"),
         ]
     )
-    @tag("country-id")
     def test_get_country_id(self, country, id):
         self.assertEqual(get_country_id(country), id)
 

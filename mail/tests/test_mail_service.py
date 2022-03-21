@@ -2,7 +2,7 @@ from collections import OrderedDict
 from poplib import POP3_SSL
 from unittest.mock import MagicMock
 
-from django.test import tag, SimpleTestCase
+from django.test import SimpleTestCase
 from parameterized import parameterized
 
 from mail.libraries.mailbox_service import read_last_message, read_last_three_emails, get_message_iterator
@@ -10,7 +10,6 @@ from mail.servers import MailServer
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
-@tag("mail_service")
 class MailServiceTests(LiteHMRCTestClient):
     @parameterized.expand(
         [
@@ -125,7 +124,6 @@ class MailServiceTests(LiteHMRCTestClient):
             self.assertEqual(f"Subject: {message.subject}".encode("utf-8"), retr_item[1][0])
 
 
-@tag("mail_service")
 class MailServerTests(SimpleTestCase):
     def test_mail_server_equal(self):
         m1 = MailServer(hostname="host", user="u", password="p", pop3_port=1, smtp_port=2)  # nosec

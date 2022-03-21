@@ -1,6 +1,5 @@
 from unittest import mock
 
-from django.test import tag
 from django.utils import timezone
 from parameterized import parameterized
 
@@ -18,7 +17,6 @@ from mail.libraries import edifact_validator
 
 class LicenceToEdifactTests(LiteHMRCTestClient):
     @parameterized.expand(["siel", "sitl", "sicl"])
-    @tag("mapping-ids")
     def test_mappings(self, licence_type):
         licence = LicencePayload.objects.get()
         licence.data["type"] = licence_type
@@ -32,7 +30,6 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             GoodIdMapping.objects.filter(lite_id=good_id, line_number=1, licence_reference=licence.reference).count(), 1
         )
 
-    @tag("edifact")
     def test_single_siel(self):
         licences = LicencePayload.objects.filter(is_processed=False)
 
@@ -55,7 +52,6 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
 
         self.assertEqual(result, expected)
 
-    @tag("sending")
     @mock.patch("mail.tasks.send")
     def test_licence_is_marked_as_processed_after_sending(self, send):
         send.return_value = None
@@ -65,11 +61,9 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         self.single_siel_licence_payload.refresh_from_db()
         self.assertEqual(self.single_siel_licence_payload.is_processed, True)
 
-    @tag("ref")
     def test_ref(self):
         self.assertEqual(get_transaction_reference("GBSIEL/2020/0000001/P"), "20200000001P")
 
-    @tag("update")
     def test_update_edifact_file(self):
         lp = LicencePayload.objects.get()
         lp.is_processed = True
@@ -109,7 +103,6 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
 
         self.assertEqual(result, expected)
 
-    @tag("cancel")
     def test_cancel(self):
         self.single_siel_licence_payload.action = LicenceActionEnum.CANCEL
         self.single_siel_licence_payload.save()

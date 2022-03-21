@@ -1,4 +1,3 @@
-from django.test import tag
 from rest_framework.exceptions import ValidationError
 
 from django.conf import settings
@@ -11,7 +10,6 @@ from mail.tests.libraries.data_processors_base import DataProcessorsTestBase
 
 
 class SerializeEmailMessageTests(DataProcessorsTestBase):
-    @tag("ser")
     def test_successful_usage_data_inbound_dto_converts_to_outbound_dto(self):
         email_message_dto = EmailMessageDto(
             run_number=self.source_run_number + 1,
@@ -34,7 +32,6 @@ class SerializeEmailMessageTests(DataProcessorsTestBase):
         self.assertEqual(dto.body, None)
         self.assertEqual(dto.raw_data, None)
 
-    @tag("ser")
     def test_unsuccessful_inbound_dto_does_not_convert_to_outbound_dto(self):
         email_message_dto = EmailMessageDto(
             run_number=self.source_run_number + 1,
@@ -49,7 +46,6 @@ class SerializeEmailMessageTests(DataProcessorsTestBase):
 
         self.assertRaises(ValidationError, serialize_email_message, email_message_dto)
 
-    @tag("ser")
     def test_licence_data_dto_to_dto(self):
         email_message_dto = EmailMessageDto(
             run_number=self.source_run_number + 1,
