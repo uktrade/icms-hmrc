@@ -19,8 +19,153 @@ class EdifactValidationError(Exception):
     pass
 
 
-# Fails prospector MC0001 complexity test.
-def licences_to_edifact(licences: QuerySet, run_number: int) -> str:  # noqa
+def generate_lines_for_licence(licence):
+    """Yield line tuples for a single licence, to use in a CHIEF message.
+
+    The line tuples have no numbering (line numbers are calculated after
+    all lines have been gathered).
+    """
+    usage_code = "E"  # "E" for export. CHIEF also does "I" for import.
+    payload = licence.data
+    licence_type = LITE_HMRC_LICENCE_TYPE_MAPPING.get(payload.get("type"))
+
+    if licence.action == LicenceActionEnum.UPDATE:
+        # An "update" is represented by a cancel for the old licence ref,
+        # followed by an "insert" for the new ref.
+        old_reference = licence.old_reference
+        old_payload = LicencePayload.objects.get(reference=old_reference).data
+        yield (
+            "licence",
+            get_transaction_reference(old_reference),
+            "cancel",
+            old_reference,
+            licence_type,
+            usage_code,
+            old_payload.get("start_date").replace("-", ""),
+            old_payload.get("end_date").replace("-", ""),
+        )
+        yield ("end", "licence")
+
+        yield (
+            "licence",
+            get_transaction_reference(licence.reference),
+            "insert",
+            licence.reference,
+            licence_type,
+            usage_code,
+            payload.get("start_date").replace("-", ""),
+            payload.get("end_date").replace("-", ""),
+        )
+    else:
+        yield (
+            "licence",
+            get_transaction_reference(licence.reference),
+            licence.action,
+            licence.reference,
+            licence_type,
+            usage_code,
+            payload.get("start_date").replace("-", ""),
+            payload.get("end_date").replace("-", ""),
+        )
+
+    if licence.action != LicenceActionEnum.CANCEL:
+        trader = payload.get("organisation")
+
+        yield (
+            "trader",
+            "",  # turn
+            trader.get("eori_number", ""),
+            payload.get("start_date").replace("-", ""),
+            payload.get("end_date").replace("-", ""),
+            trader.get("name"),
+            trader.get("address").get("line_1"),
+            trader.get("address").get("line_2", ""),
+            trader.get("address").get("line_3", ""),
+            trader.get("address").get("line_4", ""),
+            trader.get("address").get("line_5", ""),
+            trader.get("address").get("postcode"),
+        )
+
+        # Uses "D" for licence use because lite only sends allowed countries, to use E would require changes on the API
+        if payload.get("type") in LicenceTypeEnum.OPEN_LICENCES:
+            if payload.get("country_group"):
+                yield ("country", None, payload.get("country_group"), "D")
+
+            elif payload.get("countries"):
+                for country in payload.get("countries"):
+                    country_id = get_country_id(country)
+                    yield ("country", country_id, None, "D")
+
+        elif payload.get("type") in LicenceTypeEnum.STANDARD_LICENCES:
+            if payload.get("end_user"):
+                # In the absence of country_group or countries use country of End user
+                country = payload.get("end_user").get("address").get("country")
+                country_id = get_country_id(country)
+                yield ("country", country_id, None, "D")
+
+        if payload.get("end_user"):
+            trader = payload.get("end_user")
+            trader = sanitize_foreign_trader_address(trader)
+
+            yield (
+                "foreignTrader",
+                trader.get("name"),
+                trader.get("address").get("line_1"),
+                trader.get("address").get("line_2", ""),
+                trader.get("address").get("line_3", ""),
+                trader.get("address").get("line_4", ""),
+                trader.get("address").get("line_5", ""),
+                trader.get("address").get("postcode", ""),
+                get_country_id(trader.get("address").get("country")),
+            )
+
+        yield ("restrictions", "Provisos may apply please see licence")
+
+        if payload.get("goods") and payload.get("type") in LicenceTypeEnum.STANDARD_LICENCES:
+            for g, commodity in enumerate(payload.get("goods"), start=1):
+                GoodIdMapping.objects.get_or_create(
+                    lite_id=commodity["id"], licence_reference=licence.reference, line_number=g
+                )
+                controlled_by = "Q"  # usage is controlled by quantity only
+                quantity = commodity.get("quantity")
+                if commodity.get("unit") == "NAR":
+                    quantity = int(quantity)
+
+                yield (
+                    "line",
+                    g,
+                    None,
+                    None,
+                    None,
+                    None,
+                    commodity.get("name"),
+                    controlled_by,
+                    None,
+                    "{:03d}".format(UnitMapping.convert(commodity.get("unit"))),
+                    None,
+                    quantity,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                )
+
+        if payload.get("type") in LicenceTypeEnum.OPEN_LICENCES:
+            yield (
+                "line",
+                1,
+                None,
+                None,
+                None,
+                None,
+                "Open Licence goods - see actual licence for information",
+                None,
+            )
+
+
+def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
     # Build a list of lines, with each line a tuple. After we have all the
     # lines, we format them ("\" as field separator) and insert the line
     # numbers. Some lines reference previous line numbers, so we need to
@@ -46,161 +191,9 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:  # noqa
 
     logging.info(f"File header:{file_header}")
 
-    usage_code = "E"  # "E" for export. CHIEF also does "I" for import.
-
     for licence in licences:
-        licence_payload = licence.data
-        licence_type = LITE_HMRC_LICENCE_TYPE_MAPPING.get(licence_payload.get("type"))
-
-        if licence.action == LicenceActionEnum.UPDATE:
-            # An "update" is represented by a cancel for the old licence ref,
-            # followed by an "insert" for the new ref.
-            old_reference = licence.old_reference
-            old_payload = LicencePayload.objects.get(reference=old_reference).data
-            line = (
-                "licence",
-                get_transaction_reference(old_reference),
-                "cancel",
-                old_reference,
-                licence_type,
-                usage_code,
-                old_payload.get("start_date").replace("-", ""),
-                old_payload.get("end_date").replace("-", ""),
-            )
-            lines.append(line)
-
-            end_licence = ("end", "licence")
-            lines.append(end_licence)
-
-            line = (
-                "licence",
-                get_transaction_reference(licence.reference),
-                "insert",
-                licence.reference,
-                licence_type,
-                usage_code,
-                licence_payload.get("start_date").replace("-", ""),
-                licence_payload.get("end_date").replace("-", ""),
-            )
-            lines.append(line)
-
-        else:
-            line = (
-                "licence",
-                get_transaction_reference(licence.reference),
-                licence.action,
-                licence.reference,
-                licence_type,
-                usage_code,
-                licence_payload.get("start_date").replace("-", ""),
-                licence_payload.get("end_date").replace("-", ""),
-            )
-            lines.append(line)
-
-        if licence.action != LicenceActionEnum.CANCEL:
-            trader = licence_payload.get("organisation")
-
-            line = (
-                "trader",
-                "",  # turn
-                trader.get("eori_number", ""),
-                licence_payload.get("start_date").replace("-", ""),
-                licence_payload.get("end_date").replace("-", ""),
-                trader.get("name"),
-                trader.get("address").get("line_1"),
-                trader.get("address").get("line_2", ""),
-                trader.get("address").get("line_3", ""),
-                trader.get("address").get("line_4", ""),
-                trader.get("address").get("line_5", ""),
-                trader.get("address").get("postcode"),
-            )
-            lines.append(line)
-
-            # Uses "D" for licence use because lite only sends allowed countries, to use E would require changes on the API
-            if licence_payload.get("type") in LicenceTypeEnum.OPEN_LICENCES:
-                if licence_payload.get("country_group"):
-                    line = ("country", None, licence_payload.get("country_group"), "D")
-                    lines.append(line)
-
-                elif licence_payload.get("countries"):
-                    for country in licence_payload.get("countries"):
-                        country_id = get_country_id(country)
-                        line = ("country", country_id, None, "D")
-                        lines.append(line)
-
-            elif licence_payload.get("type") in LicenceTypeEnum.STANDARD_LICENCES:
-                if licence_payload.get("end_user"):
-                    # In the absence of country_group or countries use country of End user
-                    country = licence_payload.get("end_user").get("address").get("country")
-                    country_id = get_country_id(country)
-                    line = ("country", country_id, None, "D")
-                    lines.append(line)
-
-            if licence_payload.get("end_user"):
-                trader = licence_payload.get("end_user")
-                trader = sanitize_foreign_trader_address(trader)
-
-                foreign_trader = (
-                    "foreignTrader",
-                    trader.get("name"),
-                    trader.get("address").get("line_1"),
-                    trader.get("address").get("line_2", ""),
-                    trader.get("address").get("line_3", ""),
-                    trader.get("address").get("line_4", ""),
-                    trader.get("address").get("line_5", ""),
-                    trader.get("address").get("postcode", ""),
-                    get_country_id(trader.get("address").get("country")),
-                )
-                lines.append(foreign_trader)
-
-            restrictions = ("restrictions", "Provisos may apply please see licence")
-            lines.append(restrictions)
-
-            if licence_payload.get("goods") and licence_payload.get("type") in LicenceTypeEnum.STANDARD_LICENCES:
-                for g, commodity in enumerate(licence_payload.get("goods"), start=1):
-                    GoodIdMapping.objects.get_or_create(
-                        lite_id=commodity["id"], licence_reference=licence.reference, line_number=g
-                    )
-                    controlled_by = "Q"  # usage is controlled by quantity only
-                    quantity = commodity.get("quantity")
-                    if commodity.get("unit") == "NAR":
-                        quantity = int(quantity)
-
-                    commodity = (
-                        "line",
-                        g,
-                        None,
-                        None,
-                        None,
-                        None,
-                        commodity.get("name"),
-                        controlled_by,
-                        None,
-                        "{:03d}".format(UnitMapping.convert(commodity.get("unit"))),
-                        None,
-                        quantity,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                    )
-                    lines.append(commodity)
-
-            if licence_payload.get("type") in LicenceTypeEnum.OPEN_LICENCES:
-                open_licence_commodity = (
-                    "line",
-                    1,
-                    None,
-                    None,
-                    None,
-                    None,
-                    "Open Licence goods - see actual licence for information",
-                    None,
-                )
-                lines.append(open_licence_commodity)
-
+        licence_lines = list(generate_lines_for_licence(licence))
+        lines.extend(licence_lines)
         end_licence = ("end", "licence")
         lines.append(end_licence)
 
