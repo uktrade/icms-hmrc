@@ -1,7 +1,4 @@
-import json
 import uuid
-
-from django.test import tag
 
 from mail.enums import SourceEnum
 from mail.libraries.helpers import get_good_id, read_file
@@ -157,7 +154,6 @@ class FileDeconstruction(LiteHMRCTestClient):
         [consignee-name] = 13
         """
 
-    @tag("1022", "id-ident")
     def test_determine_spire_licence_id_and_lite_licence_ids(self):
         spire_id_1 = "GBSIE2018/45678"
         spire_id_2 = "GBOIE2017/12345B"
@@ -173,7 +169,6 @@ class FileDeconstruction(LiteHMRCTestClient):
         self.assertEqual(id_owner(lite_id_2), SourceEnum.LITE)
         self.assertEqual(id_owner(lite_id_3), SourceEnum.LITE)
 
-    @tag("1022", "splitting-file")
     def test_usage_data_split_according_to_licence_ids(self):
         usage_data = self.licence_usage_file_body.decode("utf-8")
         spire_data_expected = [
@@ -311,12 +306,10 @@ class FileDeconstruction(LiteHMRCTestClient):
         self.assertEqual(spire_data, spire_data_expected)
         self.assertEqual(lite_data, lite_data_expected)
 
-    @tag("1022", "rebuilding-file-spire")
     def test_spire_file_rebuild(self):
         spire_file = build_edifact_file_from_data_blocks(self.spire_data_expected)
         self.assertEqual(spire_file, self.expected_file_for_spire)
 
-    @tag("1022", "build-json-lite")
     def test_lite_json_payload_create(self):
         LicencePayload.objects.create(reference="GBOGE2011/56789", lite_id="00000000-0000-0000-0000-000000000001")
         LicencePayload.objects.create(reference="GBOGE2017/98765", lite_id="00000000-0000-0000-0000-000000000002")
@@ -343,7 +336,6 @@ class FileDeconstruction(LiteHMRCTestClient):
 
         self.assertEqual(lite_payload, self.expected_lite_json_payload)
 
-    @tag("no-good-mapping")
     def test_lite_json_payload_create_open_licence(self):
         LicencePayload.objects.create(reference="GBOGE2011/56789", lite_id="00000000-0000-0000-0000-000000000001")
         lite_data = [
@@ -376,7 +368,6 @@ class FileDeconstruction(LiteHMRCTestClient):
 
         self.assertEqual(lite_payload, expected_lite_json_payload)
 
-    @tag("de-mapping-goods")
     def test_de_mapping_goods(self):
         licence_reference = "GB2020/00001/SIE/P"
         lite_good_id = "00000000-0000-0000-0000-000000000001"
@@ -385,17 +376,60 @@ class FileDeconstruction(LiteHMRCTestClient):
 
         self.assertEqual(get_good_id(line_number=line_number, licence_reference=licence_reference), lite_good_id)
 
-    @tag("create-transaction-mapping")
     def test_create_transaction_mapping_for_lite_licences(self):
+        mail = Mail.objects.create(edi_filename="filename", edi_data="1\\fileHeader\\CHIEF\\SPIRE\\")
         usage_data = self.licence_usage_file_body.decode("utf-8")
         LicenceIdMapping.objects.create(
             lite_id="00000000-0000-0000-0000-000000000001", reference="GBSIEL/2020/0000002/P"
         )
-        split_edi_data_by_id(
-            usage_data, UsageData.objects.create(mail=Mail.objects.create(), spire_run_number=1, hmrc_run_number=1)
-        )
+        split_edi_data_by_id(usage_data, UsageData.objects.create(mail=mail, spire_run_number=1, hmrc_run_number=1))
 
         for t in TransactionMapping.objects.all():
             print(t.__dict__)
 
         self.assertEqual(TransactionMapping.objects.count(), 2)
+
+    def test_lite_usage_only_open_licences_are_processed(self):
+        usage_data_from_hmrc = [
+            [
+                "licenceUsage\\LU05234/00318\\insert\\GBSIEL/2021/0000088/P\\C\\20210218",
+                "line\1\\3\\0\\",
+                "end\\line\\2",
+                "line\\2\12\\0\\",
+                "end\\line\\2",
+                "end\\licenceUsage\\6",
+            ],
+            [
+                "licenceUsage\\LU05235/00318\\insert\\GBSIEL/2021/0000090/P\\E\\20210821",
+                "line\1\\3\\0\\",
+                "end\\line\\2",
+                "line\\2\12\\0\\",
+                "end\\line\\2",
+                "line\\3\10\\0\\",
+                "end\\line\\3",
+                "end\\licenceUsage\\8",
+            ],
+        ]
+
+        lite_payload = build_json_payload_from_data_blocks(usage_data_from_hmrc)
+        self.assertEqual(len(lite_payload["licences"]), 0)
+
+        usage_data_from_hmrc += [
+            [
+                "licenceUsage\\LU05233/00180\\insert\\GBSIEL/2021/0000088/P\\O\\",
+                "line\\1\\3\\0\\",
+                "usage\\O\\9GB000004988000-4750437112345\\H\\20220218\\3\\0\\\\GB861460724000\\\\\\\\",
+                "end\\line\\3",
+                "line\\2\\12\\0\\",
+            ],
+            [
+                "licenceUsage\\LU05258/00180\\insert\\SIE22-0000008\\O\\",
+                "line\\1\\3\\0\\",
+                "usage\\O\\9GB000004988000-4750437112345\\H\\20220218\\3\\0\\\\GB861460724000\\\\\\\\",
+                "end\\line\\3",
+                "line\\2\\12\\0\\",
+            ],
+        ]
+
+        lite_payload = build_json_payload_from_data_blocks(usage_data_from_hmrc)
+        self.assertEqual(len(lite_payload["licences"]), 2)

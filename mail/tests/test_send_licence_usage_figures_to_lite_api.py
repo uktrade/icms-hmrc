@@ -41,6 +41,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
             lite_id="80a3d9b2-09a9-4e86-840f-236d186e5b0c", reference="GBSIEL/2020/0000009/P"
         )
         self.mail = Mail.objects.create(
+            edi_filename="usage_data",
             edi_data=(
                 "1\\fileHeader\\CHIEF\\SPIRE\\usageData\\201901130300\\49543\\\n"
                 "2\\licenceUsage\\LU04148/00001\\insert\\GBSIEL/2020/0000008/P\\O\\\n"
@@ -54,7 +55,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
                 "10\\end\\line\\3\n"
                 "11\\end\\licenceUsage\\5\n"
                 "12\\fileTrailer\\2"
-            )
+            ),
         )
         self.usage_data = UsageData.objects.create(
             id="1e5a4fd0-e581-4efd-9770-ac68e04852d2",
@@ -198,6 +199,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
         ]
 
         mail = Mail.objects.create(
+            edi_filename="usage_data",
             edi_data=(
                 "1\\fileHeader\\CHIEF\\SPIRE\\usageData\\201901130300\\49543\\\n"
                 "2\\licenceUsage\\LU04148/00001\\insert\\GBSIEL/2020/0000025/P\\O\\\n"
@@ -220,7 +222,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
                 "19\\end\\line\\2\n"
                 "20\\end\\licenceUsage\\8\n"
                 "21\\fileTrailer\\2"
-            )
+            ),
         )
         usage_data = UsageData.objects.create(
             mail=mail,

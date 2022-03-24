@@ -1,12 +1,9 @@
-from django.test import tag
-
 from mail.libraries.combine_usage_replies import combine_lite_and_spire_usage_responses
 from mail.models import Mail, GoodIdMapping, LicenceIdMapping, UsageData, TransactionMapping
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
 class CombiningUsageDataReplies(LiteHMRCTestClient):
-    @tag("combine", "end-to-end")
     def test_combine_two_responses(self):
         edi_data = (
             "1\\fileHeader\\CHIEF\\SPIRE\\usageData\\201901130300\\49543\\\n"
@@ -75,7 +72,7 @@ class CombiningUsageDataReplies(LiteHMRCTestClient):
             "7\\fileTrailer\\2\\1\\0"
         )
 
-        mail = Mail.objects.create(edi_data=edi_data, response_data=spire_response)
+        mail = Mail.objects.create(edi_filename="filename", edi_data=edi_data, response_data=spire_response)
         usage_data = UsageData.objects.create(
             lite_response=lite_response, spire_run_number=12345, hmrc_run_number=54321, mail=mail
         )

@@ -14,7 +14,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework.status import HTTP_207_MULTI_STATUS, HTTP_208_ALREADY_REPORTED
 
-from mail.enums import ReceptionStatusEnum, ReplyStatusEnum
+from mail.enums import ReceptionStatusEnum
 from mail.libraries.builders import build_licence_data_mail
 from mail.libraries.data_processors import build_request_mail_message_dto
 from mail.libraries.mailbox_service import send_email
@@ -57,10 +57,23 @@ def send_licence_usage_figures_to_lite_api(lite_usage_data_id):
         )
         return
 
+    # Extract usage details of Licences issued from LITE
+    _, data = split_edi_data_by_id(lite_usage_data.mail.edi_data, lite_usage_data)
+    payload = build_json_payload_from_data_blocks(data)
+
+    # We only process usage data for active licences so below error is unlikely
+    if len(payload["licences"]) == 0:
+        logger.error("Licences is blank in payload for %s", lite_usage_data, exc_info=True)
+        return
+
+    payload["usage_data_id"] = lite_usage_data_id
+
     logging.info(f"Sending LITE UsageData [{lite_usage_data_id}] figures for Licences [{licences}] to LITE API")
 
     try:
-        build_lite_payload(lite_usage_data)
+        lite_usage_data.lite_payload = payload
+        lite_usage_data.save()
+
         response = put(
             # For lite-hmrc the path was hard-coded to '/licences/hmrc-integration/'.
             f"{settings.LITE_API_URL}",
@@ -141,20 +154,6 @@ def save_response(lite_usage_data: UsageData, accepted_licences, rejected_licenc
     lite_usage_data.save()
 
 
-def build_lite_payload(lite_usage_data: UsageData):
-    _, data = split_edi_data_by_id(lite_usage_data.mail.edi_data, lite_usage_data)
-    payload = build_json_payload_from_data_blocks(data)
-    if not payload["licences"]:
-        logger.error(
-            "Licences is blank in payload for %s",
-            lite_usage_data,
-            exc_info=True,
-        )
-    payload["usage_data_id"] = str(lite_usage_data.id)
-    lite_usage_data.lite_payload = payload
-    lite_usage_data.save()
-
-
 def schedule_max_tried_task_as_new_task(lite_usage_data_id):
     """
     Used to schedule a max-tried task as a new task (starting from attempts=0);
@@ -207,8 +206,11 @@ def send_licence_data_to_hmrc():
 
     logging.info("Sending LITE licence updates to HMRC")
 
-    if not _is_email_slot_free():
-        logging.info("There is currently an update in progress or an email is in flight")
+    if Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT).count():
+        logging.info(
+            "Currently we are either waiting for a reply or next one is ready to be processed,\n"
+            "so we cannot send this update now and will be picked up in the next cycle"
+        )
         return
 
     try:
@@ -246,31 +248,7 @@ def send_licence_data_to_hmrc():
         return True
 
 
-def _is_email_slot_free() -> bool:
-    pending_mail = _get_pending_mail()
-    if pending_mail:
-        logging.error(f"The following Mail is pending: {pending_mail}")
-        return False
-
-    return True
-
-
-def _get_pending_mail() -> []:
-    return list(Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT).values_list("id", flat=True))
-
-
-def _get_rejected_mail() -> []:
-    return list(
-        Mail.objects.filter(
-            status=ReceptionStatusEnum.REPLY_SENT,
-            response_data__icontains=ReplyStatusEnum.REJECTED,
-        ).values_list("id", flat=True)
-    )
-
-
 # Notify Users of Rejected Mail
-
-
 @background(queue=NOTIFY_USERS_TASK_QUEUE, schedule=0)
 def notify_users_of_rejected_mail(mail_id, mail_response_date):
     """If a rejected email is found, this task notifies users of the rejection"""

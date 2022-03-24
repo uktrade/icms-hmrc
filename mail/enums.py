@@ -201,3 +201,13 @@ class MailReadStatuses:
 
 # Used to select from multiple SMTP outgoing server settings.
 SMTPConnection = enum.Enum("SMTPConnection", ["SPIRE", "INCOMING", "MOCK", "HMRC"])
+
+
+class LicenceStatusEnum:
+    OPEN = "open"
+    EXHAUST = "exhaust"
+    SURRENDER = "surrender"
+    EXPIRE = "expire"
+    CANCEL = "cancel"
+
+    choices = [(OPEN, "open"), (EXHAUST, "exhaust"), (SURRENDER, "surrender"), (EXPIRE, "expire"), (CANCEL, "cancel")]
