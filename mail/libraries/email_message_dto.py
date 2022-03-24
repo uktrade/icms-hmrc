@@ -5,5 +5,5 @@ EmailMessageDto = namedtuple(
 )
 
 HmrcEmailMessageDto = namedtuple(
-    "EmailMessageDto", "run_number, message_id, sender, receiver, subject, body, attachment, raw_data"
+    "HmrcEmailMessageDto", "run_number, message_id, sender, receiver, subject, body, attachment, raw_data"
 )

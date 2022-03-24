@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.test import tag
 
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.data_processors import serialize_email_message
@@ -49,7 +48,6 @@ class MultipleEmailRetrievalTests(LiteHMRCTestClient):
             raw_data="qwerty",
         )
 
-    @tag("no-duplication")
     def test_duplicate_emails_and_licence_datas_not_saved(self):
         mail = Mail.objects.create(
             edi_filename=self.dto_2.attachment[0],
@@ -66,7 +64,6 @@ class MultipleEmailRetrievalTests(LiteHMRCTestClient):
         self.assertEqual(mail_count, Mail.objects.count())
         self.assertEqual(licence_data_count, LicenceData.objects.count())
 
-    @tag("sequencing")
     def test_emails_are_sequenced_correctly(self):
         mail = Mail.objects.create(
             edi_filename="something",
@@ -93,7 +90,6 @@ class MultipleEmailRetrievalTests(LiteHMRCTestClient):
 
         self.assertEqual(mail_lite, mail)
 
-    @tag("retry")
     def test_retry(self):
         serialize_email_message(self.dto_2)
         mail_count = Mail.objects.count()

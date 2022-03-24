@@ -1,5 +1,5 @@
 from dateutil.parser import parse
-from django.test import SimpleTestCase, tag
+from django.test import SimpleTestCase
 from parameterized import parameterized
 
 from mail.libraries.email_message_dto import *
@@ -66,7 +66,6 @@ class TestDtos(LiteHMRCTestClient):
         self.assertEqual(sorted_list, expected)
 
 
-@tag("mail_parse")
 class TestKnownMessageToDTO(SimpleTestCase):
     @classmethod
     def setUpClass(cls):

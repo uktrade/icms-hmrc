@@ -9,7 +9,7 @@ from email.message import Message
 from email.parser import Parser
 from json.decoder import JSONDecodeError
 
-from mail.enums import SourceEnum, ExtractTypeEnum, UnitMapping, ReceptionStatusEnum
+from mail.enums import SourceEnum, ExtractTypeEnum, UnitMapping, ReceptionStatusEnum, LicenceStatusEnum
 from mail.libraries.email_message_dto import EmailMessageDto, HmrcEmailMessageDto
 from mail.models import LicenceData, UsageData, Mail, GoodIdMapping, LicenceIdMapping
 from mail import serializers
@@ -320,17 +320,17 @@ def get_licence_id(licence_reference) -> str or None:
         return
 
 
-def get_action(reference) -> str:
+def get_licence_status(reference) -> str:
     if reference == "O":
-        return "open"
+        return LicenceStatusEnum.OPEN
     elif reference == "E":
-        return "exhaust"
+        return LicenceStatusEnum.EXHAUST
     elif reference == "S":
-        return "surrender"
+        return LicenceStatusEnum.SURRENDER
     elif reference == "D":
-        return "expire"
+        return LicenceStatusEnum.EXPIRE
     elif reference == "C":
-        return "cancel"
+        return LicenceStatusEnum.CANCEL
 
 
 def get_country_id(country):
