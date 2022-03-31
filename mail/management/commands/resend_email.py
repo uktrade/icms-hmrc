@@ -27,12 +27,13 @@ def get_mail_extract(hmrc_run_number):
         mail = licence_data.mail
     except LicenceData.DoesNotExist:
         logger.info("No licence data instance found for given run number %s", hmrc_run_number)
+        return None
 
     try:
         usage_data = UsageData.objects.get(hmrc_run_number=hmrc_run_number)
         mail = usage_data.mail
     except UsageData.DoesNotExist:
-        logger.error("No usage data instance found for given run number %s", hmrc_run_number)
+        logger.warning("No usage data instance found for given run number %s", hmrc_run_number)
 
     return mail
 
