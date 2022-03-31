@@ -55,3 +55,10 @@ def format_lines(lines: typing.Sequence[tuple]) -> str:
     line_sep = "\n"
 
     return line_sep.join(formatted_lines) + line_sep
+
+
+def count_transactions(lines: typing.Sequence[tuple]) -> int:
+    """Count of licence transactions, for use on the `fileTrailer` line."""
+    # A transaction is any line  with "licence" as the first field (ignoring
+    # line numbers).
+    return sum(line[0] == "licence" for line in lines)

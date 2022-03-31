@@ -199,7 +199,7 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
 
     # File trailer includes the number of licences, but +1 for each "update"
     # because this code represents those as "cancel" followed by "insert".
-    num_transactions = licences.count() + licences.filter(action=LicenceActionEnum.UPDATE).count()
+    num_transactions = chiefprotocol.count_transactions(lines)
     file_trailer = ("fileTrailer", num_transactions)
     lines.append(file_trailer)
 

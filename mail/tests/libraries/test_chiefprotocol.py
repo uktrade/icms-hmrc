@@ -110,3 +110,27 @@ class FormatLinesTest(unittest.TestCase):
 
         expected = "1\\fileHeader\n2\\licence\n3\\end\\licence\\2\n"
         self.assertEqual(result, expected)
+
+
+class CountTransactionsTest(unittest.TestCase):
+    def test_count_zero_licences(self):
+        lines = [
+            ("fileHeader",),
+            ("fileTrailer",),
+        ]
+        result = chiefprotocol.count_transactions(lines)
+
+        self.assertEqual(result, 0)
+
+    def test_count_many_licences(self):
+        lines = [
+            ("fileHeader",),
+            ("licence",),
+            ("end", "licence"),
+            ("licence",),
+            ("end", "licence"),
+            ("fileTrailer",),
+        ]
+        result = chiefprotocol.count_transactions(lines)
+
+        self.assertEqual(result, 2)
