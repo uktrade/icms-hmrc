@@ -210,7 +210,7 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
     errors = validate_edifact_file(edifact_file)
     if errors:
         logging.error("File content not as per specification, %r", errors)
-        raise EdifactValidationError
+        raise EdifactValidationError(repr(errors))
 
     return edifact_file
 
