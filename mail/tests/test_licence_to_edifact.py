@@ -60,8 +60,18 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         self.single_siel_licence_payload.refresh_from_db()
         self.assertEqual(self.single_siel_licence_payload.is_processed, True)
 
-    def test_ref(self):
-        self.assertEqual(get_transaction_reference("GBSIEL/2020/0000001/P"), "20200000001P")
+    @parameterized.expand(
+        [
+            ("GBSIEL/2020/0000001/P", "20200000001P"),
+            ("SIE22-0000025-01", "22000002501"),
+        ]
+    )
+    def test_extract_reference(self, licence_reference, expected_reference):
+        self.assertEqual(get_transaction_reference(licence_reference), expected_reference)
+
+    def test_invalid_licence_reference_raises_value_error(self):
+        with self.assertRaises(ValueError):
+            get_transaction_reference("SIE-INVALID-REF")
 
     def test_update_edifact_file(self):
         lp = LicencePayload.objects.get()
