@@ -1,8 +1,8 @@
 import re
 import logging
 import textwrap
+from typing import Iterable
 
-from django.db.models import QuerySet
 from django.utils import timezone
 
 from mail.enums import UnitMapping, LicenceActionEnum, LicenceTypeEnum, LITE_HMRC_LICENCE_TYPE_MAPPING
@@ -165,8 +165,10 @@ def generate_lines_for_licence(licence):
                 None,
             )
 
+    yield ("end", "licence")
 
-def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
+
+def licences_to_edifact(licences: Iterable[LicencePayload], run_number: int) -> str:
     # Build a list of lines, with each line a tuple. After we have all the
     # lines, we format them ("\" as field separator) and insert the line
     # numbers. Some lines reference previous line numbers, so we need to
@@ -195,8 +197,6 @@ def licences_to_edifact(licences: QuerySet, run_number: int) -> str:
     for licence in licences:
         licence_lines = list(generate_lines_for_licence(licence))
         lines.extend(licence_lines)
-        end_licence = ("end", "licence")
-        lines.append(end_licence)
 
     # File trailer includes the number of licences, but +1 for each "update"
     # because this code represents those as "cancel" followed by "insert".

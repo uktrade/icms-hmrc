@@ -5,6 +5,7 @@ from parameterized import parameterized
 
 from mail.enums import LicenceActionEnum
 from mail.libraries.lite_to_edifact_converter import (
+    generate_lines_for_licence,
     licences_to_edifact,
     get_transaction_reference,
     EdifactValidationError,
@@ -172,7 +173,46 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         licences = LicencePayload.objects.filter(is_processed=False)
         edifact_file = licences_to_edifact(licences, 1234)
         foreign_trader_line = edifact_file.split("\n")[4]
-        self.assertEqual(
-            foreign_trader_line,
-            expected_trader_line,
-        )
+        self.assertEqual(foreign_trader_line, expected_trader_line)
+
+
+class GenerateLinesForLicenceTest(LiteHMRCTestClient):
+    def test_open_licence_with_country_group(self):
+        data = {
+            "start_date": "1",
+            "end_date": "2",
+            "organisation": {
+                "address": {},
+            },
+            "address": {},
+            "type": "oiel",  # One of the OPEN_LICENCES.
+            "country_group": "G012",  # This example is from an ICMS message.
+        }
+        licence = LicencePayload(reference="GBSIEL/123", data=data)
+        lines = list(generate_lines_for_licence(licence))
+
+        expected_types = ["licence", "trader", "country", "restrictions", "line", "end"]
+        self.assertEqual([line[0] for line in lines], expected_types)
+        # The country code is the 3rd field.
+        self.assertEqual(lines[2], ("country", None, "G012", "D"))
+
+    def test_open_licence_with_multiple_countries(self):
+        data = {
+            "start_date": "1",
+            "end_date": "2",
+            "organisation": {
+                "address": {},
+            },
+            "address": {},
+            "type": "oiel",  # One of the OPEN_LICENCES.
+            "countries": [{"id": "GB"}, {"id": "NI"}],
+        }
+        licence = LicencePayload(reference="GBSIEL/123", data=data)
+        lines = list(generate_lines_for_licence(licence))
+
+        # Note there are 2 country lines.
+        expected_types = ["licence", "trader", "country", "country", "restrictions", "line", "end"]
+        self.assertEqual([line[0] for line in lines], expected_types)
+        # The country code is the 2nd field.
+        self.assertEqual(lines[2], ("country", "GB", None, "D"))
+        self.assertEqual(lines[3], ("country", "NI", None, "D"))
