@@ -14,10 +14,9 @@ import os
 import sys
 import uuid
 
-from environ import Env
-from django_log_formatter_ecs import ECSFormatter
-
 import sentry_sdk
+from django_log_formatter_ecs import ECSFormatter
+from environ import Env
 from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)

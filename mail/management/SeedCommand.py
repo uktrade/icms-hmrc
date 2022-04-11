@@ -3,7 +3,7 @@ from abc import ABC
 from io import StringIO
 
 from django.core.management import BaseCommand, call_command
-from django.db import transaction, models, IntegrityError
+from django.db import IntegrityError, models, transaction
 from django.db.models import QuerySet
 from django.test import TestCase
 

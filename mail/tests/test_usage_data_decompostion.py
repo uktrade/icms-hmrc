@@ -4,11 +4,11 @@ from mail.enums import SourceEnum
 from mail.libraries.helpers import get_good_id, read_file
 from mail.libraries.usage_data_decomposition import (
     build_edifact_file_from_data_blocks,
-    split_edi_data_by_id,
     build_json_payload_from_data_blocks,
     id_owner,
+    split_edi_data_by_id,
 )
-from mail.models import LicencePayload, GoodIdMapping, UsageData, Mail, TransactionMapping, LicenceIdMapping
+from mail.models import GoodIdMapping, LicenceIdMapping, LicencePayload, Mail, TransactionMapping, UsageData
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 

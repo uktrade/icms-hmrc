@@ -1,24 +1,22 @@
 import json
 import logging
 import uuid
-
 from datetime import timedelta
 from typing import List
 
-from django.db import models, IntegrityError
+from django.db import IntegrityError, models
 from django.utils import timezone
 from jsonfield import JSONField
 from model_utils.models import TimeStampedModel
 
 from mail.enums import (
-    ReceptionStatusEnum,
     ExtractTypeEnum,
-    SourceEnum,
     LicenceActionEnum,
-    ReplyStatusEnum,
     MailReadStatuses,
+    ReceptionStatusEnum,
+    ReplyStatusEnum,
+    SourceEnum,
 )
-
 
 logger = logging.getLogger(__name__)
 

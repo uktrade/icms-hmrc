@@ -1,18 +1,15 @@
 import logging
 from datetime import datetime
-from django.db import IntegrityError
 
 from django.conf import settings
+from django.db import IntegrityError
 from rest_framework.exceptions import ValidationError
 
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
-from mail.libraries.builders import build_sent_filename, build_sent_file_data
-from mail.libraries.data_processors import (
-    serialize_email_message,
-    to_email_message_dto_from,
-)
+from mail.libraries.builders import build_sent_file_data, build_sent_filename
+from mail.libraries.data_processors import serialize_email_message, to_email_message_dto_from
 from mail.libraries.email_message_dto import EmailMessageDto
-from mail.models import Mail, LicenceData, UsageData
+from mail.models import LicenceData, Mail, UsageData
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 

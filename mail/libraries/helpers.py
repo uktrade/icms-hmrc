@@ -1,18 +1,18 @@
 import base64
 import json
 import logging
-import sentry_sdk
-
-from dateutil.parser import parse
-from django.conf import settings
 from email.message import Message
 from email.parser import Parser
 from json.decoder import JSONDecodeError
 
-from mail.enums import SourceEnum, ExtractTypeEnum, UnitMapping, ReceptionStatusEnum, LicenceStatusEnum
-from mail.libraries.email_message_dto import EmailMessageDto, HmrcEmailMessageDto
-from mail.models import LicenceData, UsageData, Mail, GoodIdMapping, LicenceIdMapping
+import sentry_sdk
+from dateutil.parser import parse
+from django.conf import settings
+
 from mail import serializers
+from mail.enums import ExtractTypeEnum, LicenceStatusEnum, ReceptionStatusEnum, SourceEnum, UnitMapping
+from mail.libraries.email_message_dto import EmailMessageDto, HmrcEmailMessageDto
+from mail.models import GoodIdMapping, LicenceData, LicenceIdMapping, Mail, UsageData
 
 ALLOWED_FILE_MIMETYPES = ["application/octet-stream", "text/plain"]
 

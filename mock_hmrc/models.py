@@ -3,7 +3,7 @@ import uuid
 from django.db import models
 
 from mail.enums import ExtractTypeEnum
-from mock_hmrc.enums import RetrievedEmailStatusEnum, HmrcMailStatusEnum
+from mock_hmrc.enums import HmrcMailStatusEnum, RetrievedEmailStatusEnum
 
 
 class RetrievedMail(models.Model):

@@ -1,9 +1,10 @@
 import logging
-from django.conf import settings
 from email.message import Message
 from poplib import POP3_SSL, error_proto
 from smtplib import SMTP
-from typing import Callable, Iterator, Tuple, List
+from typing import Callable, Iterator, List, Tuple
+
+from django.conf import settings
 
 from mail.enums import MailReadStatuses
 from mail.libraries.email_message_dto import EmailMessageDto

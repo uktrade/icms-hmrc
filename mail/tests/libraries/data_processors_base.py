@@ -1,5 +1,5 @@
-from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail import models
+from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 

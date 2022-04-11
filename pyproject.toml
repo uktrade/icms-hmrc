@@ -22,3 +22,7 @@ exclude = '''
   | migrations
 )/
 '''
+
+[tool.isort]
+profile = 'black'
+line_length = 120  # To match Black's line-length above.

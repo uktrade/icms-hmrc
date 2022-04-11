@@ -1,24 +1,16 @@
 import logging
-from django.http import JsonResponse, HttpResponse
+
+from django.http import HttpResponse, JsonResponse
 from rest_framework import status
-from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR
+from rest_framework.views import APIView
 
 from conf.authentication import HawkOnlyAuthentication
-from mail.enums import LicenceTypeEnum, LicenceActionEnum, ReceptionStatusEnum
-from mail.models import LicencePayload, LicenceIdMapping, UsageData, Mail, LicenceData
-from mail.serializers import (
-    LiteLicenceDataSerializer,
-    ForiegnTraderSerializer,
-    GoodSerializer,
-    MailSerializer,
-)
-from mail.tasks import (
-    manage_inbox,
-    send_licence_data_to_hmrc,
-    send_licence_usage_figures_to_lite_api,
-)
-from rest_framework.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR
+from mail.enums import LicenceActionEnum, LicenceTypeEnum, ReceptionStatusEnum
+from mail.models import LicenceData, LicenceIdMapping, LicencePayload, Mail, UsageData
+from mail.serializers import ForiegnTraderSerializer, GoodSerializer, LiteLicenceDataSerializer, MailSerializer
+from mail.tasks import manage_inbox, send_licence_data_to_hmrc, send_licence_usage_figures_to_lite_api
 
 
 class LicenceDataIngestView(APIView):

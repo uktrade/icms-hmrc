@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from mail.models import LicenceData, Mail, MailboxConfig, MailReadStatus, UsageData
 
 

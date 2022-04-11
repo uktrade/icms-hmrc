@@ -5,12 +5,12 @@ from parameterized import parameterized
 
 from mail.enums import LicenceActionEnum
 from mail.libraries.lite_to_edifact_converter import (
-    generate_lines_for_licence,
-    licences_to_edifact,
-    get_transaction_reference,
     EdifactValidationError,
+    generate_lines_for_licence,
+    get_transaction_reference,
+    licences_to_edifact,
 )
-from mail.models import LicencePayload, Mail, GoodIdMapping
+from mail.models import GoodIdMapping, LicencePayload, Mail
 from mail.tasks import send_licence_data_to_hmrc
 from mail.tests.libraries.client import LiteHMRCTestClient
 

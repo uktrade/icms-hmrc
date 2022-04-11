@@ -45,11 +45,19 @@ Run the following command
 
 - Code formatting and conventions
 
-The python code formatter [Black](https://black.readthedocs.io/en/stable/) is used in this project.
+[Black](https://black.readthedocs.io/en/stable/) and isort are used in this project to enforce a consistent code style.
 
-To run it: `PIPENV_DOTENV_LOCATION=.env pipenv run black .`
+Apply formatting:
 
-To check the format `PIPENV_DOTENV_LOCATION=.env pipenv run black --check .`
+    export PIPENV_DOTENV_LOCATION=.env
+    pipenv run black .
+    pipenv run isort .
+
+Check formatting:
+
+    export PIPENV_DOTENV_LOCATION=.env
+    pipenv run black --check .
+    pipenv run isort --check --diff .
 
 - Code analysis tool
 

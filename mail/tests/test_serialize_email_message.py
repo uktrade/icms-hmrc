@@ -1,10 +1,7 @@
+from django.conf import settings
 from rest_framework.exceptions import ValidationError
 
-from django.conf import settings
-from mail.libraries.data_processors import (
-    to_email_message_dto_from,
-    serialize_email_message,
-)
+from mail.libraries.data_processors import serialize_email_message, to_email_message_dto_from
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.tests.libraries.data_processors_base import DataProcessorsTestBase
 

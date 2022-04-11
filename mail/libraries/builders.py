@@ -1,22 +1,20 @@
+import json
 import logging
-
 from datetime import datetime
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import json
-
-from unidecode import unidecode
 
 from django.conf import settings
 from django.utils import timezone
+from unidecode import unidecode
 
-from mail.enums import SourceEnum, ExtractTypeEnum
+from mail.enums import ExtractTypeEnum, SourceEnum
 from mail.libraries.combine_usage_replies import combine_lite_and_spire_usage_responses
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import convert_source_to_sender
 from mail.libraries.lite_to_edifact_converter import licences_to_edifact
-from mail.libraries.usage_data_decomposition import split_edi_data_by_id, build_edifact_file_from_data_blocks
+from mail.libraries.usage_data_decomposition import build_edifact_file_from_data_blocks, split_edi_data_by_id
 from mail.models import LicenceData, Mail, UsageData
 
 

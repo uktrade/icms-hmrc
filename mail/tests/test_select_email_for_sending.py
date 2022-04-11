@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from unittest import mock
 
-from mail.enums import ReceptionStatusEnum, ExtractTypeEnum, SourceEnum
+from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.helpers import select_email_for_sending
 from mail.libraries.routing_controller import check_and_route_emails
 from mail.models import LicenceData, Mail, UsageData

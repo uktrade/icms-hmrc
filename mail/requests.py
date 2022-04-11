@@ -3,8 +3,8 @@ Wrapper for Requests HTTP Library.
 HAWK signs requests and verifies responses.
 """
 
-from json import dumps as serialize
 import logging
+from json import dumps as serialize
 
 import requests  # noqa
 from django.conf import settings

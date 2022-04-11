@@ -9,12 +9,13 @@ class MailConfig(AppConfig):
     @classmethod
     def initialize_background_tasks(cls, **kwargs):
         from background_task.models import Task
+
         from mail.models import UsageData
         from mail.tasks import (
-            MANAGE_INBOX_TASK_QUEUE,
             LICENCE_DATA_TASK_QUEUE,
-            schedule_licence_usage_figures_for_lite_api,
+            MANAGE_INBOX_TASK_QUEUE,
             manage_inbox,
+            schedule_licence_usage_figures_for_lite_api,
             send_licence_data_to_hmrc,
         )
 

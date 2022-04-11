@@ -7,12 +7,12 @@ from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum, UnitMap
 from mail.libraries.helpers import (
     convert_sender_to_source,
     convert_source_to_sender,
-    new_hmrc_run_number,
+    get_country_id,
+    get_licence_status,
     get_run_number,
     map_unit,
-    get_licence_status,
+    new_hmrc_run_number,
     process_attachment,
-    get_country_id,
 )
 from mail.libraries.lite_to_edifact_converter import get_transaction_reference
 from mail.models import LicenceData, Mail

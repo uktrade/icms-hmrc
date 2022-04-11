@@ -1,19 +1,19 @@
-import re
 import logging
+import re
 import textwrap
 from typing import Iterable
 
 from django.utils import timezone
 
-from mail.enums import UnitMapping, LicenceActionEnum, LicenceTypeEnum, LITE_HMRC_LICENCE_TYPE_MAPPING
+from mail.enums import LITE_HMRC_LICENCE_TYPE_MAPPING, LicenceActionEnum, LicenceTypeEnum, UnitMapping
+from mail.libraries import chiefprotocol
+from mail.libraries.edifact_validator import (
+    FOREIGN_TRADER_ADDR_LINE_MAX_LEN,
+    FOREIGN_TRADER_NUM_ADDR_LINES,
+    validate_edifact_file,
+)
 from mail.libraries.helpers import get_country_id
 from mail.models import GoodIdMapping, LicencePayload
-from mail.libraries.edifact_validator import (
-    validate_edifact_file,
-    FOREIGN_TRADER_NUM_ADDR_LINES,
-    FOREIGN_TRADER_ADDR_LINE_MAX_LEN,
-)
-from mail.libraries import chiefprotocol
 
 
 class EdifactValidationError(Exception):

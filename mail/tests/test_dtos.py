@@ -3,7 +3,7 @@ from django.test import SimpleTestCase
 from parameterized import parameterized
 
 from mail.libraries.email_message_dto import *
-from mail.libraries.helpers import read_file, to_mail_message_dto, sort_dtos_by_date
+from mail.libraries.helpers import read_file, sort_dtos_by_date, to_mail_message_dto
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 

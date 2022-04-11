@@ -1,28 +1,27 @@
-from rest_framework.exceptions import ValidationError
-from typing import Callable, List, Tuple, Optional
-
 import logging
 from itertools import islice
+from typing import Callable, List, Optional, Tuple
 
 from django.conf import settings
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 from conf.settings import SPIRE_ADDRESS
-from mail.enums import ReceptionStatusEnum, SourceEnum, ExtractTypeEnum, MailReadStatuses
+from mail.enums import ExtractTypeEnum, MailReadStatuses, ReceptionStatusEnum, SourceEnum
 from mail.libraries.builders import build_email_message
 from mail.libraries.data_processors import (
+    lock_db_for_sending_transaction,
     serialize_email_message,
     to_email_message_dto_from,
-    lock_db_for_sending_transaction,
 )
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import (
-    select_email_for_sending,
-    sort_dtos_by_date,
     check_for_pending_messages,
     publish_queue_status,
+    select_email_for_sending,
+    sort_dtos_by_date,
 )
-from mail.libraries.mailbox_service import send_email, get_message_iterator
+from mail.libraries.mailbox_service import get_message_iterator, send_email
 from mail.models import Mail
 from mail.servers import MailServer
 

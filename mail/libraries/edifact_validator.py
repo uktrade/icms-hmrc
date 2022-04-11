@@ -1,6 +1,6 @@
 import re
 
-from mail.enums import LicenceActionEnum, LITE_HMRC_LICENCE_TYPE_MAPPING
+from mail.enums import LITE_HMRC_LICENCE_TYPE_MAPPING, LicenceActionEnum
 
 FILE_HEADER_FIELDS_LEN = 8
 LICENCE_TRANSACTION_HEADER_FIELDS_LEN = 9

@@ -1,4 +1,5 @@
 import logging
+
 from django.conf import settings
 
 from mail.constants import VALID_SENDERS
@@ -6,10 +7,10 @@ from mail.enums import ReceptionStatusEnum, SourceEnum
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import (
     convert_sender_to_source,
-    new_hmrc_run_number,
-    process_attachment,
     get_licence_ids,
+    new_hmrc_run_number,
     new_spire_run_number,
+    process_attachment,
 )
 
 

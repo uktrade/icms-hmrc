@@ -1,11 +1,11 @@
 import json
 import logging
-
 from datetime import datetime
+
 from rest_framework import serializers
 
 from mail import enums
-from mail.models import Mail, LicenceData, UsageData, LicenceIdMapping
+from mail.models import LicenceData, LicenceIdMapping, Mail, UsageData
 
 
 class MailSerializer(serializers.ModelSerializer):

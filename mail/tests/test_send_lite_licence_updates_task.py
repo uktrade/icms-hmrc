@@ -3,10 +3,10 @@ from unittest import mock
 from django.test import override_settings
 
 from mail.enums import ReceptionStatusEnum
+from mail.libraries.lite_to_edifact_converter import EdifactValidationError
 from mail.models import LicencePayload, Mail
 from mail.tasks import send_licence_data_to_hmrc
 from mail.tests.libraries.client import LiteHMRCTestClient
-from mail.libraries.lite_to_edifact_converter import EdifactValidationError
 
 
 @override_settings(BACKGROUND_TASK_ENABLED=False)  # Disable task from being run on app initialization

@@ -1,11 +1,9 @@
-import os
-
-from typing import MutableMapping, Tuple, List
-
 import logging
+import os
 from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from typing import List, MutableMapping, Tuple
 
 from background_task import background
 from background_task.models import Task
@@ -17,16 +15,13 @@ from rest_framework.status import HTTP_207_MULTI_STATUS, HTTP_208_ALREADY_REPORT
 from mail.enums import ReceptionStatusEnum
 from mail.libraries.builders import build_licence_data_mail
 from mail.libraries.data_processors import build_request_mail_message_dto
-from mail.libraries.mailbox_service import send_email
 from mail.libraries.lite_to_edifact_converter import EdifactValidationError
-from mail.libraries.routing_controller import check_and_route_emails
-from mail.libraries.routing_controller import update_mail, send
+from mail.libraries.mailbox_service import send_email
+from mail.libraries.routing_controller import check_and_route_emails, send, update_mail
 from mail.libraries.usage_data_decomposition import build_json_payload_from_data_blocks, split_edi_data_by_id
-from mail.models import LicencePayload, Mail
-from mail.models import UsageData, LicenceIdMapping
+from mail.models import LicenceIdMapping, LicencePayload, Mail, UsageData
 from mail.requests import put
 from mail.servers import MailServer
-
 
 logger = logging.getLogger(__name__)
 

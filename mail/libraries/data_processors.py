@@ -5,9 +5,9 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from conf.settings import SYSTEM_INSTANCE_UUID, LOCK_INTERVAL
+from conf.settings import LOCK_INTERVAL, SYSTEM_INSTANCE_UUID
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
-from mail.libraries.builders import build_request_mail_message_dto, build_reply_mail_message_dto
+from mail.libraries.builders import build_reply_mail_message_dto, build_request_mail_message_dto
 from mail.libraries.data_converters import (
     convert_data_for_licence_data,
     convert_data_for_licence_data_reply,
@@ -15,17 +15,10 @@ from mail.libraries.data_converters import (
     convert_data_for_usage_data_reply,
 )
 from mail.libraries.email_message_dto import EmailMessageDto
-from mail.libraries.helpers import (
-    process_attachment,
-    get_extract_type,
-)
+from mail.libraries.helpers import get_extract_type, process_attachment
 from mail.libraries.mailbox_service import find_mail_of
-from mail.models import Mail, UsageData, LicenceData
-from mail.serializers import (
-    LicenceDataMailSerializer,
-    UpdateResponseSerializer,
-    UsageDataMailSerializer,
-)
+from mail.models import LicenceData, Mail, UsageData
+from mail.serializers import LicenceDataMailSerializer, UpdateResponseSerializer, UsageDataMailSerializer
 
 
 def serialize_email_message(dto: EmailMessageDto) -> Mail or None:

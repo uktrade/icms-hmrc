@@ -4,7 +4,7 @@ from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.data_processors import serialize_email_message
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import select_email_for_sending
-from mail.models import Mail, LicenceData
+from mail.models import LicenceData, Mail
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 
