@@ -98,6 +98,10 @@ jobs:
           name: Black
           command: pipenv run black . --check --diff
 
+      - run:
+          name: isort
+          command: pipenv run isort --check --diff .
+
   check_background_tasks_up:
     machine:
       image: ubuntu-2004:202010-01
