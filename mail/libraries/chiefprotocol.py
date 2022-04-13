@@ -9,10 +9,16 @@
 # - A: absent (must not be present)
 
 
+import dataclasses
 import typing
 
+from . import chieftypes
 
-def resolve_line_numbers(lines: typing.Sequence[tuple]) -> list:
+FIELD_SEP = "\\"  # A single back-slash character.
+LINE_SEP = "\n"
+
+
+def resolve_line_numbers(lines: typing.Sequence[chieftypes._Record]) -> list:
     """Add line numbers for a CHIEF message.
 
     For "end" lines, we keep track of the number of lines since the matching
@@ -22,43 +28,37 @@ def resolve_line_numbers(lines: typing.Sequence[tuple]) -> list:
     result = []
 
     for lineno, line in enumerate(lines, start=1):
-        line_type = line[0]
         # Track the most recent line number for each line type.
-        starts[line_type] = lineno
+        starts[line.type_] = lineno
+        line.lineno = lineno
 
-        if line_type == "end":
+        if line.type_ == chieftypes.End.type_:
             # End lines are like ("end", <start-type>). Find the number of
             # lines since the <start-type> line, add that to the end line
             # like ("end", <start-type>, <distance>).
-            start_type = line[1]
-            distance = (lineno - starts[start_type]) + 1
-            line += (distance,)
+            line.record_count = (lineno - starts[line.start_record_type]) + 1
 
-        # Prepend every line with the line number.
-        line = (lineno,) + line
         result.append(line)
 
     return result
 
 
-def format_line(line: tuple) -> str:
+def format_line(line: chieftypes._Record) -> str:
     """Format a line, with `None` values as the empty string."""
-    field_sep = "\\"  # A single back-slash character.
+    values = dataclasses.astuple(line)
+    return FIELD_SEP.join("" if v is None else str(v) for v in values)
 
-    return field_sep.join("" if v is None else str(v) for v in line)
 
-
-def format_lines(lines: typing.Sequence[tuple]) -> str:
+def format_lines(lines: typing.Sequence[chieftypes._Record]) -> str:
     """Format the sequence of line tuples as 1 complete string."""
     lines = resolve_line_numbers(lines)
     formatted_lines = [format_line(line) for line in lines]
-    line_sep = "\n"
 
-    return line_sep.join(formatted_lines) + line_sep
+    return LINE_SEP.join(formatted_lines) + LINE_SEP
 
 
-def count_transactions(lines: typing.Sequence[tuple]) -> int:
+def count_transactions(lines: typing.Sequence[chieftypes._Record]) -> int:
     """Count of licence transactions, for use on the `fileTrailer` line."""
     # A transaction is any line  with "licence" as the first field (ignoring
     # line numbers).
-    return sum(line[0] == "licence" for line in lines)
+    return sum(line.type_ == chieftypes.Licence.type_ for line in lines)

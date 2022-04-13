@@ -6,7 +6,7 @@ from typing import Iterable
 from django.utils import timezone
 
 from mail.enums import LITE_HMRC_LICENCE_TYPE_MAPPING, LicenceActionEnum, LicenceTypeEnum, UnitMapping
-from mail.libraries import chiefprotocol
+from mail.libraries import chiefprotocol, chieftypes
 from mail.libraries.edifact_validator import (
     FOREIGN_TRADER_ADDR_LINE_MAX_LEN,
     FOREIGN_TRADER_NUM_ADDR_LINES,
@@ -35,92 +35,86 @@ def generate_lines_for_licence(licence):
         # followed by an "insert" for the new ref.
         old_reference = licence.old_reference
         old_payload = LicencePayload.objects.get(reference=old_reference).data
-        yield (
-            "licence",
-            get_transaction_reference(old_reference),
-            "cancel",
-            old_reference,
-            licence_type,
-            usage_code,
-            old_payload.get("start_date").replace("-", ""),
-            old_payload.get("end_date").replace("-", ""),
+        yield chieftypes.Licence(
+            transaction_ref=get_transaction_reference(old_reference),
+            action="cancel",
+            licence_ref=old_reference,
+            licence_type=licence_type,
+            usage=usage_code,
+            start_date=old_payload.get("start_date").replace("-", ""),
+            end_date=old_payload.get("end_date").replace("-", ""),
         )
-        yield ("end", "licence")
+        yield chieftypes.End(start_record_type=chieftypes.Licence.type_)
 
-        yield (
-            "licence",
-            get_transaction_reference(licence.reference),
-            "insert",
-            licence.reference,
-            licence_type,
-            usage_code,
-            payload.get("start_date").replace("-", ""),
-            payload.get("end_date").replace("-", ""),
+        yield chieftypes.Licence(
+            transaction_ref=get_transaction_reference(licence.reference),
+            action="insert",
+            licence_ref=licence.reference,
+            licence_type=licence_type,
+            usage=usage_code,
+            start_date=payload.get("start_date").replace("-", ""),
+            end_date=payload.get("end_date").replace("-", ""),
         )
     else:
-        yield (
-            "licence",
-            get_transaction_reference(licence.reference),
-            licence.action,
-            licence.reference,
-            licence_type,
-            usage_code,
-            payload.get("start_date").replace("-", ""),
-            payload.get("end_date").replace("-", ""),
+        yield chieftypes.Licence(
+            transaction_ref=get_transaction_reference(licence.reference),
+            action=licence.action,
+            licence_ref=licence.reference,
+            licence_type=licence_type,
+            usage=usage_code,
+            start_date=payload.get("start_date").replace("-", ""),
+            end_date=payload.get("end_date").replace("-", ""),
         )
 
     if licence.action != LicenceActionEnum.CANCEL:
         trader = payload.get("organisation")
 
-        yield (
-            "trader",
-            "",  # turn
-            trader.get("eori_number", ""),
-            payload.get("start_date").replace("-", ""),
-            payload.get("end_date").replace("-", ""),
-            trader.get("name"),
-            trader.get("address").get("line_1"),
-            trader.get("address").get("line_2", ""),
-            trader.get("address").get("line_3", ""),
-            trader.get("address").get("line_4", ""),
-            trader.get("address").get("line_5", ""),
-            trader.get("address").get("postcode"),
+        yield chieftypes.Trader(
+            rpa_trader_id=trader.get("eori_number", ""),
+            start_date=payload.get("start_date").replace("-", ""),
+            end_date=payload.get("end_date").replace("-", ""),
+            name=trader.get("name"),
+            address1=trader.get("address").get("line_1"),
+            address2=trader.get("address").get("line_2", ""),
+            address3=trader.get("address").get("line_3", ""),
+            address4=trader.get("address").get("line_4", ""),
+            address5=trader.get("address").get("line_5", ""),
+            postcode=trader.get("address").get("postcode"),
         )
 
         # Uses "D" for licence use because lite only sends allowed countries, to use E would require changes on the API
         if payload.get("type") in LicenceTypeEnum.OPEN_LICENCES:
             if payload.get("country_group"):
-                yield ("country", None, payload.get("country_group"), "D")
+                yield chieftypes.Country(group=payload.get("country_group"), use="D")
 
             elif payload.get("countries"):
                 for country in payload.get("countries"):
                     country_id = get_country_id(country)
-                    yield ("country", country_id, None, "D")
+                    yield chieftypes.Country(code=country_id, use="D")
 
         elif payload.get("type") in LicenceTypeEnum.STANDARD_LICENCES:
             if payload.get("end_user"):
                 # In the absence of country_group or countries use country of End user
                 country = payload.get("end_user").get("address").get("country")
                 country_id = get_country_id(country)
-                yield ("country", country_id, None, "D")
+                yield chieftypes.Country(code=country_id, use="D")
 
         if payload.get("end_user"):
             trader = payload.get("end_user")
             trader = sanitize_foreign_trader_address(trader)
 
-            yield (
-                "foreignTrader",
-                trader.get("name"),
-                trader.get("address").get("line_1"),
-                trader.get("address").get("line_2", ""),
-                trader.get("address").get("line_3", ""),
-                trader.get("address").get("line_4", ""),
-                trader.get("address").get("line_5", ""),
-                trader.get("address").get("postcode", ""),
-                get_country_id(trader.get("address").get("country")),
+            yield chieftypes.ForeignTrader(
+                name=trader.get("name"),
+                address1=trader.get("address").get("line_1"),
+                address2=trader.get("address").get("line_2", ""),
+                address3=trader.get("address").get("line_3", ""),
+                address4=trader.get("address").get("line_4", ""),
+                address5=trader.get("address").get("line_5", ""),
+                postcode=trader.get("address").get("postcode", ""),
+                country=get_country_id(trader.get("address").get("country")),
             )
 
-        yield ("restrictions", "Provisos may apply please see licence")
+        yield chieftypes.Restrictions(text="Provisos may apply please see licence")
 
         if payload.get("goods") and payload.get("type") in LicenceTypeEnum.STANDARD_LICENCES:
             for g, commodity in enumerate(payload.get("goods"), start=1):
@@ -132,40 +126,21 @@ def generate_lines_for_licence(licence):
                 if commodity.get("unit") == "NAR":
                     quantity = int(quantity)
 
-                yield (
-                    "line",
-                    g,
-                    None,
-                    None,
-                    None,
-                    None,
-                    commodity.get("name"),
-                    controlled_by,
-                    None,
-                    "{:03d}".format(UnitMapping.convert(commodity.get("unit"))),
-                    None,
-                    quantity,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
+                yield chieftypes.LicenceDataLine(
+                    line_num=g,
+                    goods_description=commodity.get("name"),
+                    controlled_by=controlled_by,
+                    quantity_unit="{:03d}".format(UnitMapping.convert(commodity.get("unit"))),
+                    quantity_issued=quantity,
                 )
 
         if payload.get("type") in LicenceTypeEnum.OPEN_LICENCES:
-            yield (
-                "line",
-                1,
-                None,
-                None,
-                None,
-                None,
-                "Open Licence goods - see actual licence for information",
-                None,
+            yield chieftypes.LicenceDataLine(
+                line_num=1,
+                goods_description="Open Licence goods - see actual licence for information",
             )
 
-    yield ("end", "licence")
+    yield chieftypes.End(start_record_type=chieftypes.Licence.type_)
 
 
 def licences_to_edifact(licences: Iterable[LicencePayload], run_number: int) -> str:
@@ -181,14 +156,13 @@ def licences_to_edifact(licences: Iterable[LicencePayload], run_number: int) -> 
     reset_run_number_indicator = "N"
     src_system = "SPIRE"
     dest_system = "CHIEF"
-    file_header = (
-        "fileHeader",
-        src_system,
-        dest_system,
-        "licenceData",
-        time_stamp,
-        run_number,
-        reset_run_number_indicator,
+    file_header = chieftypes.FileHeader(
+        source_system=src_system,
+        destination_system=dest_system,
+        data_id="licenceData",
+        creation_date_time=time_stamp,
+        run_num=run_number,
+        reset_run_num=reset_run_number_indicator,
     )
     lines.append(file_header)
 
@@ -202,6 +176,7 @@ def licences_to_edifact(licences: Iterable[LicencePayload], run_number: int) -> 
     # because this code represents those as "cancel" followed by "insert".
     num_transactions = chiefprotocol.count_transactions(lines)
     file_trailer = ("fileTrailer", num_transactions)
+    file_trailer = chieftypes.FileTrailer(transaction_count=num_transactions)
     lines.append(file_trailer)
 
     # Convert line tuples to the final string with line numbers, etc.

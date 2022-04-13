@@ -4,6 +4,7 @@ from django.utils import timezone
 from parameterized import parameterized
 
 from mail.enums import LicenceActionEnum
+from mail.libraries.chieftypes import Country
 from mail.libraries.lite_to_edifact_converter import (
     EdifactValidationError,
     generate_lines_for_licence,
@@ -192,9 +193,9 @@ class GenerateLinesForLicenceTest(LiteHMRCTestClient):
         lines = list(generate_lines_for_licence(licence))
 
         expected_types = ["licence", "trader", "country", "restrictions", "line", "end"]
-        self.assertEqual([line[0] for line in lines], expected_types)
-        # The country code is the 3rd field.
-        self.assertEqual(lines[2], ("country", None, "G012", "D"))
+        self.assertEqual([line.type_ for line in lines], expected_types)
+        # The country code is the 3rd field, `group`.
+        self.assertEqual(lines[2], Country(code=None, group="G012", use="D"))
 
     def test_open_licence_with_multiple_countries(self):
         data = {
@@ -212,7 +213,7 @@ class GenerateLinesForLicenceTest(LiteHMRCTestClient):
 
         # Note there are 2 country lines.
         expected_types = ["licence", "trader", "country", "country", "restrictions", "line", "end"]
-        self.assertEqual([line[0] for line in lines], expected_types)
-        # The country code is the 2nd field.
-        self.assertEqual(lines[2], ("country", "GB", None, "D"))
-        self.assertEqual(lines[3], ("country", "NI", None, "D"))
+        self.assertEqual([line.type_ for line in lines], expected_types)
+        # The country code is the 2nd field, `code`.
+        self.assertEqual(lines[2], Country(code="GB", group=None, use="D"))
+        self.assertEqual(lines[3], Country(code="NI", group=None, use="D"))
