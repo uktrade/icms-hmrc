@@ -20,16 +20,6 @@ class LicenceActionEnum:
         (UPDATE, "Update"),
     ]
 
-    @classmethod
-    def get_text(cls, status) -> str:
-        for k, v in cls.choices:
-            if status == k:
-                return v
-
-    @classmethod
-    def as_list(cls) -> list:
-        return [{"status": choice[0]} for choice in cls.choices]
-
 
 class LicenceTypeEnum:
     SIEL = "siel"
@@ -52,16 +42,6 @@ class LicenceTypeEnum:
         (OGTL, "Open General Transhipment Licence"),
     ]
 
-    @classmethod
-    def get_text(cls, status) -> str:
-        for k, v in cls.choices:
-            if status == k:
-                return v
-
-    @classmethod
-    def as_list(cls) -> list:
-        return [{"status": choice[0]} for choice in cls.choices]
-
     STANDARD_LICENCES = [SIEL, SICL, SITL]
     OPEN_LICENCES = [OIEL, OICL]
     OPEN_GENERAL_LICENCES = [OGEL, OGCL, OGTL]
@@ -78,16 +58,6 @@ class ReplyStatusEnum:
         (PENDING, "Pending"),
     ]
 
-    @classmethod
-    def get_text(cls, status) -> str:
-        for k, v in cls.choices:
-            if status == k:
-                return v
-
-    @classmethod
-    def as_list(cls) -> list:
-        return [{"status": choice[0]} for choice in cls.choices]
-
 
 class ReceptionStatusEnum:
     PENDING = "pending"
@@ -101,16 +71,6 @@ class ReceptionStatusEnum:
         (REPLY_RECEIVED, "Reply Received"),
         (REPLY_SENT, "Reply Sent"),
     ]
-
-    @classmethod
-    def get_text(cls, status):
-        for k, v in cls.choices:
-            if status == k:
-                return v
-
-    @classmethod
-    def as_list(cls) -> list:
-        return [{"status": choice[0]} for choice in cls.choices]
 
 
 class ExtractTypeEnum:
@@ -133,16 +93,6 @@ class ExtractTypeEnum:
         ("licenceData", LICENCE_DATA),
     ]
 
-    @classmethod
-    def get_text(cls, _type) -> str:
-        for k, v in cls.choices:
-            if _type == k:
-                return v
-
-    @classmethod
-    def as_list(cls) -> list:
-        return [{"extract_type": choice[0]} for choice in cls.choices]
-
 
 class SourceEnum:
     SPIRE = "SPIRE"
@@ -154,10 +104,6 @@ class SourceEnum:
         (LITE, "LITE"),
         (HMRC, "HMRC"),
     ]
-
-    @classmethod
-    def as_list(cls) -> list:
-        return [{"status": choice[0]} for choice in cls.choices]
 
 
 class UnitMapping:

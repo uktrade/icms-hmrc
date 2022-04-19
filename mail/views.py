@@ -8,9 +8,9 @@ from rest_framework.views import APIView
 
 from conf.authentication import HawkOnlyAuthentication
 from mail.enums import LicenceActionEnum, LicenceTypeEnum, ReceptionStatusEnum
-from mail.models import LicenceData, LicenceIdMapping, LicencePayload, Mail, UsageData
+from mail.models import LicenceData, LicenceIdMapping, LicencePayload, Mail
 from mail.serializers import ForiegnTraderSerializer, GoodSerializer, LiteLicenceDataSerializer, MailSerializer
-from mail.tasks import manage_inbox, send_licence_data_to_hmrc, send_licence_usage_figures_to_lite_api
+from mail.tasks import send_licence_data_to_hmrc
 
 
 class LicenceDataIngestView(APIView):
@@ -82,12 +82,6 @@ class LicenceDataIngestView(APIView):
             )
 
 
-class ManageInbox(APIView):
-    def get(self, _):
-        manage_inbox.now()
-        return HttpResponse(status=HTTP_200_OK)
-
-
 class SendLicenceUpdatesToHmrc(APIView):
     def get(self, _):
         """
@@ -98,13 +92,6 @@ class SendLicenceUpdatesToHmrc(APIView):
             return HttpResponse(status=HTTP_200_OK)
         else:
             return HttpResponse(status=HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class SendUsageUpdatesToLiteApi(APIView):
-    def get(self, _):
-        usage_data = UsageData.objects.last()
-        send_licence_usage_figures_to_lite_api.now(str(usage_data.id))
-        return HttpResponse(status=HTTP_200_OK)
 
 
 class SetAllToReplySent(APIView):

@@ -12,13 +12,6 @@ from mail.tests.libraries import colours
 
 
 class LiteHMRCTestClient(testcases.TestCase):
-    TEST_RUN_NUMBER = "49543"
-
-    @classmethod
-    def tearDownClass(cls):
-        logging.debug("tearDownClass() is called")
-        super().tearDownClass()
-
     def setUp(self):
         if settings.TIME_TESTS:
             self.tick = timezone.now()

@@ -55,18 +55,6 @@ class HelpersTests(LiteHMRCTestClient):
         run_number = get_run_number(subject)
         self.assertEqual(run_number, 9876)
 
-    def value_error_thrown_cannot_find_run_number(self):
-        subject = "usageData_9876_201901130300"
-        with self.assertRaises(ValueError) as context:
-            get_run_number(subject)
-        self.assertEqual("Can not find valid run-number", str(context.exception))
-
-    def value_error_thrown_run_number_wrong_format(self):
-        subject = "abc_xyz_nnn_yyy_a1b34_datetime"
-        with self.assertRaises(ValueError) as context:
-            get_run_number(subject)
-        self.assertEqual("Can not find valid run-number", str(context.exception))
-
     @staticmethod
     def _setup_mail():
         return Mail.objects.create(
@@ -126,15 +114,3 @@ class HelpersTests(LiteHMRCTestClient):
     )
     def test_get_country_id(self, country, id):
         self.assertEqual(get_country_id(country), id)
-
-
-def print_all_mails():
-    all_mails = Mail.objects.all()
-    for mail in all_mails:
-        rec = {
-            "id": mail.id,
-            "edi_filename": mail.edi_filename,
-            "status": mail.status,
-            "extract_type": mail.extract_type,
-        }
-        logging.debug("Mail -> {}".format(rec))

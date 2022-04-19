@@ -1,4 +1,3 @@
-import base64
 import json
 import logging
 from email.message import Message
@@ -219,14 +218,6 @@ def read_file(file_path: str, mode: str = "r", encoding: str = None):
 
 def decode(data, char_set: str):
     return data.decode(char_set) if isinstance(data, bytes) else data
-
-
-def b64encode(byte_text: str):
-    return base64.b64encode(byte_text)
-
-
-def b64decode(b64encoded_text: str):
-    return base64.b64decode(b64encoded_text)
 
 
 def map_unit(data: dict, g: int) -> dict:
