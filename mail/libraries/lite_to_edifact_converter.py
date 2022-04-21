@@ -1,4 +1,5 @@
 import logging
+import re
 import textwrap
 from typing import Iterable
 
@@ -191,8 +192,14 @@ def licences_to_edifact(licences: Iterable[LicencePayload], run_number: int) -> 
 
 
 def get_transaction_reference(licence_reference: str) -> str:
-    licence_reference = licence_reference.split("/", 1)[1]
-    return licence_reference.replace("/", "")
+    if licence_reference.startswith("GB"):
+        licence_reference = licence_reference.split("/", 1)[1]
+        return licence_reference.replace("/", "")
+    else:
+        match_first_digit = re.search(r"\d", licence_reference)
+        if not match_first_digit:
+            raise ValueError("Invalid Licence reference")
+        return licence_reference[match_first_digit.start() :].replace("-", "")
 
 
 def sanitize_foreign_trader_address(trader):
