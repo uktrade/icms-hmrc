@@ -166,7 +166,7 @@ class TraderSerializer(serializers.Serializer):
     address = AddressSerializer()
 
 
-class ForiegnTraderSerializer(serializers.Serializer):
+class ForeignTraderSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=80, allow_blank=False)
     address = AddressSerializer()
 
@@ -181,10 +181,37 @@ class LiteLicenceDataSerializer(serializers.Serializer):
 
     old_id = serializers.CharField(required=False)
 
-    def validate(self, attrs):
-        if self.initial_data.get("action") == enums.LicenceActionEnum.UPDATE and not attrs.get("old_id"):
-            raise serializers.ValidationError("old_id is a required field for action - update")
-        return attrs
+    # These fields depend on the submitted licence `type`.
+    countries = CountrySerializer(many=True, required=False)
+    end_user = ForeignTraderSerializer(required=False, allow_null=True)
+    goods = GoodSerializer(many=True, required=False, allow_null=True)
+
+    def is_valid(self, *args, **kwargs):
+        try:
+            self.initial_data
+        except AttributeError:
+            # We want to require nested serializers depending on the data.
+            # But `.initial_data` is only set when the serializer is
+            # instantiated with `data=..`.
+            pass
+        else:
+            action = self.initial_data.get("action")
+            type_ = self.initial_data.get("type")
+
+            if action == enums.LicenceActionEnum.UPDATE:
+                self.fields["old_id"].required = True
+
+            if type_ in enums.LicenceTypeEnum.OPEN_LICENCES + enums.LicenceTypeEnum.OPEN_GENERAL_LICENCES:
+                self.fields["countries"].required = True
+                self.fields["countries"].min_length = 1
+
+            if type_ in enums.LicenceTypeEnum.STANDARD_LICENCES:
+                self.fields["end_user"].required = True
+                self.fields["end_user"].allow_null = False
+                self.fields["goods"].required = True
+                self.fields["goods"].allow_null = False
+
+        return super().is_valid(*args, **kwargs)
 
     def validate_old_id(self, value):
         if (
