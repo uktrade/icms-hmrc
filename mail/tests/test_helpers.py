@@ -10,7 +10,6 @@ from mail.libraries.helpers import (
     get_country_id,
     get_licence_status,
     get_run_number,
-    map_unit,
     new_hmrc_run_number,
     process_attachment,
 )
@@ -63,37 +62,6 @@ class HelpersTests(LiteHMRCTestClient):
             status=ReceptionStatusEnum.PENDING,
             edi_filename="blank",
         )
-
-    @parameterized.expand(
-        [
-            ("NAR", 30),
-            ("GRM", 21),
-            ("KGM", 23),
-            ("MTK", 45),
-            ("MTR", 57),
-            ("LTR", 94),
-            ("MTQ", 2),
-            ("ITG", 30),
-        ]
-    )
-    def test_convert(self, lite_input, output):
-        self.assertEqual(output, UnitMapping.convert(lite_input))
-
-    @parameterized.expand(
-        [
-            ("NAR", 30),
-            ("GRM", 21),
-            ("KGM", 23),
-            ("MTK", 45),
-            ("MTR", 57),
-            ("LTR", 94),
-            ("MTQ", 2),
-            ("ITG", 30),
-        ]
-    )
-    def test_mapping(self, lite_input, output):
-        data = {"goods": [{"unit": lite_input}]}
-        self.assertEqual(output, map_unit(data, 0)["goods"][0]["unit"])
 
     @parameterized.expand([("GB/00001/P", "00001P"), ("GB/001/P/A", "001PA"), ("GB/0/01/P/a", "001Pa")])
     def test_transaction_reference_for_licence_data(self, reference, transaction_reference):

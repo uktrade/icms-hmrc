@@ -9,7 +9,7 @@ from dateutil.parser import parse
 from django.conf import settings
 
 from mail import serializers
-from mail.enums import ExtractTypeEnum, LicenceStatusEnum, ReceptionStatusEnum, SourceEnum, UnitMapping
+from mail.enums import ExtractTypeEnum, LicenceStatusEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.email_message_dto import EmailMessageDto, HmrcEmailMessageDto
 from mail.models import GoodIdMapping, LicenceData, LicenceIdMapping, Mail, UsageData
 
@@ -218,12 +218,6 @@ def read_file(file_path: str, mode: str = "r", encoding: str = None):
 
 def decode(data, char_set: str):
     return data.decode(char_set) if isinstance(data, bytes) else data
-
-
-def map_unit(data: dict, g: int) -> dict:
-    unit = data["goods"][g]["unit"]
-    data["goods"][g]["unit"] = UnitMapping.convert(unit)
-    return data
 
 
 def select_email_for_sending() -> Mail or None:
