@@ -23,7 +23,7 @@ def save_hmrc_email_message_data(dto):
     extract_type = get_extract_type(dto.subject)
     if not extract_type:
         update_retrieved_email_status(dto, enums.RetrievedEmailStatusEnum.INVALID)
-        logging.info(f"Extract type not supported ({dto.subject}), skipping")
+        logging.info("Extract type not supported (%s), skipping", dto.subject)
         return None
 
     data = convert_dto_data_for_serialization(dto, extract_type)

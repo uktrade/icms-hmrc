@@ -86,11 +86,10 @@ class Command(BaseCommand):
             logger.error("Given run number %s does not belong to Licence data or Usage data mail", hmrc_run_number)
             return
 
-        """
-        Usually we resend in cases where the mail is initially sent from our system successfully but not received
-        by the recipient. This could happen with HMRC in case of licence data mails and with SPIRE in
-        case of licence reply mails. Below we check for their expected status and set destination.
-        """
+        # Usually we resend in cases where the mail is initially sent from our system successfully but not received
+        # by the recipient. This could happen with HMRC in case of licence data mails and with SPIRE in
+        # case of licence reply mails. Below we check for their expected status and set destination.
+
         # this is the usual case where we had to resend
         if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
             destination = SourceEnum.HMRC

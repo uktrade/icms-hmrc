@@ -17,7 +17,7 @@ from mail.libraries.helpers import (
 def convert_data_for_licence_data(dto: EmailMessageDto) -> dict:
     source = convert_sender_to_source(dto.sender)
 
-    logging.info(f"Email sender ({dto.sender}) is determined as coming from {source}")
+    logging.info("Email sender (%s) is determined as coming from %s", dto.sender, source)
 
     data = {"licence_data": {}}
     data["licence_data"]["source"] = source

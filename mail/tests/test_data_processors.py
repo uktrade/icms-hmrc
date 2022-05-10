@@ -101,7 +101,6 @@ class TestDataProcessors(LiteHMRCTestClient):
 
         serialize_email_message(email_message_dto)
         self.mail.refresh_from_db()
-        logging.debug("resp data: {}".format(self.mail.response_data))
         self.assertEqual(self.mail.status, ReceptionStatusEnum.REPLY_RECEIVED)
         self.assertIsNotNone(self.mail.response_date)
 

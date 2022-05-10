@@ -80,11 +80,12 @@ def verify_api_response(sender, response):
             content_type=response.headers["Content-Type"],
         )
     except Exception as exc:  # noqa
-        logging.warning(f"Unable to authenticate response from {response.url}")
+        logging.warning("Unable to authenticate response from %s", response.url)
 
         if "server-authorization" not in response.headers:
             logging.warning(
-                f"'server_authorization' missing in header from response {response.url}; Probable HAWK misconfiguration"
+                "'server_authorization' missing in header from response %s; Probable HAWK misconfiguration",
+                response.url,
             )
 
         raise exc
