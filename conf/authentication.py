@@ -19,7 +19,7 @@ class HawkOnlyAuthentication(authentication.BaseAuthentication):
         try:
             hawk_receiver = _authenticate(request)
         except HawkFail as e:
-            logging.warning(f"Failed HAWK authentication {e}")
+            logging.warning("Failed HAWK authentication %s", e)
             raise e
 
         return AnonymousUser(), hawk_receiver

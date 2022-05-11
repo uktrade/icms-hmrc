@@ -166,7 +166,7 @@ def licences_to_edifact(licences: Iterable[LicencePayload], run_number: int) -> 
     )
     lines.append(file_header)
 
-    logging.info(f"File header:{file_header}")
+    logging.info("File header: %r", file_header)
 
     for licence in licences:
         licence_lines = list(generate_lines_for_licence(licence))

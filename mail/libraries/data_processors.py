@@ -24,10 +24,10 @@ from mail.serializers import LicenceDataMailSerializer, UpdateResponseSerializer
 def serialize_email_message(dto: EmailMessageDto) -> Mail or None:
     extract_type = get_extract_type(dto.subject)
     if not extract_type:
-        logging.info(f"Extract type not supported ({dto.subject}), skipping")
+        logging.info("Extract type not supported (%s), skipping", dto.subject)
         return
 
-    logging.info(f"Extract type is identified as {extract_type.upper()}")
+    logging.info("Extract type is identified as %s", extract_type.upper())
 
     instance = get_mail_instance(extract_type, dto.run_number)
     if not instance and extract_type in [ExtractTypeEnum.USAGE_REPLY, ExtractTypeEnum.LICENCE_REPLY]:
@@ -44,14 +44,14 @@ def serialize_email_message(dto: EmailMessageDto) -> Mail or None:
     serializer = serializer_class(instance=instance, data=data, partial=partial)
 
     if not serializer.is_valid():
-        logging.error(f"Failed to serialize email (subject: {dto.subject}) -> {serializer.errors}")
+        logging.error("Failed to serialize email (subject: %s) -> %s", dto.subject, serializer.errors)
         raise ValidationError(serializer.errors)
 
     _mail = serializer.save()
     if data["extract_type"] in ["licence_reply", "usage_reply"]:
         _mail.set_response_date_time()
 
-    logging.info(f"Successfully serialized email (subject: {dto.subject})")
+    logging.info("Successfully serialized email (subject: %s)", dto.subject)
 
     return _mail
 
@@ -126,16 +126,16 @@ def get_mail_instance(extract_type, run_number) -> Mail or None:
 def to_email_message_dto_from(mail: Mail) -> EmailMessageDto:
     _check_and_raise_error(mail, "Invalid mail object received!")
     logging.debug(
-        f"converting mail [{mail.id}] with status [{mail.status}] extract_type [{mail.extract_type}] "
-        f"to EmailMessageDto"
+        "converting mail [%s] with status [%s] extract_type [%s] to EmailMessageDto",
+        mail.id,
+        mail.status,
+        mail.extract_type,
     )
     if mail.status == ReceptionStatusEnum.PENDING:
-        logging.debug(f"building request mail [{mail.id}] message dto from [{mail.status}] mail status")
         return build_request_mail_message_dto(mail)
     elif mail.status == ReceptionStatusEnum.REPLY_RECEIVED:
-        logging.debug(f"building reply mail [{mail.id}] message dto from [{mail.status}] mail status")
         return build_reply_mail_message_dto(mail)
-    logging.warning(f"Unexpected mail [{mail.id}] with status [{mail.status}] while converting to EmailMessageDto")
+    logging.warning("Unexpected mail [%s] with status [%s] while converting to EmailMessageDto", mail.id, mail.status)
 
 
 def lock_db_for_sending_transaction(mail: Mail) -> bool:
