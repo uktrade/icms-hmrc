@@ -25,7 +25,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         organisation_id = licence.data["organisation"]["id"]
         good_id = licence.data["goods"][0]["id"]
 
-        licences_to_edifact(LicencePayload.objects.filter(), 1234)
+        licences_to_edifact(LicencePayload.objects.filter(), 1234, "FOO")
 
         self.assertEqual(
             GoodIdMapping.objects.filter(lite_id=good_id, line_number=1, licence_reference=licence.reference).count(), 1
@@ -34,11 +34,11 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
     def test_single_siel(self):
         licences = LicencePayload.objects.filter(is_processed=False)
 
-        result = licences_to_edifact(licences, 1234)
+        result = licences_to_edifact(licences, 1234, "FOO")
         trader = licences[0].data["organisation"]
         now = timezone.now()
         expected = (
-            "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
+            "1\\fileHeader\\FOO\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             + "\\1234\\N"
             + "\n2\\licence\\20200000001P\\insert\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
@@ -92,12 +92,12 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             old_reference=lp.reference,
         )
         licences = LicencePayload.objects.filter(is_processed=False)
-        result = licences_to_edifact(licences, 1234)
+        result = licences_to_edifact(licences, 1234, "FOO")
 
         trader = licences[0].data["organisation"]
         now = timezone.now()
         expected = (
-            "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
+            "1\\fileHeader\\FOO\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             + "\\1234\\N"
             + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
@@ -120,11 +120,11 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
 
         licences = LicencePayload.objects.filter(is_processed=False)
 
-        result = licences_to_edifact(licences, 1234)
+        result = licences_to_edifact(licences, 1234, "FOO")
 
         now = timezone.now()
         expected = (
-            "1\\fileHeader\\SPIRE\\CHIEF\\licenceData\\"
+            "1\\fileHeader\\FOO\\CHIEF\\licenceData\\"
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             + "\\1234\\N"
             + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
@@ -140,7 +140,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         licence.save()
 
         with self.assertRaises(EdifactValidationError) as context:
-            licences_to_edifact(LicencePayload.objects.filter(is_processed=False), 1234)
+            licences_to_edifact(LicencePayload.objects.filter(is_processed=False), 1234, "FOO")
 
     @parameterized.expand(
         [
@@ -172,7 +172,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             lite_id="00000000-0000-0000-0000-9792333e8cc8",
         )
         licences = LicencePayload.objects.filter(is_processed=False)
-        edifact_file = licences_to_edifact(licences, 1234)
+        edifact_file = licences_to_edifact(licences, 1234, "FOO")
         foreign_trader_line = edifact_file.split("\n")[4]
         self.assertEqual(foreign_trader_line, expected_trader_line)
 
