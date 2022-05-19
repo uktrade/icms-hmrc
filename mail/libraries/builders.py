@@ -199,7 +199,8 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
 def build_licence_data_mail(licences) -> Mail:
     last_lite_update = LicenceData.objects.last()
     run_number = last_lite_update.hmrc_run_number + 1 if last_lite_update else 1
-    file_name, file_content = build_licence_data_file(licences, run_number)
+    when = timezone.now()
+    file_name, file_content = build_licence_data_file(licences, run_number, when)
     mail = Mail.objects.create(
         edi_filename=file_name,
         edi_data=file_content,
@@ -213,14 +214,12 @@ def build_licence_data_mail(licences) -> Mail:
     return mail
 
 
-def build_licence_data_file(licences, run_number):
-    now = timezone.now()
-    file_name = "CHIEF_LIVE_SPIRE_licenceData_{}_{:04d}{:02d}{:02d}{:02d}{:02d}".format(
-        run_number, now.year, now.month, now.day, now.hour, now.minute
-    )
+def build_licence_data_file(licences, run_number, when):
+    system = settings.CHIEF_SOURCE_SYSTEM
+    file_name = f"CHIEF_LIVE_{system}_licenceData_{run_number}_{when:%Y%m%d%H%M}"
     logger.info("Building licenceData file %s for %s licences", file_name, len(licences))
 
-    file_content = licences_to_edifact(licences, run_number)
+    file_content = licences_to_edifact(licences, run_number, system)
 
     return file_name, file_content
 

@@ -188,16 +188,12 @@ def _handle_exception(message, lite_usage_data_id):
     raise Exception(error_message)
 
 
-# Send Licence Updates to HMRC
-
-
 @background(queue=LICENCE_DATA_TASK_QUEUE, schedule=0)
 def send_licence_data_to_hmrc():
-    """Sends LITE licence updates to HMRC
+    """Sends LITE (or ICMS) licence updates to HMRC
 
     Return: True if successful
     """
-
     logger.info("Sending LITE licence updates to HMRC")
 
     if Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT).count():

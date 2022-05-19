@@ -164,6 +164,7 @@ class SourceEnum(TextChoices):
     SPIRE = "SPIRE", "SPIRE"
     LITE = "LITE", "LITE"
     HMRC = "HMRC", "HMRC"
+    ICMS = "ICMS", "ICMS"
 
 
 # We want a duplicate entry for ITG, so cannot use Django's enum.

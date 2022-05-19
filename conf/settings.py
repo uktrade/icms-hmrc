@@ -81,6 +81,10 @@ ENABLE_MOCK_HMRC_SERVICE = env.bool("ENABLE_MOCK_HMRC_SERVICE", default=False)
 if ENABLE_MOCK_HMRC_SERVICE:
     INSTALLED_APPS += ["mock_hmrc.apps.MockHmrcConfig"]
 
+# Which system identifier to use in licence requests to HMRC's CHIEF system.
+# LITE (and SPIRE) uses "SPIRE". ICMS uses "ILBDOTI".
+CHIEF_SOURCE_SYSTEM = env("CHIEF_SOURCE_SYSTEM", default="SPIRE")
+
 INCOMING_EMAIL_PASSWORD = env("INCOMING_EMAIL_PASSWORD", default="")
 INCOMING_EMAIL_HOSTNAME = env("INCOMING_EMAIL_HOSTNAME", default="")
 INCOMING_EMAIL_USER = env("INCOMING_EMAIL_USER", default="")
