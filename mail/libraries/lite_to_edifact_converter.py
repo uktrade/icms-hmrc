@@ -143,7 +143,7 @@ def generate_lines_for_licence(licence):
     yield chieftypes.End(start_record_type=chieftypes.Licence.type_)
 
 
-def licences_to_edifact(licences: Iterable[LicencePayload], run_number: int) -> str:
+def licences_to_edifact(licences: Iterable[LicencePayload], run_number: int, source: str) -> str:
     # Build a list of lines, with each line a tuple. After we have all the
     # lines, we format them ("\" as field separator) and insert the line
     # numbers. Some lines reference previous line numbers, so we need to
@@ -154,10 +154,9 @@ def licences_to_edifact(licences: Iterable[LicencePayload], run_number: int) -> 
     # Setting this to Y will override the hmrc run number with the run number in this file.
     # This is usually set to N in almost all cases
     reset_run_number_indicator = "N"
-    src_system = "SPIRE"
     dest_system = "CHIEF"
     file_header = chieftypes.FileHeader(
-        source_system=src_system,
+        source_system=source,  # Like "SPIRE" or "ILBDOTI".
         destination_system=dest_system,
         data_id="licenceData",
         creation_date_time=time_stamp,

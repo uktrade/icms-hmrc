@@ -1,9 +1,11 @@
+import datetime
+from unittest import mock
+
 from django.conf import settings
 from django.test import testcases
 
 from mail.libraries import builders
 from mail.libraries.email_message_dto import EmailMessageDto
-from mail.libraries.helpers import read_file
 
 
 class BuildEmailMessageTest(testcases.TestCase):
@@ -50,3 +52,28 @@ class BuildEmailMessageTest(testcases.TestCase):
                 "--===============8537751789001939036==--\n"
             ),
         )
+
+
+class BuildLicenceDataFileTests(testcases.TestCase):
+    def test_filename_datetime(self):
+        # Use single digits in some values to check the output is zero-padded.
+        data = [
+            (datetime.datetime(1999, 12, 31), "CHIEF_LIVE_SPIRE_licenceData_1_199912310000"),
+            (datetime.datetime(2022, 1, 1), "CHIEF_LIVE_SPIRE_licenceData_1_202201010000"),
+            (datetime.datetime(2022, 1, 1, 9, 8, 7), "CHIEF_LIVE_SPIRE_licenceData_1_202201010908"),
+        ]
+
+        for when, expected in data:
+            with self.subTest(when=when, expected=expected):
+                filename, _ = builders.build_licence_data_file([], 1, when)
+
+                self.assertEqual(filename, expected)
+
+    def test_filename_system_identifier(self):
+        # Originally the only system was SPIRE. But you can change that.
+        when = datetime.datetime(1999, 12, 31)
+
+        with self.settings(CHIEF_SOURCE_SYSTEM="FOO"):
+            filename, _ = builders.build_licence_data_file([], 1, when)
+
+        self.assertEqual(filename, "CHIEF_LIVE_FOO_licenceData_1_199912310000")
