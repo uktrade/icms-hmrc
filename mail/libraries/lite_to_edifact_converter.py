@@ -123,14 +123,16 @@ def generate_lines_for_licence(licence):
                 )
                 controlled_by = "Q"  # usage is controlled by quantity only
                 quantity = commodity.get("quantity")
-                if commodity.get("unit") == "NAR":
+                qunit = UnitMapping[commodity["unit"]]
+
+                if qunit == UnitMapping.NAR:
                     quantity = int(quantity)
 
                 yield chieftypes.LicenceDataLine(
                     line_num=g,
                     goods_description=commodity.get("name"),
                     controlled_by=controlled_by,
-                    quantity_unit="{:03d}".format(UnitMapping.convert(commodity.get("unit"))),
+                    quantity_unit="{:03d}".format(qunit.value),
                     quantity_issued=quantity,
                 )
 

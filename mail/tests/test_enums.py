@@ -18,7 +18,14 @@ class UnitMappingTests(unittest.TestCase):
 
         for code, value in data:
             with self.subTest(code=code, value=value):
-                self.assertEqual(value, UnitMapping.convert(code))
+                self.assertEqual(value, UnitMapping[code].value)
 
     def test_convert_none(self):
-        self.assertIsNone(UnitMapping.convert(None))
+        with self.assertRaises(KeyError):
+            UnitMapping[None]
+
+    def test_serializer_choices(self):
+        choices = UnitMapping.serializer_choices()
+        expected = ["NAR", "GRM", "KGM", "MTK", "MTR", "LTR", "MTQ", "ITG"]
+
+        self.assertEqual(choices, expected)

@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from mail.enums import LicenceTypeEnum
+from mail.enums import LicenceTypeEnum, UnitMapping
 from mail.serializers import LiteLicenceDataSerializer
 
 
@@ -137,3 +137,74 @@ class LiteLicenceDataSerializerTestCase(TestCase):
         serializer = LiteLicenceDataSerializer(data=data)
 
         self.assertTrue(serializer.is_valid())
+
+    def test_goods_invalid_choice_for_unit(self):
+        data = {
+            "action": "insert",
+            "end_date": "1999-12-31",
+            "id": "foo",
+            "reference": "bar",
+            "start_date": "1999-12-31",
+            "type": "siel",  # Standard type, which requires "goods".
+            "end_user": {
+                "name": "Foo",
+                "address": {
+                    "line_1": "Line1",
+                    "country": {"id": "GB", "name": "GB"},
+                },
+            },
+            # This "goods" nested object is what we are testing.
+            "goods": [
+                {
+                    "description": "",
+                    "name": "Bar",
+                    "quantity": "1",
+                    "unit": "XyzUnit",
+                },
+            ],
+        }
+        serializer = LiteLicenceDataSerializer(data=data)
+        serializer.is_valid()
+
+        expected_errors = {
+            "goods": [
+                {"unit": ['"XyzUnit" is not a valid choice.']},
+            ],
+        }
+        self.assertDictEqual(serializer.errors, expected_errors)
+
+    def test_goods_valid_choice_for_unit(self):
+        data = {
+            "action": "insert",
+            "end_date": "1999-12-31",
+            "id": "foo",
+            "reference": "bar",
+            "start_date": "1999-12-31",
+            "type": "siel",  # Standard type, which requires "goods".
+            "end_user": {
+                "name": "Foo",
+                "address": {
+                    "line_1": "Line1",
+                    "country": {"id": "GB", "name": "GB"},
+                },
+            },
+            # This "goods" nested object is what we are testing.
+            "goods": [
+                {
+                    "description": "",
+                    "name": "Bar",
+                    "quantity": "1",
+                    "unit": "XyzUnit",
+                },
+            ],
+        }
+
+        for unit_label in UnitMapping.__members__:
+            # `unit_label` is each of the strings, like "NAR", "ITG", etc.
+            with self.subTest(unit=unit_label):
+                data["goods"][0]["unit"] = unit_label
+                serializer = LiteLicenceDataSerializer(data=data)
+                is_valid = serializer.is_valid()
+
+                self.assertDictEqual(serializer.errors, {})
+                self.assertTrue(is_valid)
