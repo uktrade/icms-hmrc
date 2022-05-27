@@ -161,6 +161,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
             send_licence_usage_figures_to_lite_api.now(str(self.usage_data.id))
 
         self.usage_data.refresh_from_db()
+
         put_request.assert_called_with(
             f"{settings.LITE_API_URL}/licences/hmrc-integration/",
             self.usage_data.lite_payload,
