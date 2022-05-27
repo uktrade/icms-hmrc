@@ -1,5 +1,5 @@
 from mail.libraries.combine_usage_replies import combine_lite_and_spire_usage_responses
-from mail.models import Mail, GoodIdMapping, LicenceIdMapping, UsageData, TransactionMapping
+from mail.models import GoodIdMapping, LicenceIdMapping, Mail, TransactionMapping, UsageData
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 

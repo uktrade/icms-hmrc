@@ -1,13 +1,13 @@
-from ast import Break
 from datetime import datetime, timezone
-from django.conf import settings
-from django.core.management import call_command
 from unittest import mock
 
-from mail.enums import SourceEnum, ReceptionStatusEnum, ExtractTypeEnum
+from django.conf import settings
+from django.core.management import call_command
+
+from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.routing_controller import check_and_route_emails
-from mail.models import Mail, LicenceData, UsageData
+from mail.models import LicenceData, Mail, UsageData
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 

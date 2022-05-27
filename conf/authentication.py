@@ -3,7 +3,7 @@ import logging
 from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
 from mohawk import Receiver
-from mohawk.exc import HawkFail, AlreadyProcessed
+from mohawk.exc import AlreadyProcessed, HawkFail
 from rest_framework import authentication
 
 from conf import settings
@@ -19,7 +19,7 @@ class HawkOnlyAuthentication(authentication.BaseAuthentication):
         try:
             hawk_receiver = _authenticate(request)
         except HawkFail as e:
-            logging.warning(f"Failed HAWK authentication {e}")
+            logging.warning("Failed HAWK authentication %s", e)
             raise e
 
         return AnonymousUser(), hawk_receiver

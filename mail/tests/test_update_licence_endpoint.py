@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from mail.enums import LicenceActionEnum
-from mail.models import LicencePayload, LicenceIdMapping
+from mail.models import LicenceIdMapping, LicencePayload
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 

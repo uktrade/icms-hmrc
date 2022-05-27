@@ -3,10 +3,10 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.test import override_settings
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_207_MULTI_STATUS, HTTP_208_ALREADY_REPORTED
+from rest_framework.status import HTTP_207_MULTI_STATUS, HTTP_208_ALREADY_REPORTED, HTTP_400_BAD_REQUEST
 
-from mail.models import GoodIdMapping, LicenceIdMapping, Mail, UsageData, LicencePayload
-from mail.tasks import send_licence_usage_figures_to_lite_api, schedule_max_tried_task_as_new_task
+from mail.models import GoodIdMapping, LicenceIdMapping, LicencePayload, Mail, UsageData
+from mail.tasks import schedule_max_tried_task_as_new_task, send_licence_usage_figures_to_lite_api
 from mail.tests.libraries.client import LiteHMRCTestClient
 
 

@@ -1,26 +1,25 @@
-from rest_framework.exceptions import ValidationError
-from typing import Callable, List, Tuple, Optional
-
 import logging
 from itertools import islice
+from typing import Callable, List, Optional, Tuple
 
 from django.conf import settings
 from django.core.mail.backends.base import BaseEmailBackend
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 from mail import enums
 from mail.libraries.builders import build_email_message
 from mail.libraries.data_processors import (
+    lock_db_for_sending_transaction,
     serialize_email_message,
     to_email_message_dto_from,
-    lock_db_for_sending_transaction,
 )
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import (
-    select_email_for_sending,
-    sort_dtos_by_date,
     check_for_pending_messages,
     publish_queue_status,
+    select_email_for_sending,
+    sort_dtos_by_date,
 )
 from mail.libraries.mailbox_service import get_message_iterator
 from mail.models import Mail
@@ -80,7 +79,7 @@ def check_and_route_emails():
     hmrc_to_dit_server = get_hmrc_to_dit_mailserver()
     email_message_dtos = _get_email_message_dtos(hmrc_to_dit_server, number=None)
     email_message_dtos = sort_dtos_by_date(email_message_dtos)
-    logging.info("Incoming message dtos sorted by date: %s" % email_message_dtos)
+    logger.info("Incoming message dtos sorted by date: %s", email_message_dtos)
 
     spire_to_dit_server = get_spire_to_dit_mailserver()
     if hmrc_to_dit_server != spire_to_dit_server:
@@ -89,19 +88,21 @@ def check_and_route_emails():
         # same emails.
         reply_message_dtos = _get_email_message_dtos(spire_to_dit_server)
         reply_message_dtos = sort_dtos_by_date(reply_message_dtos)
-        logging.info("Reply message dtos sorted by date: %s" % reply_message_dtos)
+        logger.info("Reply message dtos sorted by date: %s", reply_message_dtos)
 
         email_message_dtos.extend(reply_message_dtos)
 
     if not email_message_dtos:
         pending_message = check_for_pending_messages()
         if pending_message:
-            logging.info(
-                f"Found pending mail ({pending_message.id}) of extract type {pending_message.extract_type} for sending"
+            logger.info(
+                "Found pending mail (%s) of extract type %s for sending",
+                pending_message.id,
+                pending_message.extract_type,
             )
             _collect_and_send(pending_message)
 
-        logger.info(f"No new emails found from {hmrc_to_dit_server.user} or {spire_to_dit_server.user}")
+        logger.info("No new emails found from %s or %s", hmrc_to_dit_server.user, spire_to_dit_server.user)
 
         publish_queue_status()
 
@@ -109,19 +110,22 @@ def check_and_route_emails():
 
     for email, mark_status in email_message_dtos:
         try:
-            logging.info(f"Processing mail with subject {email.subject}")
+            logger.info("Processing mail with subject", email.subject)
             serialize_email_message(email)
             mark_status(enums.MailReadStatuses.READ)
         except ValidationError as ve:
-            logger.info(f"Marking message {email.subject} as UNPROCESSABLE. {ve.detail}")
+            logger.info("Marking message %s as UNPROCESSABLE. %s", email.subject, ve.detail)
             mark_status(enums.MailReadStatuses.UNPROCESSABLE)
 
     logger.info("Finished checking for emails")
 
     mail = select_email_for_sending()  # Can return None in the event of in flight or no pending or no reply_received
     if mail:
-        logging.info(
-            f"Selected mail ({mail.id}) for sending, extract type {mail.extract_type}, current status {mail.status}"
+        logger.info(
+            "Selected mail (%s) for sending, extract type %s, current status %s",
+            mail.id,
+            mail.extract_type,
+            mail.status,
         )
         _collect_and_send(mail)
 
@@ -150,13 +154,13 @@ def update_mail(mail: Mail, mail_dto: EmailMessageDto):
         mail.sent_response_filename = mail_dto.attachment[0]
         mail.sent_response_data = mail_dto.attachment[1]
 
-    logging.info(f"Updating Mail {mail.id} status from {previous_status} => {mail.status}")
+    logger.info("Updating Mail %s status from %s => %s", mail.id, previous_status, mail.status)
 
     mail.save()
 
 
 def send(connection: BaseEmailBackend, email_message_dto: EmailMessageDto):
-    logging.info("Preparing to send email")
+    logger.info("Preparing to send email")
     email = build_email_message(email_message_dto)
 
     with connection as conn:
@@ -169,13 +173,13 @@ def send(connection: BaseEmailBackend, email_message_dto: EmailMessageDto):
 def _collect_and_send(mail: Mail):
     from mail.tasks import send_licence_data_to_hmrc
 
-    logger.info(f"Sending Mail [{mail.id}] of extract type {mail.extract_type}")
+    logger.info("Sending Mail [%s] of extract type %s", mail.id, mail.extract_type)
 
     message_to_send_dto = to_email_message_dto_from(mail)
     is_locked_by_me = lock_db_for_sending_transaction(mail)
 
     if not is_locked_by_me:
-        logger.info(f"Mail [{mail.id}] is being sent by another thread")
+        logger.info("Mail [%s] is being sent by another thread", mail.id)
 
     if message_to_send_dto:
         if message_to_send_dto.receiver != enums.SourceEnum.LITE and message_to_send_dto.subject:
@@ -184,7 +188,11 @@ def _collect_and_send(mail: Mail):
             update_mail(mail, message_to_send_dto)
 
             logger.info(
-                f"Mail [{mail.id}] routed from [{message_to_send_dto.sender}] to [{message_to_send_dto.receiver}] with subject {message_to_send_dto.subject}"
+                "Mail [%s] routed from [%s] to [%s] with subject %s",
+                mail.id,
+                message_to_send_dto.sender,
+                message_to_send_dto.receiver,
+                message_to_send_dto.subject,
             )
         else:
             update_mail(mail, message_to_send_dto)

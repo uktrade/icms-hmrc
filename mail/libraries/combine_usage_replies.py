@@ -1,6 +1,6 @@
 from django.utils import timezone
 
-from mail.models import UsageData, LicenceIdMapping, GoodIdMapping, TransactionMapping
+from mail.models import GoodIdMapping, LicenceIdMapping, TransactionMapping, UsageData
 
 
 def combine_lite_and_spire_usage_responses(mail) -> str:  # noqa

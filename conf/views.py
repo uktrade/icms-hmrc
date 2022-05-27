@@ -23,11 +23,11 @@ class HealthCheck(APIView):
         start_time = time.time()
 
         if not self._is_lite_licence_update_task_responsive():
-            logging.error(f"{LICENCE_DATA_TASK_QUEUE} is not responsive")
+            logging.error("%s is not responsive", LICENCE_DATA_TASK_QUEUE)
             return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
 
         if not self._is_inbox_polling_task_responsive():
-            logging.error(f"{MANAGE_INBOX_TASK_QUEUE} is not responsive")
+            logging.error("%s is not responsive", MANAGE_INBOX_TASK_QUEUE)
             return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
 
         pending_mail = self._get_pending_mail()

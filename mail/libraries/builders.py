@@ -1,23 +1,24 @@
 import email.encoders
+import json
 import logging
 from datetime import datetime
 from email.mime.application import MIMEApplication
 from email.mime.text import MIMEText
-import json
-
-from unidecode import unidecode
 
 from django.conf import settings
 from django.core import mail
 from django.utils import timezone
+from unidecode import unidecode
 
-from mail.enums import SourceEnum, ExtractTypeEnum
+from mail.enums import ExtractTypeEnum, SourceEnum
 from mail.libraries.combine_usage_replies import combine_lite_and_spire_usage_responses
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import convert_source_to_sender
 from mail.libraries.lite_to_edifact_converter import licences_to_edifact
-from mail.libraries.usage_data_decomposition import split_edi_data_by_id, build_edifact_file_from_data_blocks
+from mail.libraries.usage_data_decomposition import build_edifact_file_from_data_blocks, split_edi_data_by_id
 from mail.models import LicenceData, Mail, UsageData
+
+logger = logging.getLogger(__name__)
 
 
 def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
@@ -47,8 +48,12 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
                 build_sent_file_data(file, run_number),
             ]
 
-    logging.info(
-        f"Preparing request Mail dto of extract type {mail.extract_type}, sender {sender}, receiver {receiver} with filename {attachment[0]}"
+    logger.info(
+        "Preparing request Mail dto of extract type %s, sender %s, receiver %s with filename %s",
+        mail.extract_type,
+        sender,
+        receiver,
+        attachment[0],
     )
 
     return EmailMessageDto(
@@ -70,18 +75,14 @@ def _build_request_mail_message_dto_internal(mail: Mail) -> EmailMessageDto:
     run_number = 0
 
     if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
-        """
-        This is the case where we sent a licence_data email earlier which hasn't reached HMRC
-        and so we are resending it
-        """
+        # This is the case where we sent a licence_data email earlier which hasn't reached HMRC
+        # and so we are resending it
         sender = settings.EMAIL_USER
         receiver = settings.OUTGOING_EMAIL_USER
         attachment = [mail.sent_filename, mail.sent_data]
     elif mail.extract_type == ExtractTypeEnum.LICENCE_REPLY:
-        """
-        This is the case where we sent the licence_reply email to SPIRE but they haven't
-        received it and so we are resending it
-        """
+        # This is the case where we sent the licence_reply email to SPIRE but they haven't
+        # received it and so we are resending it
         sender = settings.EMAIL_USER
         receiver = settings.SPIRE_ADDRESS
         attachment = [mail.sent_response_filename, mail.sent_response_data]
@@ -100,8 +101,12 @@ def _build_request_mail_message_dto_internal(mail: Mail) -> EmailMessageDto:
     else:
         return None
 
-    logging.info(
-        f"Preparing request Mail dto of extract type {mail.extract_type}, sender {sender}, receiver {receiver} with filename {attachment[0]}"
+    logger.info(
+        "Preparing request Mail dto of extract type %s, sender %s, receiver %s with filename %s",
+        mail.extract_type,
+        sender,
+        receiver,
+        attachment[0],
     )
 
     return EmailMessageDto(
@@ -142,15 +147,23 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
         licence_data = LicenceData.objects.get(mail=mail)
         run_number = licence_data.source_run_number
         receiver = convert_source_to_sender(licence_data.source)
-        logging.info(
-            f"[{mail.extract_type}] Source {licence_data.source} run number: {run_number}, HMRC run number: {licence_data.hmrc_run_number}"
+        logger.info(
+            "[%s] Source %s run number: %s, HMRC run number: %s",
+            mail.extract_type,
+            licence_data.source,
+            run_number,
+            licence_data.hmrc_run_number,
         )
     elif mail.extract_type == ExtractTypeEnum.LICENCE_REPLY:
         licence_data = LicenceData.objects.get(mail=mail)
         run_number = licence_data.source_run_number
         receiver = convert_source_to_sender(licence_data.source)
-        logging.info(
-            f"[{mail.extract_type}] Source {licence_data.source} run number: {run_number}, HMRC run number: {licence_data.hmrc_run_number}"
+        logger.info(
+            "[%s] Source %s run number: %s, HMRC run number: %s",
+            mail.extract_type,
+            licence_data.source,
+            run_number,
+            licence_data.hmrc_run_number,
         )
     elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
         usage_data = UsageData.objects.get(mail=mail)
@@ -164,8 +177,12 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
         build_sent_file_data(mail.response_data, run_number),
     ]
 
-    logging.info(
-        f"Preparing reply Mail dto of extract type {mail.extract_type}, sender {sender}, receiver {receiver} with filename {attachment[0]}"
+    logger.info(
+        "Preparing reply Mail dto of extract type %s, sender %s, receiver %s with filename %s",
+        mail.extract_type,
+        sender,
+        receiver,
+        attachment[0],
     )
 
     return EmailMessageDto(
@@ -183,28 +200,27 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
 def build_licence_data_mail(licences) -> Mail:
     last_lite_update = LicenceData.objects.last()
     run_number = last_lite_update.hmrc_run_number + 1 if last_lite_update else 1
-    file_name, file_content = build_licence_data_file(licences, run_number)
+    when = timezone.now()
+    file_name, file_content = build_licence_data_file(licences, run_number, when)
     mail = Mail.objects.create(
         edi_filename=file_name,
         edi_data=file_content,
         extract_type=ExtractTypeEnum.LICENCE_DATA,
         raw_data="See Licence Payload",
     )
-    logging.info(f"New Mail instance ({mail.id}) created for filename {file_name}")
+    logger.info("New Mail instance (%s) created for filename %s", mail.id, file_name)
     licence_ids = json.dumps([licence.reference for licence in licences])
     LicenceData.objects.create(hmrc_run_number=run_number, source=SourceEnum.LITE, mail=mail, licence_ids=licence_ids)
 
     return mail
 
 
-def build_licence_data_file(licences, run_number) -> (str, str):
-    now = timezone.now()
-    file_name = "CHIEF_LIVE_SPIRE_licenceData_{}_{:04d}{:02d}{:02d}{:02d}{:02d}".format(
-        run_number, now.year, now.month, now.day, now.hour, now.minute
-    )
-    logging.info(f"Building licenceData file {file_name} for {len(licences)} licences")
+def build_licence_data_file(licences, run_number, when):
+    system = settings.CHIEF_SOURCE_SYSTEM
+    file_name = f"CHIEF_LIVE_{system}_licenceData_{run_number}_{when:%Y%m%d%H%M}"
+    logger.info("Building licenceData file %s for %s licences", file_name, len(licences))
 
-    file_content = licences_to_edifact(licences, run_number)
+    file_content = licences_to_edifact(licences, run_number, system)
 
     return file_name, file_content
 

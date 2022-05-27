@@ -1,4 +1,5 @@
 import logging
+
 from django.conf import settings
 
 from mail.constants import VALID_SENDERS
@@ -6,17 +7,17 @@ from mail.enums import ReceptionStatusEnum, SourceEnum
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import (
     convert_sender_to_source,
-    new_hmrc_run_number,
-    process_attachment,
     get_licence_ids,
+    new_hmrc_run_number,
     new_spire_run_number,
+    process_attachment,
 )
 
 
 def convert_data_for_licence_data(dto: EmailMessageDto) -> dict:
     source = convert_sender_to_source(dto.sender)
 
-    logging.info(f"Email sender ({dto.sender}) is determined as coming from {source}")
+    logging.info("Email sender (%s) is determined as coming from %s", dto.sender, source)
 
     data = {"licence_data": {}}
     data["licence_data"]["source"] = source

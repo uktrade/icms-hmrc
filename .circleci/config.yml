@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  jq: circleci/jq@1.8.0
-
 jobs:
   tests:
     docker:
@@ -19,26 +16,8 @@ jobs:
     working_directory: ~/lite-hmrc
 
     steps:
-      - jq/install
-
       - checkout
 
-#      - run:
-#          name: Repository Vulnerability Check
-#          command: |
-#            VULNERABILITY_COUNT=`curl -s -u "lite-cicircle:${CICIRCLE_PERSONAL_ACCESS_TOKEN}" \
-#              -X POST -H "Content-Type: application/json" \
-#              -H "Accept: application/vnd.github.vixen-preview+json" \
-#              -d '{"query": "query { repository(owner:\"uktrade\" name:\"lite-hmrc\") { vulnerabilityAlerts(first: 100) { totalCount } } }"}' \
-#              https://api.github.com/graphql | jq ".data.repository.vulnerabilityAlerts.totalCount"`
-#            if [ "$VULNERABILITY_COUNT" = "0" ]; then
-#              echo "No vulnerabilities found"
-#            elif [ "$VULNERABILITY_COUNT" = "null" ]; then
-#              echo "Vulnerability check query returned unexpected JSON - bad credentials? Check JSON response for details"
-#            else
-#              echo "Vulnerabilities found: $VULNERABILITY_COUNT. Check GitHub security tab for details (only visible to admin users)"
-#            fi
-#            exit $VULNERABILITY_COUNT
       - run:
           name: Set Environment File
           command: cp local.env .env
@@ -96,6 +75,10 @@ jobs:
       - run:
           name: Black
           command: pipenv run black . --check --diff
+
+      - run:
+          name: isort
+          command: pipenv run isort --check --diff .
 
   check_background_tasks_up:
     machine:

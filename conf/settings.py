@@ -2,10 +2,9 @@ import os
 import sys
 import uuid
 
-from environ import Env
-from django_log_formatter_ecs import ECSFormatter
-
 import sentry_sdk
+from django_log_formatter_ecs import ECSFormatter
+from environ import Env
 from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -16,9 +15,6 @@ if os.path.exists(ENV_FILE):
     Env.read_env(ENV_FILE)
 
 env = Env()
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("DJANGO_SECRET_KEY")
@@ -81,9 +77,13 @@ WSGI_APPLICATION = "conf.wsgi.application"
 
 DATABASES = {"default": env.db()}
 
-ENABLE_MOCK_HMRC_SERVICE = env.bool("ENABLE_MOCK_HMRC_SERVICE", False)
+ENABLE_MOCK_HMRC_SERVICE = env.bool("ENABLE_MOCK_HMRC_SERVICE", default=False)
 if ENABLE_MOCK_HMRC_SERVICE:
     INSTALLED_APPS += ["mock_hmrc.apps.MockHmrcConfig"]
+
+# Which system identifier to use in licence requests to HMRC's CHIEF system.
+# LITE (and SPIRE) uses "SPIRE". ICMS uses "ILBDOTI".
+CHIEF_SOURCE_SYSTEM = env("CHIEF_SOURCE_SYSTEM", default="SPIRE")
 
 INCOMING_EMAIL_PASSWORD = env("INCOMING_EMAIL_PASSWORD", default="")
 INCOMING_EMAIL_HOSTNAME = env("INCOMING_EMAIL_HOSTNAME", default="")
@@ -94,8 +94,8 @@ INCOMING_EMAIL_SMTP_PORT = env("INCOMING_EMAIL_SMTP_PORT", default=None)
 HMRC_TO_DIT_EMAIL_PASSWORD = env("HMRC_TO_DIT_EMAIL_PASSWORD", default="")
 HMRC_TO_DIT_EMAIL_HOSTNAME = env("HMRC_TO_DIT_EMAIL_HOSTNAME", default="")
 HMRC_TO_DIT_EMAIL_USER = env("HMRC_TO_DIT_EMAIL_USER", default="")
-HMRC_TO_DIT_EMAIL_POP3_PORT = env("HMRC_TO_DIT_EMAIL_POP3_PORT", default=None)
-HMRC_TO_DIT_EMAIL_SMTP_PORT = env("HMRC_TO_DIT_EMAIL_SMTP_PORT", default=None)
+HMRC_TO_DIT_EMAIL_POP3_PORT = env("HMRC_TO_DIT_EMAIL_POP3_PORT", default="")
+HMRC_TO_DIT_EMAIL_SMTP_PORT = env("HMRC_TO_DIT_EMAIL_SMTP_PORT", default="")
 
 OUTGOING_EMAIL_USER = env("OUTGOING_EMAIL_USER")
 
@@ -125,9 +125,10 @@ EMAIL_HOSTNAME = env("EMAIL_HOSTNAME")
 EMAIL_USER = env("EMAIL_USER")
 EMAIL_POP3_PORT = env("EMAIL_POP3_PORT")
 EMAIL_SMTP_PORT = env("EMAIL_SMTP_PORT")
-SPIRE_ADDRESS = env("SPIRE_ADDRESS", default="test-spire-address@example.com")
-HMRC_ADDRESS = env("HMRC_ADDRESS", default="test-hmrc-address@example.com")
-EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", True)
+SPIRE_ADDRESS = env("SPIRE_ADDRESS", default="test-spire-address@example.com")  # /PS-IGNORE
+HMRC_ADDRESS = env("HMRC_ADDRESS", default="test-hmrc-address@example.com")  # /PS-IGNORE
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+MAILHOG_URL = env.str("MAILHOG_URL", default="http://localhost:8025")
 
 TIME_TESTS = env.bool("TIME_TESTS", default=False)
 
@@ -170,7 +171,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = env.bool("USE_TZ", True)
+USE_TZ = env.bool("USE_TZ", default=True)
 
 _log_level = env.str("LOG_LEVEL", default="INFO")
 if "test" not in sys.argv:
@@ -196,7 +197,7 @@ else:
 STATIC_URL = "/static/"
 
 # HAWK
-HAWK_AUTHENTICATION_ENABLED = env.bool("HAWK_AUTHENTICATION_ENABLED", default=False)
+HAWK_AUTHENTICATION_ENABLED = env.bool("HAWK_AUTHENTICATION_ENABLED", default=True)
 HAWK_RECEIVER_NONCE_EXPIRY_SECONDS = 60
 HAWK_ALGORITHM = "sha256"
 HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS = "hmrc-integration"
@@ -231,7 +232,7 @@ if env.str("SENTRY_DSN", ""):
 # Application Performance Monitoring
 if env.str("ELASTIC_APM_SERVER_URL", ""):
     ELASTIC_APM = {
-        "SERVICE_NAME": env.str("ELASTIC_APM_SERVICE_NAME", "lite-hmrc"),
+        "SERVICE_NAME": env.str("ELASTIC_APM_SERVICE_NAME", default="lite-hmrc"),
         "SECRET_TOKEN": env.str("ELASTIC_APM_SECRET_TOKEN"),
         "SERVER_URL": env.str("ELASTIC_APM_SERVER_URL"),
         "ENVIRONMENT": env.str("SENTRY_ENVIRONMENT"),

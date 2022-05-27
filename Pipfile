@@ -5,11 +5,11 @@ verify_ssl = true
 
 [dev-packages]
 bandit = "==1.6.2"
-black = "==22.1.0"
+black = "==22.3.0"
 coverage = "~=5.0"
 parameterized = "==0.7.0"
 prospector = "==1.1.6.2" #  Our project only works with version 1.1.6.2
-isort = "==4.3.21"
+isort = "==5.10.1"
 django-extensions = "*"
 ipdb = "*"
 
@@ -29,6 +29,7 @@ python-dateutil = "~=2.8"
 requests = "~=2.21"
 unidecode = "~=1.2"
 django-log-formatter-ecs = "==0.0.5"
+gunicorn = "*"
 
 [requires]
 python_version = "3.7"

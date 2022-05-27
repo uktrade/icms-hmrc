@@ -1,2 +1,3 @@
-web: python manage.py migrate && ./manage.py runserver 0.0.0.0:$PORT
+# See gunicorn.conf.py for more configuration.
+web: python manage.py migrate && gunicorn conf.wsgi:application
 worker: python manage.py process_tasks --log-std

@@ -2,11 +2,11 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from mail.models import LicenceData, UsageData
-from mail.enums import SourceEnum, ExtractTypeEnum, ReceptionStatusEnum
+from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.builders import _build_request_mail_message_dto_internal
 from mail.libraries.routing_controller import send
 from mail.servers import get_smtp_connection
+from mail.models import LicenceData, UsageData
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 def get_mail_extract(hmrc_run_number):
     licence_data = None
     usage_data = None
-    mail = None
 
     """
     Given run number could be of licence data or usage data so check both types.
@@ -23,17 +22,17 @@ def get_mail_extract(hmrc_run_number):
     """
     try:
         licence_data = LicenceData.objects.get(hmrc_run_number=hmrc_run_number)
-        mail = licence_data.mail
+        return licence_data.mail
     except LicenceData.DoesNotExist:
         logger.info("No licence data instance found for given run number %s", hmrc_run_number)
 
     try:
         usage_data = UsageData.objects.get(hmrc_run_number=hmrc_run_number)
-        mail = usage_data.mail
+        return usage_data.mail
     except UsageData.DoesNotExist:
-        logger.error("No usage data instance found for given run number %s", hmrc_run_number)
+        logger.info("No usage data instance found for given run number %s", hmrc_run_number)
 
-    return mail
+    return None
 
 
 class Command(BaseCommand):
@@ -86,11 +85,10 @@ class Command(BaseCommand):
             logger.error("Given run number %s does not belong to Licence data or Usage data mail", hmrc_run_number)
             return
 
-        """
-        Usually we resend in cases where the mail is initially sent from our system successfully but not received
-        by the recipient. This could happen with HMRC in case of licence data mails and with SPIRE in
-        case of licence reply mails. Below we check for their expected status and set destination.
-        """
+        # Usually we resend in cases where the mail is initially sent from our system successfully but not received
+        # by the recipient. This could happen with HMRC in case of licence data mails and with SPIRE in
+        # case of licence reply mails. Below we check for their expected status and set destination.
+
         # this is the usual case where we had to resend
         if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
             destination = SourceEnum.HMRC

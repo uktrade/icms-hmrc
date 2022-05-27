@@ -1,18 +1,17 @@
-import base64
 import json
 import logging
-import sentry_sdk
-
-from dateutil.parser import parse
-from django.conf import settings
 from email.message import Message
 from email.parser import Parser
 from json.decoder import JSONDecodeError
 
-from mail.enums import SourceEnum, ExtractTypeEnum, UnitMapping, ReceptionStatusEnum, LicenceStatusEnum
-from mail.libraries.email_message_dto import EmailMessageDto, HmrcEmailMessageDto
-from mail.models import LicenceData, UsageData, Mail, GoodIdMapping, LicenceIdMapping
+import sentry_sdk
+from dateutil.parser import parse
+from django.conf import settings
+
 from mail import serializers
+from mail.enums import ExtractTypeEnum, LicenceStatusEnum, ReceptionStatusEnum, SourceEnum
+from mail.libraries.email_message_dto import EmailMessageDto, HmrcEmailMessageDto
+from mail.models import GoodIdMapping, LicenceData, LicenceIdMapping, Mail, UsageData
 
 ALLOWED_FILE_MIMETYPES = ["application/octet-stream", "text/plain"]
 
@@ -70,7 +69,7 @@ def get_attachment(msg: Message):
             data = part.get_payload(decode=True)
             if name:
                 return name, data
-    logging.info("No attachment found")
+    logger.info("No attachment found")
     return None, None
 
 
@@ -168,7 +167,7 @@ def process_attachment(attachment):
     file_data = attachment[1]
     file_data = file_data.decode("utf-8")
 
-    logging.debug(f"attachment filename: {file_name}, filedata:\n{file_data}")
+    logger.debug("attachment filename: %s, filedata:\n%s", file_name, file_data)
     return file_name, file_data
 
 
@@ -208,7 +207,7 @@ def get_licence_ids(file_body) -> str:
     for line in lines:
         if line and "licence" in line.split("\\")[1]:
             ids.append(line.split("\\")[4])
-    logging.debug(f"licence ids in the file: {ids}")
+    logger.debug("licence ids in the file: %s", ids)
     return json.dumps(ids)
 
 
@@ -221,22 +220,8 @@ def decode(data, char_set: str):
     return data.decode(char_set) if isinstance(data, bytes) else data
 
 
-def b64encode(byte_text: str):
-    return base64.b64encode(byte_text)
-
-
-def b64decode(b64encoded_text: str):
-    return base64.b64decode(b64encoded_text)
-
-
-def map_unit(data: dict, g: int) -> dict:
-    unit = data["goods"][g]["unit"]
-    data["goods"][g]["unit"] = UnitMapping.convert(unit)
-    return data
-
-
 def select_email_for_sending() -> Mail or None:
-    logging.info("Selecting email to send")
+    logger.info("Selecting email to send")
 
     reply_received = Mail.objects.filter(status=ReceptionStatusEnum.REPLY_RECEIVED).first()
     if reply_received:
@@ -252,14 +237,14 @@ def select_email_for_sending() -> Mail or None:
             usage_data = UsageData.objects.get(mail=reply_pending)
             if not usage_data.has_spire_data:
                 return reply_pending
-        logging.info("Email currently in flight")
+        logger.info("Email currently in flight")
         return
 
     pending = Mail.objects.filter(status=ReceptionStatusEnum.PENDING).first()
     if pending:
         return pending
 
-    logging.info("No emails to send")
+    logger.info("No emails to send")
     return
 
 

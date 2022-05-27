@@ -1,11 +1,9 @@
-import os
-
-from typing import MutableMapping, Tuple, List
-
 import logging
+import os
 from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from typing import List, MutableMapping, Tuple
 
 from background_task import background
 from background_task.models import Task
@@ -17,16 +15,13 @@ from rest_framework.status import HTTP_207_MULTI_STATUS, HTTP_208_ALREADY_REPORT
 from mail.enums import ReceptionStatusEnum
 from mail.libraries.builders import build_licence_data_mail
 from mail.libraries.data_processors import build_request_mail_message_dto
-from mail.libraries.mailbox_service import send_email
 from mail.libraries.lite_to_edifact_converter import EdifactValidationError
-from mail.libraries.routing_controller import check_and_route_emails
-from mail.libraries.routing_controller import update_mail, send
+from mail.libraries.mailbox_service import send_email
+from mail.libraries.routing_controller import check_and_route_emails, send, update_mail
 from mail.libraries.usage_data_decomposition import build_json_payload_from_data_blocks, split_edi_data_by_id
-from mail.models import LicencePayload, Mail
-from mail.models import UsageData, LicenceIdMapping
+from mail.models import LicenceIdMapping, LicencePayload, Mail, UsageData
 from mail.requests import put
 from mail.servers import MailServer, get_smtp_connection
-
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +40,7 @@ TASK_BACK_OFF = 3600  # Time, in seconds, to wait before scheduling a new task (
 def send_licence_usage_figures_to_lite_api(lite_usage_data_id):
     """Sends HMRC Usage figure updates to LITE"""
 
-    logging.info(f"Preparing LITE UsageData [{lite_usage_data_id}] for LITE API")
+    logger.info("Preparing LITE UsageData [%s] for LITE API", lite_usage_data_id)
 
     try:
         lite_usage_data = UsageData.objects.get(id=lite_usage_data_id)
@@ -68,7 +63,7 @@ def send_licence_usage_figures_to_lite_api(lite_usage_data_id):
 
     payload["usage_data_id"] = lite_usage_data_id
 
-    logging.info(f"Sending LITE UsageData [{lite_usage_data_id}] figures for Licences [{licences}] to LITE API")
+    logger.info("Sending LITE UsageData [%s] figures for Licences [%s] to LITE API", lite_usage_data_id, licences)
 
     try:
         lite_usage_data.lite_payload = payload
@@ -109,18 +104,18 @@ def send_licence_usage_figures_to_lite_api(lite_usage_data_id):
             return
         save_response(lite_usage_data, accepted_licences, rejected_licences, response)
 
-    logging.info(f"Successfully sent LITE UsageData [{lite_usage_data_id}] to LITE API")
+    logger.info("Successfully sent LITE UsageData [%s] to LITE API", lite_usage_data_id)
 
 
 def schedule_licence_usage_figures_for_lite_api(lite_usage_data_id):
-    logging.info(f"Scheduling UsageData '{lite_usage_data_id}' for LITE API")
+    logger.info("Scheduling UsageData '%s' for LITE API", lite_usage_data_id)
     task = Task.objects.filter(queue=USAGE_FIGURES_QUEUE, task_params=f'[["{lite_usage_data_id}"], {{}}]')
 
     if task.exists():
-        logging.info(f"UsageData '{lite_usage_data_id}' has already been scheduled")
+        logger.info("UsageData '%s' has already been scheduled", lite_usage_data_id)
     else:
         send_licence_usage_figures_to_lite_api(lite_usage_data_id)
-        logging.info(f"UsageData '{lite_usage_data_id}' has been scheduled")
+        logger.info("UsageData '%s' has been scheduled", lite_usage_data_id)
 
 
 def parse_response(response) -> Tuple[MutableMapping, List[str], List[str]]:
@@ -160,12 +155,12 @@ def schedule_max_tried_task_as_new_task(lite_usage_data_id):
     Abstracted from 'send_licence_usage_figures_to_lite_api' to enable unit testing of a recursive operation
     """
 
-    logging.warning(
+    logger.warning(
         "Maximum attempts of %s for LITE UsageData [%s] has been reached", settings.MAX_ATTEMPTS, lite_usage_data_id
     )
 
     schedule_datetime = timezone.now() + timedelta(seconds=TASK_BACK_OFF)
-    logging.info(
+    logger.info(
         "Scheduling new task for LITE UsageData [%s] to commence at [%s]", lite_usage_data_id, schedule_datetime
     )
     send_licence_usage_figures_to_lite_api(lite_usage_data_id, schedule=TASK_BACK_OFF)  # noqa
@@ -177,7 +172,7 @@ def _handle_exception(message, lite_usage_data_id):
     try:
         task = Task.objects.get(queue=USAGE_FIGURES_QUEUE, task_params=f'[["{lite_usage_data_id}"], {{}}]')
     except Task.DoesNotExist:
-        logging.error(f"No task was found for UsageData [{lite_usage_data_id}]")
+        logger.error("No task was found for UsageData [%s]", lite_usage_data_id)
     else:
         # Get the task's current attempt number by retrieving the previous attempts and adding 1
         current_attempt = task.attempts + 1
@@ -194,20 +189,16 @@ def _handle_exception(message, lite_usage_data_id):
     raise Exception(error_message)
 
 
-# Send Licence Updates to HMRC
-
-
 @background(queue=LICENCE_DATA_TASK_QUEUE, schedule=0)
 def send_licence_data_to_hmrc():
-    """Sends LITE licence updates to HMRC
+    """Sends LITE (or ICMS) licence updates to HMRC
 
     Return: True if successful
     """
-
-    logging.info("Sending LITE licence updates to HMRC")
+    logger.info("Sending LITE licence updates to HMRC")
 
     if Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT).count():
-        logging.info(
+        logger.info(
             "Currently we are either waiting for a reply or next one is ready to be processed,\n"
             "so we cannot send this update now and will be picked up in the next cycle"
         )
@@ -218,14 +209,14 @@ def send_licence_data_to_hmrc():
             licences = LicencePayload.objects.filter(is_processed=False).select_for_update(nowait=True)
 
             if not licences.exists():
-                logging.info("There are currently no licences to send")
+                logger.info("There are currently no licences to send")
                 return
 
             mail = build_licence_data_mail(licences)
             mail_dto = build_request_mail_message_dto(mail)
-            licence_references = list(licences.values_list("reference", flat=True))
-            logging.info(
-                f"Created Mail [{mail.id}] with subject {mail_dto.subject} from licences [{licence_references}]"
+            licence_references = [licence.reference for licence in licences]
+            logger.info(
+                "Created Mail [%s] with subject %s from licences [%s]", mail.id, mail_dto.subject, licence_references
             )
 
             smtp_connection = get_smtp_connection()
@@ -233,18 +224,18 @@ def send_licence_data_to_hmrc():
             update_mail(mail, mail_dto)
 
             licences.update(is_processed=True)
-            logging.info(f"Licence references [{licence_references}] marked as processed")
+            logger.info("Licence references [%s] marked as processed", licence_references)
 
     except EdifactValidationError as err:  # noqa
         raise err
     except Exception as exc:  # noqa
-        logging.error(
+        logger.error(
             "An unexpected error occurred when sending LITE licence updates to HMRC -> %s",
             type(exc).__name__,
             exc_info=True,
         )
     else:
-        logging.info(f"Successfully sent LITE licences updates in Mail [{mail.id}] to HMRC")
+        logger.info("Successfully sent LITE licences updates in Mail [%s] to HMRC", mail.id)
         return True
 
 
@@ -253,7 +244,7 @@ def send_licence_data_to_hmrc():
 def notify_users_of_rejected_mail(mail_id, mail_response_date):
     """If a rejected email is found, this task notifies users of the rejection"""
 
-    logging.info(f"Notifying users of rejected Mail [{mail_id}, {mail_response_date}]")
+    logger.info("Notifying users of rejected Mail [%s, %s]", mail_id, mail_response_date)
 
     try:
         multipart_msg = MIMEMultipart()
@@ -277,7 +268,7 @@ def notify_users_of_rejected_mail(mail_id, mail_response_date):
         # this will cause the task to be marked as 'Failed' and retried if there are retry attempts left
         raise Exception(error_message)
     else:
-        logging.info(f"Successfully notified users of rejected Mail [{mail_id}, {mail_response_date}]")
+        logger.info("Successfully notified users of rejected Mail [%s, %s]", mail_id, mail_response_date)
 
 
 # Manage Inbox
@@ -287,12 +278,12 @@ def notify_users_of_rejected_mail(mail_id, mail_response_date):
 def manage_inbox():
     """Main task which scans inbox for SPIRE and HMRC emails"""
 
-    logging.info("Polling inbox for updates")
+    logger.info("Polling inbox for updates")
 
     try:
         check_and_route_emails()
     except Exception as exc:  # noqa
-        logging.error(
+        logger.error(
             "An unexpected error occurred when polling inbox for updates -> %s",
             type(exc).__name__,
             exc_info=True,

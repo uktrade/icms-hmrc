@@ -12,13 +12,6 @@ from mail.tests.libraries import colours
 
 
 class LiteHMRCTestClient(testcases.TestCase):
-    TEST_RUN_NUMBER = "49543"
-
-    @classmethod
-    def tearDownClass(cls):
-        logging.debug("tearDownClass() is called")
-        super().tearDownClass()
-
     def setUp(self):
         if settings.TIME_TESTS:
             self.tick = timezone.now()
@@ -31,7 +24,6 @@ class LiteHMRCTestClient(testcases.TestCase):
             b"AwMDAwMDEvUAo0XGZpbGVUcmFpbGVyXDJcMFww"
         )
         self.usage_data_reply_body = read_file("mail/tests/files/usage_data_reply_file", mode="rb")
-        logging.debug("licence_data_reply_body: \n{}".format(self.licence_data_reply_body))
         self.licence_data_reply_name = "ILBDOTI_live_CHIEF_licenceReply_49543_201902080025"
 
         self.usage_data_reply_name = "ILBDOTI_live_CHIEF_usageReply_49543_201902080025"
