@@ -5,13 +5,12 @@ from django.conf import settings
 from django.utils import timezone
 
 from mail.enums import ExtractTypeEnum, SMTPConnection
-from mail.libraries.helpers import get_extract_type
 from mail.libraries.data_processors import convert_dto_data_for_serialization
 from mail.libraries.email_message_dto import EmailMessageDto
+from mail.libraries.helpers import get_extract_type
 from mail.libraries.routing_controller import send
 from mail.servers import get_smtp_connection
-from mock_hmrc import models, enums
-
+from mock_hmrc import enums, models
 
 MOCK_HMRC_SUPPORTED_EXTRACT_TYPES = [ExtractTypeEnum.LICENCE_DATA]
 

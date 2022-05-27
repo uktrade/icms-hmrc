@@ -5,8 +5,8 @@ from django.core.management.base import BaseCommand
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.builders import _build_request_mail_message_dto_internal
 from mail.libraries.routing_controller import send
-from mail.servers import get_smtp_connection
 from mail.models import LicenceData, UsageData
+from mail.servers import get_smtp_connection
 
 logger = logging.getLogger(__name__)
 
