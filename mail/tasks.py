@@ -22,7 +22,7 @@ from mail.libraries.routing_controller import check_and_route_emails, send, upda
 from mail.libraries.usage_data_decomposition import build_json_payload_from_data_blocks, split_edi_data_by_id
 from mail.models import LicenceIdMapping, LicencePayload, Mail, UsageData
 from mail.requests import put
-from mail.servers import MailServer, get_smtp_connection
+from mail.servers import MailServer
 
 logger = logging.getLogger(__name__)
 
@@ -232,8 +232,8 @@ def send_licence_data_to_hmrc():
                 "Created Mail [%s] with subject %s from licences [%s]", mail.id, mail_dto.subject, licence_references
             )
 
-            smtp_connection = get_smtp_connection()
-            send(smtp_connection, mail_dto)
+            server = MailServer()
+            send(server, mail_dto)
             update_mail(mail, mail_dto)
 
             licences.update(is_processed=True)

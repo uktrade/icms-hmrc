@@ -126,15 +126,15 @@ class MailServiceTests(LiteHMRCTestClient):
 
 class MailServerTests(SimpleTestCase):
     def test_mail_server_equal(self):
-        m1 = MailServer(hostname="host", user="u", password="p", pop3_port=1)  # nosec
+        m1 = MailServer(hostname="host", user="u", password="p", pop3_port=1, smtp_port=2)  # nosec
 
-        m2 = MailServer(hostname="host", user="u", password="p", pop3_port=1)  # nosec
+        m2 = MailServer(hostname="host", user="u", password="p", pop3_port=1, smtp_port=2)  # nosec
 
         self.assertEqual(m1, m2)
 
     def test_mail_server_not_equal(self):
-        m1 = MailServer(hostname="host", user="u", password="p", pop3_port=1)  # nosec
+        m1 = MailServer(hostname="host", user="u", password="p", pop3_port=1, smtp_port=2)  # nosec
 
-        m2 = MailServer(hostname="host", user="u", password="p", pop3_port=2)  # nosec
+        m2 = MailServer(hostname="host", user="u", password="p", pop3_port=2, smtp_port=1)  # nosec
 
         self.assertNotEqual(m1, m2)
