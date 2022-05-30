@@ -114,7 +114,7 @@ def check_and_route_emails():
 
     for email, mark_status in email_message_dtos:
         try:
-            logger.info("Processing mail with subject", email.subject)
+            logger.info("Processing mail with subject %s", email.subject)
             serialize_email_message(email)
             mark_status(MailReadStatuses.READ)
         except ValidationError as ve:
