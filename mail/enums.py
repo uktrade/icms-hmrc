@@ -179,11 +179,9 @@ class UnitMapping(enum.Enum):
     ITG = 30  # intangible
 
     @classmethod
-    def convert(cls, unit):
-        try:
-            return cls[unit].value
-        except KeyError:
-            pass
+    def serializer_choices(cls):
+        # Used by the API serializer for validation.
+        return list(cls.__members__.keys())
 
 
 class MailReadStatuses(TextChoices):

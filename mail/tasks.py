@@ -1,5 +1,6 @@
 import logging
 import os
+import urllib.parse
 from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -34,6 +35,19 @@ TASK_BACK_OFF = 3600  # Time, in seconds, to wait before scheduling a new task (
 
 
 # Send Usage Figures to LITE API
+def get_lite_api_url():
+    """The URL for the licence usage callback, from the LITE_API_URL setting.
+
+    If the configured URL has no path, use `/licences/hmrc-integration/`.
+    """
+    url = settings.LITE_API_URL
+    components = urllib.parse.urlparse(url)
+
+    if components.path in ("", "/"):
+        components = components._replace(path="/licences/hmrc-integration/")
+        url = urllib.parse.urlunparse(components)
+
+    return url
 
 
 @background(queue=USAGE_FIGURES_QUEUE, schedule=0)
@@ -62,7 +76,7 @@ def send_licence_usage_figures_to_lite_api(lite_usage_data_id):
         return
 
     payload["usage_data_id"] = lite_usage_data_id
-
+    lite_api_url = get_lite_api_url()
     logger.info("Sending LITE UsageData [%s] figures for Licences [%s] to LITE API", lite_usage_data_id, licences)
 
     try:
@@ -70,8 +84,7 @@ def send_licence_usage_figures_to_lite_api(lite_usage_data_id):
         lite_usage_data.save()
 
         response = put(
-            # For lite-hmrc the path was hard-coded to '/licences/hmrc-integration/'.
-            f"{settings.LITE_API_URL}",
+            lite_api_url,
             lite_usage_data.lite_payload,
             hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
             timeout=settings.LITE_API_REQUEST_TIMEOUT,

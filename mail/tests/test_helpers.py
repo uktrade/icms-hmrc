@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from parameterized import parameterized
 
-from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum, UnitMapping
+from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.helpers import (
     convert_sender_to_source,
     convert_source_to_sender,

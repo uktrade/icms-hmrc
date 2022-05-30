@@ -210,6 +210,8 @@ HAWK_CREDENTIALS = {
     "lite-api": {"id": "lite-api", "key": env("LITE_API_HAWK_KEY"), "algorithm": HAWK_ALGORITHM},
 }
 
+# The URL for licence usage callbacks. If there is no path component, defaults
+# to `/licences/hmrc-integration/`.
 LITE_API_URL = env("LITE_API_URL")
 LITE_API_REQUEST_TIMEOUT = 60  # Maximum time, in seconds, to wait between bytes of a response
 
