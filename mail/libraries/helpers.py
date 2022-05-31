@@ -405,5 +405,5 @@ def publish_queue_status():
     if "usage_data" in queue_status:
         extra_state = {**extra_state, **queue_status["usage_data"]}
 
-    if queue_status != "HEALTHY":
+    if queue_state != "HEALTHY":
         log_to_sentry(f"Mail queue status: {queue_state} (see additional data below)", extra=extra_state)
