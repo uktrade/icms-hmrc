@@ -17,12 +17,11 @@ from mail.enums import ChiefSystemEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.builders import build_licence_data_mail
 from mail.libraries.data_processors import build_request_mail_message_dto
 from mail.libraries.lite_to_edifact_converter import EdifactValidationError
-from mail.libraries.mailbox_service import send_email
 from mail.libraries.routing_controller import check_and_route_emails, send, update_mail
 from mail.libraries.usage_data_decomposition import build_json_payload_from_data_blocks, split_edi_data_by_id
 from mail.models import LicenceIdMapping, LicencePayload, Mail, UsageData
 from mail.requests import put
-from mail.servers import MailServer
+from mail.servers import smtp_send
 
 logger = logging.getLogger(__name__)
 
@@ -233,8 +232,7 @@ def send_licence_data_to_hmrc():
                 "Created Mail [%s] with subject %s from licences [%s]", mail.id, mail_dto.subject, licence_references
             )
 
-            server = MailServer()
-            send(server, mail_dto)
+            send(mail_dto)
             update_mail(mail, mail_dto)
 
             licences.update(is_processed=True)
@@ -269,10 +267,7 @@ def notify_users_of_rejected_mail(mail_id, mail_response_date):
         body = MIMEText(f"Mail [{mail_id}] received at [{mail_response_date}] was rejected")
         multipart_msg.attach(body)
 
-        server = MailServer()
-        smtp_connection = server.connect_to_smtp()
-        send_email(smtp_connection, multipart_msg)
-        server.quit_smtp_connection()
+        smtp_send(multipart_msg)
     except Exception as exc:  # noqa
         error_message = (
             f"An unexpected error occurred when notifying users of rejected Mail "

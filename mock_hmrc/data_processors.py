@@ -8,7 +8,7 @@ from mail.enums import ExtractTypeEnum
 from mail.libraries.data_processors import convert_dto_data_for_serialization
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.helpers import get_extract_type
-from mail.libraries.routing_controller import get_mock_hmrc_mailserver, send
+from mail.libraries.routing_controller import send
 from mock_hmrc import enums, models
 
 MOCK_HMRC_SUPPORTED_EXTRACT_TYPES = [ExtractTypeEnum.LICENCE_DATA]
@@ -121,7 +121,6 @@ def to_email_message_dto_from(hmrc_mail):
 def send_reply(email):
     message_to_send = to_email_message_dto_from(email)
     if message_to_send:
-        server = get_mock_hmrc_mailserver()
-        send(server, message_to_send)
+        send(message_to_send)
         email.status = enums.HmrcMailStatusEnum.REPLIED
         email.save()
