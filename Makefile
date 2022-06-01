@@ -4,6 +4,12 @@ test:
 test-in:
 	docker exec -it lite-hmrc-intg make test
 
+migrate:
+	docker exec -it lite-hmrc-intg pipenv run ./manage.py migrate
+
+createsuperuser:
+	docker exec -it lite-hmrc-intg pipenv run ./manage.py createsuperuser
+
 run:
 	pipenv run ./manage.py runserver
 
