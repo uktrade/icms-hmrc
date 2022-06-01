@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+    mailhog:
+        networks:
+          - backend
+
+    lite-hmrc-postgres:
+        networks:
+          - backend
+
+    lite-hmrc-intg:
+        networks:
+          - backend
+          - icms_backend
+
+networks:
+  backend:
+  icms_backend:
+    name: "icms_backend"
