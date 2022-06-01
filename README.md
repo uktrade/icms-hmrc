@@ -1,58 +1,66 @@
 [![CircleCI](https://circleci.com/gh/uktrade/lite-hmrc.svg?style=svg)](https://circleci.com/gh/uktrade/lite-hmrc)
 
-## Introduction
+# Introduction
 This project is meant for sending licence updates to HMRC and receiving usage reporting. Information like licence updates
 and usage are exchanged as mail attachment between Lite and HMRC
 
-#### Build and Run
+# Build and Run
+An `.env` file is expected at the root of project.
+
+Copy the template .env file: `cp local.env .env`
+
+### Running in Docker
+To run in docker do the following
+- Configure .env file - Using local.env as a starting point:
+  ```properties
+  DATABASE_URL=postgres://postgres:password@lite-hmrc-postgres:5432/postgres
+  MAILHOG_URL=http://mailhog:8025
+  EMAIL_HOSTNAME=mailhog
+  ```
+- Start the containers: `docker-compose up --build`
+- Initial setup (run once):
+  - Run migrations: `make migrate`
+  - Create super user: `make createsuperuser`
 
 
-##### Without Docker
+### Running locally
+- Configure .env file - Using local.env as a starting point:
+  ```properties
+  EMAIL_SMTP_PORT=587
+  ```
 - To build and run a local Postfix [mail server](https://github.com/uktrade/mailserver)
 - To initilize database
 `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py migrate`
 - To create database superuser `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py createsuperuser`
 - To start the application
 `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py runserver`
-
-##### With Docker
-
-An `.env` file is expected at the root of project. An example provided below
-```properties
-DATABASE_URL=postgresql://postgres:password@lite-hmrc-postgres:5432/postgres
-DJANGO_SECRET_KEY='DJANGO_SECRET_KEY'
-EMAIL_PASSWORD=password
-EMAIL_HOSTNAME=lite-hmrc-ditmail
-EMAIL_USER=username
-EMAIL_POP3_PORT=995
-EMAIL_SMTP_PORT=587
-TIME_TESTS=true
-LOCK_INTERVAL=120
-SPIRE_ADDRESS=test@spire.com
-HMRC_ADDRESS=HMRC
-```
 - check out [mailserver](https://github.com/uktrade/mailserver) to a local folder
 has the same parent folder of this repo
 - `docker-compose up --build -d`
 
-if it is the first time building the local environment, a database migration is required to be carried out.
-Run the following command
+**To check either setup is working correctly navigate to the following url:** `http://localhost:8000/healthcheck/`
 
-- `docker exec -it lite-hmrc-intg pipenv run ./manage.py migrate`
-- `docker exec -it lite-hmrc-intg pipenv run ./manage.py createsuperuser`
+# Testing
+Tests are located in `mail/tests`.
 
-#### Deploying to production
+### To run the tests in a container:
+- Ensure correct environment variables are set (see Running in Docker section)
+- Run the containers (to ensure MailHog is running): `docker-compose up`
+- Run this command: `make test-in`
 
-Important settings:
+### To run the tests locally:
+- Ensure correct environment variables are set (see Running locally section)
+- Run this command: `make test`
 
-- SPIRE_ADDRESS: email address used by SPIRE system (legacy).
-- SPIRE_INCOMING_EMAIL_ADDRESS: same as SPIRE_ADDRESS?
-- HMRC_ADDRESS: email address used by HMRC / CHIEF to process licenses.
-- LITE_HMRC_INTEGRATION_HAWK_KEY: part of Hawk authentication protocol.
-- LITE_API_HAWK_KEY: part of Hawk authentication protocol.
-- LITE_API_URL: full URL for API to send usage response data.
+> NOTE: A task manager needs to be running locally if you are running E2E tests or similar. Check Procfile
 
-#### Linting
+The tests require a live postgres server. They will create a database called
+`test_postgres` as part of the test run.
+
+You may encounter `AssertionError: database connection isn't set to UTC` when running. To work around this set
+`USE_TZ = False` in `conf/settings.py`.
+
+# Linting
 
 - Code formatting and conventions
 
@@ -78,21 +86,20 @@ The tool `prospector` is used. To run it `pipenv run prospector .`
 
 The tool 'bandit' is used. To run it `pipenv run bandit -r .`
 
-#### Git Hub pre-commit setup
-- Install pre-commit (e.g MAC pip install pre-commit)
-- pre-commit install
+# Git Hub pre-commit setup
+- Install pre-commit (e.g MAC `pip install pre-commit`)
+- `pre-commit install`
 * run following to scan all files for issues
-  - pre-commit run --all-files
+  - `pre-commit run --all-files`
 
-#### Test
 
-> NOTE: A task manager needs to be running locally if you are running E2E tests or similar. Check Procfile
+# Deploying to production
 
-The tests require a live postgres server. They will create a database called
-`test_postgres` as part of the test run.
+Important settings:
 
-You may encounter `AssertionError: database connection isn't set to UTC` when running. To work around this set
-`USE_TZ = False` in `conf/settings.py`.
-
-Tests are located in `mail/tests`. To run all tests
-`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py test`
+- SPIRE_ADDRESS: email address used by SPIRE system (legacy).
+- SPIRE_INCOMING_EMAIL_ADDRESS: same as SPIRE_ADDRESS?
+- HMRC_ADDRESS: email address used by HMRC / CHIEF to process licenses.
+- LITE_HMRC_INTEGRATION_HAWK_KEY: part of Hawk authentication protocol.
+- LITE_API_HAWK_KEY: part of Hawk authentication protocol.
+- LITE_API_URL: full URL for API to send usage response data.
