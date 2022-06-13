@@ -20,9 +20,10 @@ class LicenceDataIngestView(APIView):
             data = request.data["licence"]
         except KeyError:
             errors = [{"licence": "This field is required."}]
+
             return JsonResponse(status=status.HTTP_400_BAD_REQUEST, data={"errors": errors})
-        else:
-            serializer = LiteLicenceDataSerializer(data=data)
+
+        serializer = LiteLicenceDataSerializer(data=data)
 
         if not serializer.is_valid():
             errors = [{"licence": serializer.errors}]
