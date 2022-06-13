@@ -10,6 +10,9 @@ migrate:
 createsuperuser:
 	docker exec -it lite-hmrc-intg pipenv run ./manage.py createsuperuser
 
+shell:
+	docker exec -it lite-hmrc-intg pipenv run ./manage.py shell -i python
+
 run:
 	pipenv run ./manage.py runserver
 
