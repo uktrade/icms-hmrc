@@ -32,6 +32,12 @@ jobs:
           name: Install Dependencies
           command: pipenv sync --dev
 
+      - run:
+          name: Install code coverage
+          command: |
+            curl -Os https://uploader.codecov.io/latest/linux/codecov
+            chmod +x codecov
+
       - save_cache:
           paths:
             - ./venv
@@ -51,6 +57,10 @@ jobs:
           name: Run Bandit tests
           command: |
             pipenv run bandit -r .
+      - run:
+          name: Upload code coverage
+          command: ./codecov
+
   linting:
     docker:
       - image: circleci/python:3.7
