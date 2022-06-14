@@ -27,3 +27,6 @@ cov:
 
 cov-report:
 	docker exec -it lite-hmrc-intg pipenv run coverage report
+
+run-icms:
+	docker-compose -f docker-compose.yml -f docker-compose-icms.yml up
