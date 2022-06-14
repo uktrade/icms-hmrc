@@ -19,6 +19,9 @@ run:
 check-format:
 	black --check ./mail
 
+check-prospector:
+	docker exec -it lite-hmrc-intg pipenv run prospector -W pylint -W pep257
+
 cov:
 	docker exec -it lite-hmrc-intg pipenv run coverage run --source='.' manage.py test mail
 
