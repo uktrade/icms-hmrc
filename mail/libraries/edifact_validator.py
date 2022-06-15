@@ -1,6 +1,10 @@
 import re
 
+from django.conf import settings
+
 from mail.enums import LITE_HMRC_LICENCE_TYPE_MAPPING, LicenceActionEnum
+
+from . import chieftypes
 
 FILE_HEADER_FIELDS_LEN = 8
 LICENCE_TRANSACTION_HEADER_FIELDS_LEN = 9
@@ -69,8 +73,10 @@ def validate_licence_transaction_header(data_identifier, record):
     if tokens[5] not in VALID_LICENCE_TYPES:
         errors.append({record_type: f"Invalid licence type {tokens[5]} in the record"})
 
-    if tokens[6] != "E":
-        errors.append({record_type: "licence transaction header is not of Export type"})
+    # Export check
+    if settings.CHIEF_SOURCE_SYSTEM == "SPIRE":
+        if tokens[6] != "E":
+            errors.append({record_type: "licence transaction header is not of Export type"})
 
     return errors
 
@@ -99,8 +105,6 @@ def validate_permitted_trader(record):
     errors = []
     tokens = record.split("\\")
     record_type = tokens[1]
-    TURN = tokens[2]
-    rpa_trader_id = tokens[3]
 
     if len(tokens) != PERMITTED_TRADER_HEADER_FIELDS_LEN:
         errors.append({record_type: f"{record_type} doesn't contain all necessary values"})
@@ -109,25 +113,31 @@ def validate_permitted_trader(record):
     if tokens[1] != "trader":
         errors.append({record_type: f"Invalid file header tag {tokens[1]}"})
 
-    if TURN == "" and rpa_trader_id == "":
+    # Use chief type rather than indexing into tokens
+    tr = chieftypes.Trader(*tokens)
+
+    if tr.turn == "" and tr.rpa_trader_id == "":
         errors.append({record_type: "RPA Trader Id must not be empty when TURN is empty"})
 
-    if len(rpa_trader_id) < 12 or len(rpa_trader_id) > 15:
-        errors.append({record_type: "RPA Trader Id must be of atleast 12 chars and max 15 chars wide"})
+    # Export check - ICMS sets turn
+    if settings.CHIEF_SOURCE_SYSTEM == "SPIRE":
+        if len(tr.rpa_trader_id) < 12 or len(tr.rpa_trader_id) > 15:
+            errors.append({record_type: "RPA Trader Id must be of atleast 12 chars and max 15 chars wide"})
 
-    if int(tokens[5]) < int(tokens[4]):
-        errors.append({record_type: "Invalid start and end dates for the licence"})
+    if tr.start_date and tr.end_date:
+        if int(tr.end_date) < int(tr.start_date):
+            errors.append({record_type: "Invalid start and end dates for the licence"})
 
-    organisation_name = tokens[6]
-    if len(organisation_name) > PERMITTED_TRADER_NAME_MAX_LEN:
+    if len(tr.name) > PERMITTED_TRADER_NAME_MAX_LEN:
         errors.append({record_type: f"Organisation name cannot exceed {PERMITTED_TRADER_NAME_MAX_LEN} chars"})
 
-    for i in range(5):
-        if len(tokens[7 + i]) > PERMITTED_TRADER_ADDR_LINE_MAX_LEN:
+    address_lines = [tr.address1, tr.address2, tr.address3, tr.address4, tr.address5]
+    for line in address_lines:
+        if len(line) > PERMITTED_TRADER_ADDR_LINE_MAX_LEN:
             errors.append({record_type: f"Address line cannot exceed {PERMITTED_TRADER_ADDR_LINE_MAX_LEN} chars"})
 
-    if not is_postcode_valid(tokens[12]):
-        errors.append({record_type: f"Invalid postcode found {tokens[12]}"})
+    if not is_postcode_valid(tr.postcode):
+        errors.append({record_type: f"Invalid postcode found {tr.postcode}"})
 
     return errors
 
@@ -224,8 +234,10 @@ def validate_licence_product_line(record):
     if controlled_by not in CONTROLLED_BY_VALUES:
         errors.append({record_type: "Invalid controlled by value"})
 
-    if len(tokens[10]) != 3:
-        errors.append({record_type: "Quantity unit field should be of 3 characters wide"})
+    # Export check
+    if settings.CHIEF_SOURCE_SYSTEM == "SPIRE":
+        if len(tokens[10]) != 3:
+            errors.append({record_type: "Quantity unit field should be of 3 characters wide"})
 
     return errors
 
