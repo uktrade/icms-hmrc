@@ -1,6 +1,10 @@
-from django.test import TestCase
+import uuid
+
+from django.test import TestCase, override_settings
+from rest_framework.exceptions import ErrorDetail
 
 from mail.enums import LicenceTypeEnum, UnitMapping
+from mail.icms_serializers import IcmsFaOilLicenceDataSerializer
 from mail.serializers import LiteLicenceDataSerializer
 
 
@@ -208,3 +212,117 @@ class LiteLicenceDataSerializerTestCase(TestCase):
 
                 self.assertDictEqual(serializer.errors, {})
                 self.assertTrue(is_valid)
+
+
+@override_settings(CHIEF_SOURCE_SYSTEM="ILBDOTI")
+class ICMSLicenceDataSerializerTestCase(TestCase):
+    def test_invalid_case_reference(self):
+        data = {"case_reference": "asdf/"}
+
+        serializer = IcmsFaOilLicenceDataSerializer(data=data)
+
+        self.assertFalse(serializer.is_valid())
+
+        expected_error = [ErrorDetail(string="This value does not match the required pattern.", code="invalid")]
+        self.assertEqual(serializer.errors["case_reference"], expected_error)
+
+    def test_valid_case_reference(self):
+        data = {"case_reference": "IMA/2022/00001"}
+        serializer = IcmsFaOilLicenceDataSerializer(data=data)
+        serializer.is_valid()
+        self.assertNotIn("case_reference", serializer.errors)
+
+        data = {"case_reference": "IMA/2022/00001/99"}
+        serializer = IcmsFaOilLicenceDataSerializer(data=data)
+        serializer.is_valid()
+        self.assertNotIn("case_reference", serializer.errors)
+
+    def test_valid_fa_oil_payload(self):
+        data = {
+            "type": "OIL",
+            "action": "insert",
+            "id": str(uuid.uuid4()),
+            "reference": "GBOIL9089667C",
+            "case_reference": "IMA/2022/00001",
+            "start_date": "2022-06-06",
+            "end_date": "2025-05-30",
+            "organisation": {
+                "eori_number": "112233445566",
+                "name": "org name",
+                "address": {
+                    "line_1": "line_1",
+                    "line_2": "line_2",
+                    "line_3": "line_3",
+                    "line_4": "line_4",
+                    "line_5": "line_5",
+                    "postcode": "S118ZZ",  # /PS-IGNORE
+                    "start_date": None,
+                    "end_date": None,
+                },
+            },
+            "country_group": "G001",
+            "restrictions": "Some restrictions.\n\n Some more restrictions",
+            "goods": [
+                {
+                    "description": (
+                        "Firearms, component parts thereof, or ammunition of"
+                        " any applicable commodity code, other than those"
+                        " falling under Section 5 of the Firearms Act 1968"
+                        " as amended."
+                    ),
+                }
+            ],
+        }
+
+        serializer = IcmsFaOilLicenceDataSerializer(data=data)
+
+        is_valid = serializer.is_valid()
+
+        self.assertTrue(is_valid)
+
+        # Check all the keys here are in the validated data
+        for key in data.keys():
+            self.assertIn(key, serializer.validated_data)
+
+    def test_at_least_one_country_field_is_set(self):
+        data = {
+            "type": "OIL",
+            "action": "insert",
+            "id": str(uuid.uuid4()),
+            "reference": "GBOIL9089667C",
+            "case_reference": "IMA/2022/00001",
+            "start_date": "2022-06-06",
+            "end_date": "2025-05-30",
+            "organisation": {
+                "eori_number": "112233445566",
+                "name": "org name",
+                "address": {
+                    "line_1": "line_1",
+                    "line_2": "line_2",
+                    "line_3": "line_3",
+                    "line_4": "line_4",
+                    "line_5": "line_5",
+                    "postcode": "S118ZZ",  # /PS-IGNORE
+                    "start_date": None,
+                    "end_date": None,
+                },
+            },
+            "restrictions": "Some restrictions.\n\n Some more restrictions",
+            "goods": [
+                {
+                    "description": (
+                        "Firearms, component parts thereof, or ammunition of"
+                        " any applicable commodity code, other than those"
+                        " falling under Section 5 of the Firearms Act 1968"
+                        " as amended."
+                    ),
+                }
+            ],
+        }
+
+        serializer = IcmsFaOilLicenceDataSerializer(data=data)
+
+        self.assertFalse(serializer.is_valid())
+
+        expected_error = [ErrorDetail(string="Either 'country_code' or 'country_group' should be set.", code="invalid")]
+        self.assertEqual(serializer.errors["non_field_errors"], expected_error)

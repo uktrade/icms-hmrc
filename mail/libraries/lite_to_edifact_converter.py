@@ -257,8 +257,8 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
         licence_ref=licence.reference,
         licence_type=licence_type,
         usage=usage_code,
-        start_date=payload.get("start_date").replace("-", ""),
-        end_date=payload.get("end_date").replace("-", ""),
+        start_date=get_date_field(payload, "start_date"),
+        end_date=get_date_field(payload, "end_date"),
     )
 
     trader = payload.get("organisation")
@@ -266,8 +266,8 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
 
     yield chieftypes.Trader(
         turn=trader.get("eori_number"),
-        start_date=trader.get("start_date", "").replace("-", ""),
-        end_date=trader.get("end_date", "").replace("-", ""),
+        start_date=get_date_field(trader, "start_date"),
+        end_date=get_date_field(trader, "end_date"),
         name=trader.get("name"),
         address1=trader_address.get("line_1"),
         address2=trader_address.get("line_2"),
@@ -293,6 +293,15 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
             yield chieftypes.LicenceDataLine(line_num=idx, goods_description=good["description"], controlled_by="O")
 
     yield chieftypes.End(start_record_type=chieftypes.Licence.type_)
+
+
+def get_date_field(obj, key, default="") -> str:
+    val = obj.get(key)
+
+    if not val:
+        return default
+
+    return val.replace("-", "")
 
 
 def get_restrictions(licence: LicencePayload) -> chieftypes.Restrictions:

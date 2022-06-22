@@ -1,15 +1,21 @@
 import logging
+from typing import TYPE_CHECKING, Type
 
+from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from conf.authentication import HawkOnlyAuthentication
-from mail.enums import LicenceActionEnum, ReceptionStatusEnum
+from mail import icms_serializers
+from mail.enums import LicenceActionEnum, LicenceTypeEnum, ReceptionStatusEnum
 from mail.models import LicenceData, LicenceIdMapping, LicencePayload, Mail
 from mail.serializers import LiteLicenceDataSerializer, MailSerializer
 from mail.tasks import send_licence_data_to_hmrc
+
+if TYPE_CHECKING:
+    from rest_framework.serializers import Serializer  # noqa
 
 
 class LicenceDataIngestView(APIView):
@@ -23,7 +29,8 @@ class LicenceDataIngestView(APIView):
 
             return JsonResponse(status=status.HTTP_400_BAD_REQUEST, data={"errors": errors})
 
-        serializer = LiteLicenceDataSerializer(data=data)
+        serializer_cls = self.get_serializer_cls(data["type"])
+        serializer = serializer_cls(data=data)
 
         if not serializer.is_valid():
             errors = [{"licence": serializer.errors}]
@@ -55,6 +62,14 @@ class LicenceDataIngestView(APIView):
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
             data={"licence": licence.data},
         )
+
+    def get_serializer_cls(self, app_type: str) -> Type["Serializer"]:
+        if settings.CHIEF_SOURCE_SYSTEM == "ILBDOTI":
+            serializers = {LicenceTypeEnum.IMPORT_OIL: icms_serializers.IcmsFaOilLicenceDataSerializer}
+
+            return serializers[app_type]
+
+        return LiteLicenceDataSerializer
 
 
 class SendLicenceUpdatesToHmrc(APIView):
