@@ -4,14 +4,18 @@ from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
 from mohawk import Receiver
 from mohawk.exc import AlreadyProcessed, HawkFail
-from rest_framework import authentication
+from rest_framework import authentication, exceptions
+from sentry_sdk import capture_exception
 
 from conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 class HawkOnlyAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
-        """
+        """Authenticate the request and return a two-tuple of (user, token).
+
         Establish that the request has come from an authorised LITE API client
         by checking that the request is correctly Hawk signed
         """
@@ -19,10 +23,22 @@ class HawkOnlyAuthentication(authentication.BaseAuthentication):
         try:
             hawk_receiver = _authenticate(request)
         except HawkFail as e:
-            logging.warning("Failed HAWK authentication %s", e)
-            raise e
+            logger.warning("Failed HAWK authentication %s", e)
+
+            raise exceptions.AuthenticationFailed(f"Failed HAWK authentication")
+
+        except Exception as e:
+            logger.error("Failed HAWK authentication %s", e)
+
+            if settings.SENTRY_ENABLED:
+                capture_exception(e)
+
+            raise exceptions.AuthenticationFailed(f"Failed HAWK authentication")
 
         return AnonymousUser(), hawk_receiver
+
+    def authenticate_header(self, request):
+        return "Hawk"
 
 
 def _authenticate(request):
