@@ -46,7 +46,7 @@ def _authenticate(request):
     Raises a HawkFail exception if the passed request cannot be authenticated
     """
 
-    if settings.HAWK_AUTHENTICATION_ENABLED:
+    if hawk_authentication_enabled():
         return Receiver(
             _lookup_credentials,
             request.META["HTTP_HAWK_AUTHENTICATION"],
@@ -91,3 +91,14 @@ def _lookup_credentials(access_key_id):
         "algorithm": "sha256",
         **credentials,
     }
+
+
+def hawk_authentication_enabled() -> bool:
+    """Defined as method as you can't override settings.HAWK_AUTHENTICATION_ENABLED correctly in tests.
+
+    Patch this function to get desired behaviour.
+    See here for reason:
+    https://stackoverflow.com/questions/29367043/unit-testing-django-rest-framework-authentication-at-runtime
+    """
+
+    return settings.HAWK_AUTHENTICATION_ENABLED
