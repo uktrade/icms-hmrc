@@ -1,0 +1,25 @@
+from conf.settings import *  # noqa
+
+# Remove all json logging
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        "conf": {"handlers": ["console"], "level": "DEBUG"},
+        "mail": {"handlers": ["console"], "level": "DEBUG"},
+        # Enable if having issues with mohawk
+        # "mohawk": {
+        #     'handlers': ['console'],
+        #     "level": "DEBUG"
+        # }
+    },
+}
