@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Iterable
 
 from django.utils import timezone
 
-from mail.enums import LITE_HMRC_LICENCE_TYPE_MAPPING, LicenceActionEnum, LicenceTypeEnum, UnitMapping
+from mail.enums import LITE_HMRC_LICENCE_TYPE_MAPPING, ChiefSystemEnum, LicenceActionEnum, LicenceTypeEnum, UnitMapping
 from mail.libraries import chiefprotocol, chieftypes
 from mail.libraries.edifact_validator import (
     FOREIGN_TRADER_ADDR_LINE_MAX_LEN,
@@ -179,7 +179,7 @@ def licences_to_edifact(
 
     logging.info("File header: %r", file_header)
 
-    if source == "ILBDOTI":
+    if source == ChiefSystemEnum.ICMS:
         get_licence_lines = generate_lines_for_icms_licence
     else:
         get_licence_lines = generate_lines_for_licence

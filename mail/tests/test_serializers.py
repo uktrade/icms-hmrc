@@ -3,7 +3,7 @@ import uuid
 from django.test import TestCase, override_settings
 from rest_framework.exceptions import ErrorDetail
 
-from mail.enums import LicenceTypeEnum, UnitMapping
+from mail.enums import ChiefSystemEnum, LicenceTypeEnum, UnitMapping
 from mail.icms_serializers import IcmsFaOilLicenceDataSerializer
 from mail.serializers import LiteLicenceDataSerializer
 
@@ -214,7 +214,7 @@ class LiteLicenceDataSerializerTestCase(TestCase):
                 self.assertTrue(is_valid)
 
 
-@override_settings(CHIEF_SOURCE_SYSTEM="ILBDOTI")
+@override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
 class ICMSLicenceDataSerializerTestCase(TestCase):
     def test_invalid_case_reference(self):
         data = {"case_reference": "asdf/"}

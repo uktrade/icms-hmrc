@@ -40,6 +40,7 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
             build_sent_filename(mail.edi_filename, run_number),
             build_sent_file_data(mail.edi_data, run_number),
         ]
+
     elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
         sender = settings.HMRC_ADDRESS
         receiver = settings.SPIRE_ADDRESS
@@ -202,7 +203,7 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
     )
 
 
-def build_licence_data_mail(licences: "QuerySet[LicencePayload]") -> Mail:
+def build_licence_data_mail(licences: "QuerySet[LicencePayload]", source: SourceEnum) -> Mail:
     last_lite_update = LicenceData.objects.last()
     run_number = last_lite_update.hmrc_run_number + 1 if last_lite_update else 1
     when = timezone.now()
@@ -215,7 +216,7 @@ def build_licence_data_mail(licences: "QuerySet[LicencePayload]") -> Mail:
     )
     logger.info("New Mail instance (%s) created for filename %s", mail.id, file_name)
     licence_ids = json.dumps([licence.reference for licence in licences])
-    LicenceData.objects.create(hmrc_run_number=run_number, source=SourceEnum.LITE, mail=mail, licence_ids=licence_ids)
+    LicenceData.objects.create(hmrc_run_number=run_number, source=source, mail=mail, licence_ids=licence_ids)
 
     return mail
 
