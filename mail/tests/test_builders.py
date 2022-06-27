@@ -4,7 +4,7 @@ from pathlib import Path
 from django.conf import settings
 from django.test import override_settings, testcases
 
-from mail.enums import LicenceActionEnum, LicenceTypeEnum
+from mail.enums import ChiefSystemEnum, LicenceActionEnum, LicenceTypeEnum
 from mail.libraries import builders
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.models import LicencePayload
@@ -81,7 +81,7 @@ class BuildLicenceDataFileTests(testcases.TestCase):
         self.assertEqual(filename, "CHIEF_LIVE_FOO_licenceData_1_199912310000")
 
 
-@override_settings(CHIEF_SOURCE_SYSTEM="ILBDOTI")
+@override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
 class TestBuildICMSLicenceData(testcases.TestCase):
     def setUp(self) -> None:
         self.licence = LicencePayload.objects.create(

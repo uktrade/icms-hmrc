@@ -172,6 +172,12 @@ class SourceEnum(TextChoices):
     ICMS = "ICMS", "ICMS"
 
 
+# System names recognised by CHIEF
+class ChiefSystemEnum(TextChoices):
+    ICMS = "ILBDOTI"
+    SPIRE = "SPIRE"
+
+
 # We want a duplicate entry for ITG, so cannot use Django's enum.
 class UnitMapping(enum.Enum):
     NAR = 30  # number
