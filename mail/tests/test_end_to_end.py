@@ -96,7 +96,7 @@ class ICMSEndToEndTests(testcases.TestCase):
         ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
 
         # Replace the hardcoded date in the test file with the one in the email.
-        test_file = Path("mail/tests/files/icms/icms_chief_licence_data_file")
+        test_file = Path("mail/tests/files/icms/icms_chief_licence_data_file_fa_oil")
         expected_content = test_file.read_text().replace("202201011011", ymdhm_timestamp).strip()
         self.assertEqual(expected_content, body)
 
