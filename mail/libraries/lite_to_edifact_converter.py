@@ -1,11 +1,12 @@
+import datetime
 import logging
 import re
 import textwrap
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
 
 from django.utils import timezone
 
-from mail.enums import LITE_HMRC_LICENCE_TYPE_MAPPING, LicenceActionEnum, LicenceTypeEnum, UnitMapping
+from mail.enums import LITE_HMRC_LICENCE_TYPE_MAPPING, ChiefSystemEnum, LicenceActionEnum, LicenceTypeEnum, UnitMapping
 from mail.libraries import chiefprotocol, chieftypes
 from mail.libraries.edifact_validator import (
     FOREIGN_TRADER_ADDR_LINE_MAX_LEN,
@@ -15,12 +16,15 @@ from mail.libraries.edifact_validator import (
 from mail.libraries.helpers import get_country_id
 from mail.models import GoodIdMapping, LicencePayload
 
+if TYPE_CHECKING:
+    from django.db.models import QuerySet  # noqa
+
 
 class EdifactValidationError(Exception):
     pass
 
 
-def generate_lines_for_licence(licence):
+def generate_lines_for_licence(licence: LicencePayload) -> Iterable[chieftypes._Record]:
     """Yield line tuples for a single licence, to use in a CHIEF message.
 
     The line tuples have no numbering (line numbers are calculated after
@@ -145,14 +149,20 @@ def generate_lines_for_licence(licence):
     yield chieftypes.End(start_record_type=chieftypes.Licence.type_)
 
 
-def licences_to_edifact(licences: Iterable[LicencePayload], run_number: int, source: str) -> str:
+def licences_to_edifact(
+    licences: "QuerySet[LicencePayload]", run_number: int, source: str, when: datetime.datetime = None
+) -> str:
     # Build a list of lines, with each line a tuple. After we have all the
     # lines, we format them ("\" as field separator) and insert the line
     # numbers. Some lines reference previous line numbers, so we need to
     # track those.
     lines = []
 
-    time_stamp = timezone.now().strftime("%Y%m%d%H%M")  # YYYYMMDDhhmm
+    if not when:
+        when = timezone.now()
+
+    time_stamp = when.strftime("%Y%m%d%H%M")  # YYYYMMDDhhmm
+
     # Setting this to Y will override the hmrc run number with the run number in this file.
     # This is usually set to N in almost all cases
     reset_run_number_indicator = "N"
@@ -169,9 +179,13 @@ def licences_to_edifact(licences: Iterable[LicencePayload], run_number: int, sou
 
     logging.info("File header: %r", file_header)
 
+    if source == ChiefSystemEnum.ICMS:
+        get_licence_lines = generate_lines_for_icms_licence
+    else:
+        get_licence_lines = generate_lines_for_licence
+
     for licence in licences:
-        licence_lines = list(generate_lines_for_licence(licence))
-        lines.extend(licence_lines)
+        lines.extend(get_licence_lines(licence))
 
     # File trailer includes the number of licences, but +1 for each "update"
     # because this code represents those as "cancel" followed by "insert".
@@ -223,3 +237,75 @@ def sanitize_foreign_trader_address(trader):
         address[f"line_{index}"] = line
 
     return trader
+
+
+def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chieftypes._Record]:
+    """Yield lines for a single ICMS licence, to use in a CHIEF message."""
+
+    payload = licence.data
+    usage_code = "I"
+    licence_type = "OIL"
+
+    supported_actions = [LicenceActionEnum.INSERT]
+
+    if licence.action not in supported_actions:
+        raise NotImplementedError(f"Action {licence.action} not supported yet")
+
+    yield chieftypes.Licence(
+        transaction_ref=payload["case_reference"],
+        action=licence.action,
+        licence_ref=licence.reference,
+        licence_type=licence_type,
+        usage=usage_code,
+        start_date=get_date_field(payload, "start_date"),
+        end_date=get_date_field(payload, "end_date"),
+    )
+
+    trader = payload.get("organisation")
+    trader_address = trader.get("address")
+
+    yield chieftypes.Trader(
+        turn=trader.get("eori_number"),
+        start_date=get_date_field(trader, "start_date"),
+        end_date=get_date_field(trader, "end_date"),
+        name=trader.get("name"),
+        address1=trader_address.get("line_1"),
+        address2=trader_address.get("line_2"),
+        address3=trader_address.get("line_3"),
+        address4=trader_address.get("line_4"),
+        address5=trader_address.get("line_5"),
+        postcode=trader_address.get("postcode"),
+    )
+
+    kwargs = {"use": "O"}
+    if payload.get("country_group"):
+        yield chieftypes.Country(group=payload.get("country_group"), **kwargs)
+
+    elif payload.get("countries"):
+        for country in payload.get("countries"):
+            country_id = get_country_id(country)
+            yield chieftypes.Country(code=country_id, **kwargs)
+
+    yield get_restrictions(licence)
+
+    if payload.get("goods"):
+        for idx, good in enumerate(payload.get("goods"), start=1):
+            yield chieftypes.LicenceDataLine(line_num=idx, goods_description=good["description"], controlled_by="O")
+
+    yield chieftypes.End(start_record_type=chieftypes.Licence.type_)
+
+
+def get_date_field(obj, key, default="") -> str:
+    val = obj.get(key)
+
+    if not val:
+        return default
+
+    return val.replace("-", "")
+
+
+def get_restrictions(licence: LicencePayload) -> chieftypes.Restrictions:
+    restrictions: str = licence.data.get("restrictions", "")
+    text = restrictions.replace("\n", "|").strip()
+
+    return chieftypes.Restrictions(text=text)

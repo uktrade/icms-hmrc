@@ -1,9 +1,10 @@
+import datetime
 import json
 import logging
-from datetime import datetime
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from typing import TYPE_CHECKING, Tuple
 
 from django.conf import settings
 from django.utils import timezone
@@ -18,6 +19,11 @@ from mail.libraries.usage_data_decomposition import build_edifact_file_from_data
 from mail.models import LicenceData, Mail, UsageData
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from django.db.models import QuerySet  # noqa
+
+    from mail.models import LicencePayload  # noqa
 
 
 def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
@@ -34,6 +40,7 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
             build_sent_filename(mail.edi_filename, run_number),
             build_sent_file_data(mail.edi_data, run_number),
         ]
+
     elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
         sender = settings.HMRC_ADDRESS
         receiver = settings.SPIRE_ADDRESS
@@ -59,7 +66,7 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
         run_number=run_number,
         sender=sender,
         receiver=receiver,
-        date=datetime.now(),
+        date=timezone.now(),
         subject=attachment[0],
         body=None,
         attachment=attachment,
@@ -112,7 +119,7 @@ def _build_request_mail_message_dto_internal(mail: Mail) -> EmailMessageDto:
         run_number=run_number,
         sender=sender,
         receiver=receiver,
-        date=datetime.now(),
+        date=timezone.now(),
         subject=attachment[0],
         body=None,
         attachment=attachment,
@@ -189,14 +196,14 @@ def build_reply_mail_message_dto(mail) -> EmailMessageDto:
         sender=sender,
         receiver=receiver,
         subject=attachment[0],
-        date=datetime.now(),
+        date=timezone.now(),
         body=None,
         attachment=attachment,
         raw_data=None,
     )
 
 
-def build_licence_data_mail(licences) -> Mail:
+def build_licence_data_mail(licences: "QuerySet[LicencePayload]", source: SourceEnum) -> Mail:
     last_lite_update = LicenceData.objects.last()
     run_number = last_lite_update.hmrc_run_number + 1 if last_lite_update else 1
     when = timezone.now()
@@ -209,17 +216,19 @@ def build_licence_data_mail(licences) -> Mail:
     )
     logger.info("New Mail instance (%s) created for filename %s", mail.id, file_name)
     licence_ids = json.dumps([licence.reference for licence in licences])
-    LicenceData.objects.create(hmrc_run_number=run_number, source=SourceEnum.LITE, mail=mail, licence_ids=licence_ids)
+    LicenceData.objects.create(hmrc_run_number=run_number, source=source, mail=mail, licence_ids=licence_ids)
 
     return mail
 
 
-def build_licence_data_file(licences, run_number, when):
+def build_licence_data_file(
+    licences: "QuerySet[LicencePayload]", run_number: int, when: datetime.datetime
+) -> Tuple[str, str]:
     system = settings.CHIEF_SOURCE_SYSTEM
     file_name = f"CHIEF_LIVE_{system}_licenceData_{run_number}_{when:%Y%m%d%H%M}"
-    logger.info("Building licenceData file %s for %s licences", file_name, len(licences))
+    logger.info("Building licenceData file %s for %s licences", file_name, licences.count())
 
-    file_content = licences_to_edifact(licences, run_number, system)
+    file_content = licences_to_edifact(licences, run_number, system, when)
 
     return file_name, file_content
 

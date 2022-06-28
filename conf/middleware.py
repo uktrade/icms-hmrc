@@ -5,6 +5,8 @@ import uuid
 from mohawk import Receiver
 from mohawk.util import prepare_header_val, utc_now
 
+logger = logging.getLogger(__name__)
+
 
 class LoggingMiddleware:
     def __init__(self, get_response=None):
@@ -17,7 +19,7 @@ class LoggingMiddleware:
             correlation = request.META["HTTP_X_CORRELATION_ID"]
         request.correlation = correlation or uuid.uuid4().hex
         response = self.get_response(request)
-        logging.info(
+        logger.info(
             {
                 "message": "liteolog hmrc",
                 "corrID": request.correlation,

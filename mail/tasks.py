@@ -13,7 +13,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework.status import HTTP_207_MULTI_STATUS, HTTP_208_ALREADY_REPORTED
 
-from mail.enums import ReceptionStatusEnum
+from mail.enums import ChiefSystemEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.builders import build_licence_data_mail
 from mail.libraries.data_processors import build_request_mail_message_dto
 from mail.libraries.lite_to_edifact_converter import EdifactValidationError
@@ -208,7 +208,8 @@ def send_licence_data_to_hmrc():
 
     Return: True if successful
     """
-    logger.info("Sending LITE licence updates to HMRC")
+    source = SourceEnum.ICMS if settings.CHIEF_SOURCE_SYSTEM == ChiefSystemEnum.ICMS else SourceEnum.LITE
+    logger.info(f"Sending {source} licence updates to HMRC")
 
     if Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT).count():
         logger.info(
@@ -225,7 +226,7 @@ def send_licence_data_to_hmrc():
                 logger.info("There are currently no licences to send")
                 return
 
-            mail = build_licence_data_mail(licences)
+            mail = build_licence_data_mail(licences, source)
             mail_dto = build_request_mail_message_dto(mail)
             licence_references = [licence.reference for licence in licences]
             logger.info(
@@ -243,12 +244,13 @@ def send_licence_data_to_hmrc():
         raise err
     except Exception as exc:  # noqa
         logger.error(
-            "An unexpected error occurred when sending LITE licence updates to HMRC -> %s",
+            "An unexpected error occurred when sending %s licence updates to HMRC -> %s",
+            source,
             type(exc).__name__,
             exc_info=True,
         )
     else:
-        logger.info("Successfully sent LITE licences updates in Mail [%s] to HMRC", mail.id)
+        logger.info("Successfully sent %s licences updates in Mail [%s] to HMRC", source, mail.id)
         return True
 
 

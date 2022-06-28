@@ -230,6 +230,9 @@ if env.str("SENTRY_DSN", ""):
         integrations=[DjangoIntegration()],
         send_default_pii=True,
     )
+    SENTRY_ENABLED = True
+else:
+    SENTRY_ENABLED = False
 
 # Application Performance Monitoring
 if env.str("ELASTIC_APM_SERVER_URL", ""):
