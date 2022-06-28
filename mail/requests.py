@@ -12,6 +12,8 @@ from django.core.cache import cache
 from mohawk import Sender
 from mohawk.exc import AlreadyProcessed
 
+from conf.authentication import hawk_authentication_enabled
+
 
 class RequestException(Exception):
     """Exceptions to raise when sending requests."""
@@ -37,7 +39,7 @@ def make_request(method, url, data=None, headers=None, hawk_credentials=None, ti
     headers = headers or {}  # If no headers are supplied, default to an empty dictionary
     headers["content-type"] = "application/json"
 
-    if settings.HAWK_AUTHENTICATION_ENABLED:
+    if hawk_authentication_enabled():
         if not hawk_credentials:
             raise RequestException("'hawk_credentials' must be specified when 'HAWK_AUTHENTICATION_ENABLED' is 'True'")
 

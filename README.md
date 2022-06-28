@@ -9,6 +9,9 @@ An `.env` file is expected at the root of project.
 
 Copy the template .env file: `cp local.env .env`
 
+Copy the template local_settings.sample if required: `cp local_settings.sample local_settings.py`
+
+
 ### Running in Docker
 To run in docker do the following
 - Configure .env file - Using local.env as a starting point:

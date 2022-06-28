@@ -106,6 +106,9 @@ class LicenceTypeEnum(TextChoices):
     OGCL = "ogcl", "Open General Trade Control Licence"
     OGTL = "ogtl", "Open General Transhipment Licence"
 
+    # ICMS Licence types
+    IMPORT_OIL = "OIL", "Open Individual Import Licence"
+
     @classproperty
     def STANDARD_LICENCES(cls):
         return [cls.SIEL, cls.SICL, cls.SITL]
@@ -128,6 +131,8 @@ LITE_HMRC_LICENCE_TYPE_MAPPING = {
     LicenceTypeEnum.OGEL.value: "OGE",
     LicenceTypeEnum.OGCL.value: "OGE",
     LicenceTypeEnum.OGTL.value: "OGE",
+    # ICMS Licence types
+    LicenceTypeEnum.IMPORT_OIL.value: "OIL",
 }
 
 
@@ -165,6 +170,12 @@ class SourceEnum(TextChoices):
     LITE = "LITE", "LITE"
     HMRC = "HMRC", "HMRC"
     ICMS = "ICMS", "ICMS"
+
+
+# System names recognised by CHIEF
+class ChiefSystemEnum(TextChoices):
+    ICMS = "ILBDOTI"
+    SPIRE = "SPIRE"
 
 
 # We want a duplicate entry for ITG, so cannot use Django's enum.

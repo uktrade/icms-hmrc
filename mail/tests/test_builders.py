@@ -1,10 +1,13 @@
 import datetime
+from pathlib import Path
 
 from django.conf import settings
-from django.test import testcases
+from django.test import override_settings, testcases
 
+from mail.enums import ChiefSystemEnum, LicenceActionEnum, LicenceTypeEnum
 from mail.libraries import builders
 from mail.libraries.email_message_dto import EmailMessageDto
+from mail.models import LicencePayload
 
 
 class BuildEmailMessageTest(testcases.TestCase):
@@ -64,7 +67,7 @@ class BuildLicenceDataFileTests(testcases.TestCase):
 
         for when, expected in data:
             with self.subTest(when=when, expected=expected):
-                filename, _ = builders.build_licence_data_file([], 1, when)
+                filename, _ = builders.build_licence_data_file(LicencePayload.objects.none(), 1, when)
 
                 self.assertEqual(filename, expected)
 
@@ -73,6 +76,63 @@ class BuildLicenceDataFileTests(testcases.TestCase):
         when = datetime.datetime(1999, 12, 31)
 
         with self.settings(CHIEF_SOURCE_SYSTEM="FOO"):
-            filename, _ = builders.build_licence_data_file([], 1, when)
+            filename, _ = builders.build_licence_data_file(LicencePayload.objects.none(), 1, when)
 
         self.assertEqual(filename, "CHIEF_LIVE_FOO_licenceData_1_199912310000")
+
+
+@override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
+class TestBuildICMSLicenceData(testcases.TestCase):
+    def setUp(self) -> None:
+        self.licence = LicencePayload.objects.create(
+            lite_id="deaa301d-d978-473b-b76b-da275f28f447",
+            reference="GBOIL9089667C",
+            action=LicenceActionEnum.INSERT,
+            data={
+                "type": LicenceTypeEnum.IMPORT_OIL.value,
+                "case_reference": "IMA/2022/00001",
+                "start_date": "2022-06-06",
+                "end_date": "2025-05-30",
+                "organisation": {
+                    "eori_number": "112233445566",
+                    "name": "org name",
+                    "address": {
+                        "line_1": "line_1",
+                        "line_2": "line_2",
+                        "line_3": "line_3",
+                        "line_4": "line_4",
+                        "line_5": "line_5",
+                        "postcode": "S118ZZ",
+                    },
+                },
+                "country_group": "G001",
+                "restrictions": "Some restrictions.\n\n Some more restrictions",
+                "goods": [
+                    {
+                        "description": (
+                            "Firearms, component parts thereof, or ammunition of"
+                            " any applicable commodity code, other than those"
+                            " falling under Section 5 of the Firearms Act 1968"
+                            " as amended."
+                        )
+                    }
+                ],
+            },
+        )
+
+        self.test_file = Path("mail/tests/files/icms/icms_chief_licence_data_file")
+        self.assertTrue(self.test_file.is_file())
+
+    def test_generate_icms_licence_file(self):
+        self.assertEqual(self.licence.reference, "GBOIL9089667C")
+
+        licences = LicencePayload.objects.filter(pk=self.licence.pk)
+        run_number = 1
+        when = datetime.datetime(2022, 1, 1, 10, 11, 00)
+
+        filename, file_content = builders.build_licence_data_file(licences, run_number, when)
+
+        self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
+
+        expected_content = self.test_file.read_text()
+        self.assertEqual(expected_content, file_content)
