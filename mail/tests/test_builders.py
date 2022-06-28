@@ -153,11 +153,8 @@ class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
                 "postcode": "S881ZZ",
             },
         }
-        restrictions = (
-            "Not valid for items originating in or consigned from Iran, North"
-            " Korea, Libya, Syria or the Russian Federation.(including any"
-            " previous name by which these territories have been known)."
-        )
+
+        restrictions = "Sample restrictions"
 
         LicencePayload.objects.create(
             lite_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
@@ -171,7 +168,7 @@ class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
                 "organisation": org_data,
                 "country_code": "US",
                 "restrictions": restrictions,
-                "goods": [{"description": "Penn Arms 40mm multi shot launcher Model PGL6-40LR. serial No PGR 135"}],
+                "goods": [{"description": "Sample goods description"}],
             },
         )
 
@@ -187,7 +184,7 @@ class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
                 "organisation": org_data,
                 "country_code": "US",
                 "restrictions": restrictions,
-                "goods": [{"description": "Penn Arms 40 mm single shot launcher serial No GSC 1986"}],
+                "goods": [{"description": "Sample goods description 2"}],
             },
         )
 

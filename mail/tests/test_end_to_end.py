@@ -50,7 +50,7 @@ class EndToEndTests(LiteHMRCTestClient):
 
 @override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
 class ICMSEndToEndTests(testcases.TestCase):
-    def test_ismc_send_email_to_hmrc_e2e(self):
+    def test_icms_send_email_to_hmrc_fa_oil_e2e(self):
         clear_stmp_mailbox()
         self.client.get(reverse("mail:set_all_to_reply_sent"))
 
@@ -103,3 +103,67 @@ class ICMSEndToEndTests(testcases.TestCase):
         encoded_reference_code = quote("GBOIL9089667C", safe="")
         response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
         self.assertEqual(response.json()["status"], "reply_pending")
+
+    def test_icms_send_email_to_hmrc_fa_dfl_e2e(self):
+        clear_stmp_mailbox()
+        self.client.get(reverse("mail:set_all_to_reply_sent"))
+
+        org_data = {
+            "eori_number": "665544332211",
+            "name": "DFL Organisation",
+            "address": {
+                "line_1": "line_1",
+                "line_2": "line_2",
+                "line_3": "line_3",
+                "line_4": "line_4",
+                "line_5": "",
+                "postcode": "S881ZZ",
+            },
+        }
+        restrictions = "Sample restrictions"
+
+        data = {
+            "type": "DFL",
+            "action": "insert",
+            "id": "4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
+            "reference": "GBSIL9089277C",
+            "case_reference": "IMA/2022/00002",
+            "start_date": "2022-01-14",
+            "end_date": "2022-07-14",
+            "organisation": org_data,
+            "country_code": "US",
+            "restrictions": restrictions,
+            "goods": [{"description": "Sample goods description"}],
+        }
+        resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
+        self.assertEqual(resp.status_code, 201)
+
+        data = {
+            "type": "DFL",
+            "action": "insert",
+            "id": "f4142c5a-19f8-40b4-a9a8-46362eaa85c6",
+            "reference": "GBSIL9089278D",
+            "case_reference": "IMA/2022/00003",
+            "start_date": "2022-01-14",
+            "end_date": "2022-07-14",
+            "organisation": org_data,
+            "country_code": "US",
+            "restrictions": restrictions,
+            "goods": [{"description": "Sample goods description 2"}],
+        }
+        resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
+        self.assertEqual(resp.status_code, 201)
+
+        self.client.get(reverse("mail:send_updates_to_hmrc"))
+        body = get_smtp_body().replace("\r", "")
+        ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
+
+        # Replace the hardcoded date in the test file with the one in the email.
+        test_file = Path("mail/tests/files/icms/icms_chief_licence_data_file_fa_dfl")
+        expected_content = test_file.read_text().replace("202201011011", ymdhm_timestamp).strip()
+        self.assertEqual(expected_content, body)
+
+        for ref in ["GBSIL9089277C", "GBSIL9089278D"]:
+            encoded_reference_code = quote(ref, safe="")
+            response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
+            self.assertEqual(response.json()["status"], "reply_pending", f"{ref} has incorrect status")
