@@ -244,7 +244,7 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
 
     payload = licence.data
     usage_code = "I"
-    licence_type = "OIL"
+    licence_type = LITE_HMRC_LICENCE_TYPE_MAPPING[payload["type"]]
 
     supported_actions = [LicenceActionEnum.INSERT]
 
@@ -281,10 +281,8 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
     if payload.get("country_group"):
         yield chieftypes.Country(group=payload.get("country_group"), **kwargs)
 
-    elif payload.get("countries"):
-        for country in payload.get("countries"):
-            country_id = get_country_id(country)
-            yield chieftypes.Country(code=country_id, **kwargs)
+    elif payload.get("country_code"):
+        yield chieftypes.Country(code=payload.get("country_code"), **kwargs)
 
     yield get_restrictions(licence)
 

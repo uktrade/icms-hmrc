@@ -107,7 +107,9 @@ class LicenceTypeEnum(TextChoices):
     OGTL = "ogtl", "Open General Transhipment Licence"
 
     # ICMS Licence types
+    IMPORT_DFL = "DFL", "Deactivated Firearms Licence"
     IMPORT_OIL = "OIL", "Open Individual Import Licence"
+    IMPORT_SIL = "SIL", "Specific Individual Import Licence"
 
     @classproperty
     def STANDARD_LICENCES(cls):
@@ -132,7 +134,9 @@ LITE_HMRC_LICENCE_TYPE_MAPPING = {
     LicenceTypeEnum.OGCL.value: "OGE",
     LicenceTypeEnum.OGTL.value: "OGE",
     # ICMS Licence types
+    LicenceTypeEnum.IMPORT_DFL.value: "SIL",
     LicenceTypeEnum.IMPORT_OIL.value: "OIL",
+    LicenceTypeEnum.IMPORT_SIL.value: "SIL",
 }
 
 

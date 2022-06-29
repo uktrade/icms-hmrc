@@ -67,7 +67,10 @@ class LicenceDataIngestView(APIView):
 
     def get_serializer_cls(self, app_type: str) -> Type["Serializer"]:
         if settings.CHIEF_SOURCE_SYSTEM == ChiefSystemEnum.ICMS:
-            serializers = {LicenceTypeEnum.IMPORT_OIL: icms_serializers.IcmsFaOilLicenceDataSerializer}
+            serializers = {
+                LicenceTypeEnum.IMPORT_OIL: icms_serializers.FaOilLicenceDataSerializer,
+                LicenceTypeEnum.IMPORT_DFL: icms_serializers.FaDflLicenceDataSerializer,
+            }
 
             return serializers[app_type]
 

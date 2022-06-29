@@ -82,7 +82,7 @@ class BuildLicenceDataFileTests(testcases.TestCase):
 
 
 @override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
-class TestBuildICMSLicenceData(testcases.TestCase):
+class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
     def setUp(self) -> None:
         self.licence = LicencePayload.objects.create(
             lite_id="deaa301d-d978-473b-b76b-da275f28f447",
@@ -120,13 +120,82 @@ class TestBuildICMSLicenceData(testcases.TestCase):
             },
         )
 
-        self.test_file = Path("mail/tests/files/icms/icms_chief_licence_data_file")
+        self.test_file = Path("mail/tests/files/icms/icms_chief_licence_data_file_fa_oil")
         self.assertTrue(self.test_file.is_file())
 
     def test_generate_icms_licence_file(self):
         self.assertEqual(self.licence.reference, "GBOIL9089667C")
 
         licences = LicencePayload.objects.filter(pk=self.licence.pk)
+        run_number = 1
+        when = datetime.datetime(2022, 1, 1, 10, 11, 00)
+
+        filename, file_content = builders.build_licence_data_file(licences, run_number, when)
+
+        self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
+
+        expected_content = self.test_file.read_text()
+        self.assertEqual(expected_content, file_content)
+
+
+@override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
+class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
+    def setUp(self) -> None:
+        org_data = {
+            "eori_number": "665544332211",
+            "name": "DFL Organisation",
+            "address": {
+                "line_1": "line_1",
+                "line_2": "line_2",
+                "line_3": "line_3",
+                "line_4": "line_4",
+                "line_5": "",
+                "postcode": "S881ZZ",
+            },
+        }
+
+        restrictions = "Sample restrictions"
+
+        LicencePayload.objects.create(
+            lite_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
+            reference="GBSIL9089277C",
+            action=LicenceActionEnum.INSERT,
+            data={
+                "type": LicenceTypeEnum.IMPORT_DFL.value,
+                "case_reference": "IMA/2022/00002",
+                "start_date": "2022-01-14",
+                "end_date": "2022-07-14",
+                "organisation": org_data,
+                "country_code": "US",
+                "restrictions": restrictions,
+                "goods": [{"description": "Sample goods description"}],
+            },
+        )
+
+        LicencePayload.objects.create(
+            lite_id="f4142c5a-19f8-40b4-a9a8-46362eaa85c6",
+            reference="GBSIL9089278D",
+            action=LicenceActionEnum.INSERT,
+            data={
+                "type": LicenceTypeEnum.IMPORT_DFL.value,
+                "case_reference": "IMA/2022/00003",
+                "start_date": "2022-01-14",
+                "end_date": "2022-07-14",
+                "organisation": org_data,
+                "country_code": "US",
+                "restrictions": restrictions,
+                "goods": [{"description": "Sample goods description 2"}],
+            },
+        )
+
+        self.test_file = Path("mail/tests/files/icms/icms_chief_licence_data_file_fa_dfl")
+        self.assertTrue(self.test_file.is_file())
+
+    def test_generate_icms_licence_file(self):
+        # There should be two licences
+        licences = LicencePayload.objects.all()
+        self.assertEqual(licences.count(), 2)
+
         run_number = 1
         when = datetime.datetime(2022, 1, 1, 10, 11, 00)
 
