@@ -86,7 +86,7 @@ class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
     def setUp(self) -> None:
         self.licence = LicencePayload.objects.create(
             lite_id="deaa301d-d978-473b-b76b-da275f28f447",
-            reference="GBOIL9089667C",
+            reference="GBOIL2222222C",
             action=LicenceActionEnum.INSERT,
             data={
                 "type": LicenceTypeEnum.IMPORT_OIL.value,
@@ -124,7 +124,7 @@ class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
         self.assertTrue(self.test_file.is_file())
 
     def test_generate_icms_licence_file(self):
-        self.assertEqual(self.licence.reference, "GBOIL9089667C")
+        self.assertEqual(self.licence.reference, "GBOIL2222222C")
 
         licences = LicencePayload.objects.filter(pk=self.licence.pk)
         run_number = 1
@@ -158,7 +158,7 @@ class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
 
         LicencePayload.objects.create(
             lite_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
-            reference="GBSIL9089277C",
+            reference="GBSIL1111111C",
             action=LicenceActionEnum.INSERT,
             data={
                 "type": LicenceTypeEnum.IMPORT_DFL.value,
@@ -203,5 +203,87 @@ class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
 
         self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
 
+        expected_content = self.test_file.read_text()
+        self.assertEqual(expected_content, file_content)
+
+
+@override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
+class TestBuildICMSLicenceDataFASIL(testcases.TestCase):
+    def setUp(self) -> None:
+        org_data = {
+            "eori_number": "123456654321",
+            "name": "SIL Organisation",
+            "address": {
+                "line_1": "line_1",
+                "line_2": "line_2",
+                "line_3": "line_3",
+                "line_4": "",
+                "line_5": "",
+                "postcode": "S227ZZ",
+            },
+        }
+
+        restrictions = "Sample restrictions"
+
+        goods = [
+            {
+                "description": "9mm Pistol. Part number: 1 to which Section 5(1)(aba) of the Firearms Act 1968, as amended, applies.",
+                "quantity": 1,
+                "controlled_by": "Q",
+            },
+            {
+                "description": "9mm Pistol. Part number: 2 to which Section 5(1)(aba) of the Firearms Act 1968, as amended, applies.",
+                "quantity": 2,
+                "controlled_by": "Q",
+            },
+            {
+                "description": "9mm Pistol. Part number: 3 to which Section 5(1)(aba) of the Firearms Act 1968, as amended, applies.",
+                "quantity": 3,
+                "controlled_by": "Q",
+            },
+            {
+                "description": "9mm Pistol. Part number: 4 to which Section 5(1)(aba) of the Firearms Act 1968, as amended, applies.",
+                "quantity": 4,
+                "controlled_by": "Q",
+            },
+            {
+                "description": "9mm Pistol. Part number: 5 to which Section 5(1)(aba) of the Firearms Act 1968, as amended, applies.",
+                "quantity": 5,
+                "controlled_by": "Q",
+            },
+            {"description": "Unlimited Description goods line", "controlled_by": "O"},
+        ]
+
+        LicencePayload.objects.create(
+            lite_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
+            reference="GBSIL3333333H",
+            action=LicenceActionEnum.INSERT,
+            data={
+                "type": LicenceTypeEnum.IMPORT_SIL.value,
+                "case_reference": "IMA/2022/00003",
+                "start_date": "2022-06-29",
+                "end_date": "2024-12-29",
+                "organisation": org_data,
+                "country_code": "US",
+                "restrictions": restrictions,
+                "goods": goods,
+            },
+        )
+
+        self.test_file = Path("mail/tests/files/icms/icms_chief_licence_data_file_fa_sil")
+        self.assertTrue(self.test_file.is_file())
+
+    def test_generate_icms_licence_file(self):
+        licences = LicencePayload.objects.all()
+        self.assertEqual(licences.count(), 1)
+
+        run_number = 1
+        when = datetime.datetime(2022, 1, 1, 10, 11, 00)
+
+        filename, file_content = builders.build_licence_data_file(licences, run_number, when)
+
+        self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
+
+        self.maxDiff = None
         expected_content = self.test_file.read_text()
         self.assertEqual(expected_content, file_content)

@@ -58,7 +58,7 @@ class ICMSEndToEndTests(testcases.TestCase):
             "type": "OIL",
             "action": "insert",
             "id": "deaa301d-d978-473b-b76b-da275f28f447",
-            "reference": "GBOIL9089667C",
+            "reference": "GBOIL2222222C",
             "case_reference": "IMA/2022/00001",
             "start_date": "2022-06-06",
             "end_date": "2025-05-30",
@@ -100,7 +100,7 @@ class ICMSEndToEndTests(testcases.TestCase):
         expected_content = test_file.read_text().replace("202201011011", ymdhm_timestamp).strip()
         self.assertEqual(expected_content, body)
 
-        encoded_reference_code = quote("GBOIL9089667C", safe="")
+        encoded_reference_code = quote("GBOIL2222222C", safe="")
         response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
         self.assertEqual(response.json()["status"], "reply_pending")
 
@@ -126,7 +126,7 @@ class ICMSEndToEndTests(testcases.TestCase):
             "type": "DFL",
             "action": "insert",
             "id": "4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
-            "reference": "GBSIL9089277C",
+            "reference": "GBSIL1111111C",
             "case_reference": "IMA/2022/00002",
             "start_date": "2022-01-14",
             "end_date": "2022-07-14",
@@ -163,7 +163,7 @@ class ICMSEndToEndTests(testcases.TestCase):
         expected_content = test_file.read_text().replace("202201011011", ymdhm_timestamp).strip()
         self.assertEqual(expected_content, body)
 
-        for ref in ["GBSIL9089277C", "GBSIL9089278D"]:
+        for ref in ["GBSIL1111111C", "GBSIL9089278D"]:
             encoded_reference_code = quote(ref, safe="")
             response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
             self.assertEqual(response.json()["status"], "reply_pending", f"{ref} has incorrect status")

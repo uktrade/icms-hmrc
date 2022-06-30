@@ -2,7 +2,7 @@ import datetime
 import logging
 import re
 import textwrap
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, Optional
 
 from django.utils import timezone
 
@@ -244,7 +244,8 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
 
     payload = licence.data
     usage_code = "I"
-    licence_type = LITE_HMRC_LICENCE_TYPE_MAPPING[payload["type"]]
+    icms_licence_type = payload["type"]
+    chief_licence_type = LITE_HMRC_LICENCE_TYPE_MAPPING[icms_licence_type]
 
     supported_actions = [LicenceActionEnum.INSERT]
 
@@ -255,7 +256,7 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
         transaction_ref=payload["case_reference"],
         action=licence.action,
         licence_ref=licence.reference,
-        licence_type=licence_type,
+        licence_type=chief_licence_type,
         usage=usage_code,
         start_date=get_date_field(payload, "start_date"),
         end_date=get_date_field(payload, "end_date"),
@@ -286,9 +287,8 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
 
     yield get_restrictions(licence)
 
-    if payload.get("goods"):
-        for idx, good in enumerate(payload.get("goods"), start=1):
-            yield chieftypes.LicenceDataLine(line_num=idx, goods_description=good["description"], controlled_by="O")
+    for g in get_goods(icms_licence_type, payload.get("goods")):
+        yield g
 
     yield chieftypes.End(start_record_type=chieftypes.Licence.type_)
 
@@ -307,3 +307,29 @@ def get_restrictions(licence: LicencePayload) -> chieftypes.Restrictions:
     text = restrictions.replace("\n", "|").strip()
 
     return chieftypes.Restrictions(text=text)
+
+
+def get_goods(licence_type: str, goods: Optional[list]) -> Iterable[chieftypes.Restrictions]:
+    if not goods:
+        return []
+
+    goods_iter = enumerate(goods, start=1)
+
+    if licence_type == LicenceTypeEnum.IMPORT_SIL:
+        # each line can have "controlled_by": "Q" or "O"
+        for idx, good in goods_iter:
+            controlled_by = good["controlled_by"]
+
+            if controlled_by == "Q":
+                kwargs = {"quantity_unit": "030", "quantity_issued": good["quantity"]}
+            else:
+                kwargs = {}
+
+            yield chieftypes.LicenceDataLine(
+                line_num=idx, goods_description=good["description"], controlled_by=controlled_by, **kwargs
+            )
+
+    # FA-DFL and FA-OIL
+    else:
+        for idx, good in goods_iter:
+            yield chieftypes.LicenceDataLine(line_num=idx, goods_description=good["description"], controlled_by="O")
