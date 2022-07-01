@@ -61,14 +61,46 @@ class IcmsFaLicenceDataBaseSerializer(serializers.Serializer):
     restrictions = serializers.CharField(allow_blank=True, max_length=2000)
     goods = GoodSerializer(many=True, required=False, allow_null=True)
 
+    # One of these must be supplied for all Firearm app types:
+    country_group = serializers.CharField(max_length=4, required=False, allow_null=True)
+    country_code = serializers.CharField(max_length=2, required=False, allow_null=True)
+
+    def validate(self, data) -> dict:
+        data = super().validate(data)
+
+        if not data.get("country_group") and not data.get("country_code"):
+            raise serializers.ValidationError("Either 'country_code' or 'country_group' should be set.")
+
+        return data
+
 
 class FaOilLicenceDataSerializer(IcmsFaLicenceDataBaseSerializer):
     """FA-OIL licence data serializer"""
 
-    country_group = serializers.CharField(max_length=4)
+    type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_OIL])
 
 
 class FaDflLicenceDataSerializer(IcmsFaLicenceDataBaseSerializer):
     """FA-DFL licence data serializer."""
 
-    country_code = serializers.CharField(max_length=2)
+    type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_DFL])
+
+
+class FaSilGoods(GoodSerializer):
+    controlled_by = serializers.ChoiceField(choices=["O", "Q"], required=True)
+    quantity = serializers.DecimalField(decimal_places=3, max_digits=13, required=False, allow_null=True)
+
+    def validate(self, data):
+        """Conditionally check that quantity is set"""
+
+        data = super().validate(data)
+
+        if data["controlled_by"] == "Q" and not data.get("quantity"):
+            raise serializers.ValidationError("'quantity' must be set when controlled_by equals 'Q'")
+
+        return data
+
+
+class FaSilLicenceDataSerializer(IcmsFaLicenceDataBaseSerializer):
+    type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_SIL])
+    goods = FaSilGoods(many=True)

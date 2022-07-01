@@ -70,6 +70,7 @@ class LicenceDataIngestView(APIView):
             serializers = {
                 LicenceTypeEnum.IMPORT_OIL: icms_serializers.FaOilLicenceDataSerializer,
                 LicenceTypeEnum.IMPORT_DFL: icms_serializers.FaDflLicenceDataSerializer,
+                LicenceTypeEnum.IMPORT_SIL: icms_serializers.FaSilLicenceDataSerializer,
             }
 
             return serializers[app_type]
