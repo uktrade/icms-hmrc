@@ -226,31 +226,11 @@ class TestBuildICMSLicenceDataFASIL(testcases.TestCase):
         restrictions = "Sample restrictions"
 
         goods = [
-            {
-                "description": "9mm Pistol. Part number: 1 to which Section 5(1)(aba) of the Firearms Act 1968, as amended, applies.",
-                "quantity": 1,
-                "controlled_by": "Q",
-            },
-            {
-                "description": "9mm Pistol. Part number: 2 to which Section 5(1)(aba) of the Firearms Act 1968, as amended, applies.",
-                "quantity": 2,
-                "controlled_by": "Q",
-            },
-            {
-                "description": "9mm Pistol. Part number: 3 to which Section 5(1)(aba) of the Firearms Act 1968, as amended, applies.",
-                "quantity": 3,
-                "controlled_by": "Q",
-            },
-            {
-                "description": "9mm Pistol. Part number: 4 to which Section 5(1)(aba) of the Firearms Act 1968, as amended, applies.",
-                "quantity": 4,
-                "controlled_by": "Q",
-            },
-            {
-                "description": "9mm Pistol. Part number: 5 to which Section 5(1)(aba) of the Firearms Act 1968, as amended, applies.",
-                "quantity": 5,
-                "controlled_by": "Q",
-            },
+            {"description": "Sample goods description 1", "quantity": 1, "controlled_by": "Q"},
+            {"description": "Sample goods description 2", "quantity": 2, "controlled_by": "Q"},
+            {"description": "Sample goods description 3", "quantity": 3, "controlled_by": "Q"},
+            {"description": "Sample goods description 4", "quantity": 4, "controlled_by": "Q"},
+            {"description": "Sample goods description 5", "quantity": 5, "controlled_by": "Q"},
             {"description": "Unlimited Description goods line", "controlled_by": "O"},
         ]
 

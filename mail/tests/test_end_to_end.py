@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from mail.enums import ChiefSystemEnum
 from mail.tests.libraries.client import LiteHMRCTestClient
+from mail.tests.test_serializers import get_valid_fa_sil_payload
 
 
 def clear_stmp_mailbox():
@@ -167,3 +168,24 @@ class ICMSEndToEndTests(testcases.TestCase):
             encoded_reference_code = quote(ref, safe="")
             response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
             self.assertEqual(response.json()["status"], "reply_pending", f"{ref} has incorrect status")
+
+    def test_icms_send_email_to_hmrc_fa_sil_e2e(self):
+        clear_stmp_mailbox()
+        self.client.get(reverse("mail:set_all_to_reply_sent"))
+
+        data = get_valid_fa_sil_payload()
+        resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
+        self.assertEqual(resp.status_code, 201)
+
+        self.client.get(reverse("mail:send_updates_to_hmrc"))
+        body = get_smtp_body().replace("\r", "")
+        ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
+
+        # Replace the hardcoded date in the test file with the one in the email.
+        test_file = Path("mail/tests/files/icms/icms_chief_licence_data_file_fa_sil")
+        expected_content = test_file.read_text().replace("202201011011", ymdhm_timestamp).strip()
+        self.assertEqual(expected_content, body)
+
+        encoded_reference_code = quote("GBSIL3333333H", safe="")
+        response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
+        self.assertEqual(response.json()["status"], "reply_pending")
