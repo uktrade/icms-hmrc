@@ -219,7 +219,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
     def test_invalid_case_reference(self):
         data = {"case_reference": "asdf/"}
 
-        serializer = icms_serializers.FaOilLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
 
         self.assertFalse(serializer.is_valid())
 
@@ -228,12 +228,12 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
     def test_valid_case_reference(self):
         data = {"case_reference": "IMA/2022/00001"}
-        serializer = icms_serializers.FaOilLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
         serializer.is_valid()
         self.assertNotIn("case_reference", serializer.errors)
 
         data = {"case_reference": "IMA/2022/00001/99"}
-        serializer = icms_serializers.FaOilLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
         serializer.is_valid()
         self.assertNotIn("case_reference", serializer.errors)
 
@@ -274,7 +274,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             ],
         }
 
-        serializer = icms_serializers.FaOilLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
 
         is_valid = serializer.is_valid()
 
@@ -320,7 +320,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             ],
         }
 
-        serializer = icms_serializers.FaOilLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
 
         self.assertFalse(serializer.is_valid())
 
@@ -364,7 +364,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             ],
         }
 
-        serializer = icms_serializers.FaDflLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmDflLicenceDataSerializer(data=data)
 
         is_valid = serializer.is_valid()
 
@@ -376,7 +376,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
     def test_valid_fa_sil_payload(self):
         data = get_valid_fa_sil_payload()
-        serializer = icms_serializers.FaSilLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmSilLicenceDataSerializer(data=data)
         is_valid = serializer.is_valid()
 
         self.assertTrue(is_valid)
@@ -390,7 +390,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
         data["goods"] = [
             {"controlled_by": "Q", "description": "goods description"},
         ]
-        serializer = icms_serializers.FaSilLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmSilLicenceDataSerializer(data=data)
 
         self.assertFalse(serializer.is_valid())
 

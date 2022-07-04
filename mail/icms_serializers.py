@@ -74,19 +74,19 @@ class IcmsFaLicenceDataBaseSerializer(serializers.Serializer):
         return data
 
 
-class FaOilLicenceDataSerializer(IcmsFaLicenceDataBaseSerializer):
+class FirearmOilLicenceDataSerializer(IcmsFaLicenceDataBaseSerializer):
     """FA-OIL licence data serializer"""
 
     type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_OIL])
 
 
-class FaDflLicenceDataSerializer(IcmsFaLicenceDataBaseSerializer):
+class FirearmDflLicenceDataSerializer(IcmsFaLicenceDataBaseSerializer):
     """FA-DFL licence data serializer."""
 
     type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_DFL])
 
 
-class FaSilGoods(GoodSerializer):
+class FirearmSilGoods(GoodSerializer):
     controlled_by = serializers.ChoiceField(choices=["O", "Q"], required=True)
     quantity = serializers.DecimalField(decimal_places=3, max_digits=13, required=False, allow_null=True)
 
@@ -101,6 +101,6 @@ class FaSilGoods(GoodSerializer):
         return data
 
 
-class FaSilLicenceDataSerializer(IcmsFaLicenceDataBaseSerializer):
+class FirearmSilLicenceDataSerializer(IcmsFaLicenceDataBaseSerializer):
     type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_SIL])
-    goods = FaSilGoods(many=True)
+    goods = FirearmSilGoods(many=True)

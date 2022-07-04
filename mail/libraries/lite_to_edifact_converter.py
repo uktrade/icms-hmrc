@@ -319,11 +319,7 @@ def get_goods(licence_type: str, goods: Optional[list]) -> Iterable[chieftypes.R
         # each line can have "controlled_by": "Q" or "O"
         for idx, good in goods_iter:
             controlled_by = good["controlled_by"]
-
-            if controlled_by == "Q":
-                kwargs = {"quantity_unit": "030", "quantity_issued": good["quantity"]}
-            else:
-                kwargs = {}
+            kwargs = {"quantity_unit": "030", "quantity_issued": good["quantity"]} if controlled_by == "Q" else {}
 
             yield chieftypes.LicenceDataLine(
                 line_num=idx, goods_description=good["description"], controlled_by=controlled_by, **kwargs
