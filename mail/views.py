@@ -71,6 +71,7 @@ class LicenceDataIngestView(APIView):
                 LicenceTypeEnum.IMPORT_OIL: icms_serializers.FirearmOilLicenceDataSerializer,
                 LicenceTypeEnum.IMPORT_DFL: icms_serializers.FirearmDflLicenceDataSerializer,
                 LicenceTypeEnum.IMPORT_SIL: icms_serializers.FirearmSilLicenceDataSerializer,
+                LicenceTypeEnum.IMPORT_SAN: icms_serializers.SanctionLicenceDataSerializer,
             }
 
             return serializers[app_type]
