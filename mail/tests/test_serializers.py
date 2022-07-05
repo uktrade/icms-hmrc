@@ -219,7 +219,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
     def test_invalid_case_reference(self):
         data = {"case_reference": "asdf/"}
 
-        serializer = icms_serializers.FaOilLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
 
         self.assertFalse(serializer.is_valid())
 
@@ -228,12 +228,12 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
     def test_valid_case_reference(self):
         data = {"case_reference": "IMA/2022/00001"}
-        serializer = icms_serializers.FaOilLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
         serializer.is_valid()
         self.assertNotIn("case_reference", serializer.errors)
 
         data = {"case_reference": "IMA/2022/00001/99"}
-        serializer = icms_serializers.FaOilLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
         serializer.is_valid()
         self.assertNotIn("case_reference", serializer.errors)
 
@@ -242,7 +242,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             "type": "OIL",
             "action": "insert",
             "id": str(uuid.uuid4()),
-            "reference": "GBOIL9089667C",
+            "reference": "GBOIL2222222C",
             "case_reference": "IMA/2022/00001",
             "start_date": "2022-06-06",
             "end_date": "2025-05-30",
@@ -274,7 +274,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             ],
         }
 
-        serializer = icms_serializers.FaOilLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
 
         is_valid = serializer.is_valid()
 
@@ -289,7 +289,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             "type": "OIL",
             "action": "insert",
             "id": str(uuid.uuid4()),
-            "reference": "GBOIL9089667C",
+            "reference": "GBOIL2222222C",
             "case_reference": "IMA/2022/00001",
             "start_date": "2022-06-06",
             "end_date": "2025-05-30",
@@ -320,19 +320,19 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             ],
         }
 
-        serializer = icms_serializers.FaOilLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
 
         self.assertFalse(serializer.is_valid())
 
-        expected_error = [ErrorDetail(string="This field is required.", code="required")]
-        self.assertEqual(serializer.errors["country_group"], expected_error)
+        expected_error = [ErrorDetail(string="Either 'country_code' or 'country_group' should be set.", code="invalid")]
+        self.assertEqual(serializer.errors["non_field_errors"], expected_error)
 
     def test_valid_fa_dfl_payload(self):
         data = {
             "type": "DFL",
             "action": "insert",
             "id": str(uuid.uuid4()),
-            "reference": "GBOIL9089667C",
+            "reference": "GBOIL2222222C",
             "case_reference": "IMA/2022/00001",
             "start_date": "2022-06-06",
             "end_date": "2025-05-30",
@@ -364,7 +364,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             ],
         }
 
-        serializer = icms_serializers.FaDflLicenceDataSerializer(data=data)
+        serializer = icms_serializers.FirearmDflLicenceDataSerializer(data=data)
 
         is_valid = serializer.is_valid()
 
@@ -373,3 +373,63 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
         # Check all the keys here are in the validated data
         for key in data.keys():
             self.assertIn(key, serializer.validated_data)
+
+    def test_valid_fa_sil_payload(self):
+        data = get_valid_fa_sil_payload()
+        serializer = icms_serializers.FirearmSilLicenceDataSerializer(data=data)
+        is_valid = serializer.is_valid()
+
+        self.assertTrue(is_valid)
+
+        # Check all the keys here are in the validated data
+        for key in data.keys():
+            self.assertIn(key, serializer.validated_data)
+
+    def test_controlled_by_and_quantity_errors(self):
+        data = get_valid_fa_sil_payload()
+        data["goods"] = [
+            {"controlled_by": "Q", "description": "goods description"},
+        ]
+        serializer = icms_serializers.FirearmSilLicenceDataSerializer(data=data)
+
+        self.assertFalse(serializer.is_valid())
+
+        expected_error = [ErrorDetail(string="'quantity' must be set when controlled_by equals 'Q'", code="invalid")]
+        goods_error = serializer.errors["goods"][0]["non_field_errors"]
+        self.assertEqual(goods_error, expected_error)
+
+
+def get_valid_fa_sil_payload():
+    goods = [
+        {"description": "Sample goods description 1", "quantity": 1, "controlled_by": "Q"},
+        {"description": "Sample goods description 2", "quantity": 2, "controlled_by": "Q"},
+        {"description": "Sample goods description 3", "quantity": 3, "controlled_by": "Q"},
+        {"description": "Sample goods description 4", "quantity": 4, "controlled_by": "Q"},
+        {"description": "Sample goods description 5", "quantity": 5, "controlled_by": "Q"},
+        {"description": "Unlimited Description goods line", "controlled_by": "O"},
+    ]
+
+    return {
+        "type": "SIL",
+        "action": "insert",
+        "id": str(uuid.uuid4()),
+        "reference": "GBSIL3333333H",
+        "case_reference": "IMA/2022/00003",
+        "start_date": "2022-06-29",
+        "end_date": "2024-12-29",
+        "organisation": {
+            "eori_number": "123456654321",
+            "name": "SIL Organisation",
+            "address": {
+                "line_1": "line_1",
+                "line_2": "line_2",
+                "line_3": "line_3",
+                "line_4": "",
+                "line_5": "",
+                "postcode": "S227ZZ",
+            },
+        },
+        "country_code": "US",
+        "restrictions": "Sample restrictions",
+        "goods": goods,
+    }
