@@ -6,7 +6,6 @@ from typing import List
 
 from django.db import IntegrityError, models
 from django.utils import timezone
-from jsonfield import JSONField
 from model_utils.models import TimeStampedModel
 
 from mail.enums import (
@@ -109,21 +108,21 @@ class LicenceData(models.Model):
 
 class UsageData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    licence_ids = JSONField()
+    licence_ids = models.JSONField(default=list)
     mail = models.ForeignKey(Mail, on_delete=models.DO_NOTHING, null=False)
     spire_run_number = models.IntegerField()
     hmrc_run_number = models.IntegerField()
     has_lite_data = models.NullBooleanField(default=None)
     has_spire_data = models.NullBooleanField(default=None)
-    lite_payload = JSONField()
+    lite_payload = models.JSONField(default=dict)
     lite_sent_at = models.DateTimeField(blank=True, null=True)  # When update was sent to LITE API
-    lite_accepted_licences = JSONField()
-    lite_rejected_licences = JSONField()
-    spire_accepted_licences = JSONField()
-    spire_rejected_licences = JSONField()
-    lite_licences = JSONField()
-    spire_licences = JSONField()
-    lite_response = JSONField()
+    lite_accepted_licences = models.JSONField(default=list)
+    lite_rejected_licences = models.JSONField(default=list)
+    spire_accepted_licences = models.JSONField(default=dict)
+    spire_rejected_licences = models.JSONField(default=dict)
+    lite_licences = models.JSONField(default=dict)
+    spire_licences = models.JSONField(default=dict)
+    lite_response = models.JSONField(default=dict)
 
     class Meta:
         ordering = ["mail__created_at"]
@@ -143,7 +142,7 @@ class LicencePayload(models.Model):
     lite_id = models.UUIDField(null=False, blank=False, unique=False)
     reference = models.CharField(null=False, blank=False, max_length=35)
     action = models.CharField(choices=LicenceActionEnum.choices, null=False, blank=False, max_length=6)
-    data = JSONField()
+    data = models.JSONField(default=dict)
     received_at = models.DateTimeField(default=timezone.now)
     is_processed = models.BooleanField(default=False)
 
