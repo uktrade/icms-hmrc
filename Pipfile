@@ -17,7 +17,6 @@ pytest-django = "*"
 pytest-cov = "*"
 
 [packages]
-Django = "~=2.2"
 djangorestframework = "~=3.9"
 django-background-tasks = "~=1.2"
 django-environ = "~=0.4"
@@ -33,6 +32,7 @@ requests = "~=2.21"
 unidecode = "~=1.2"
 django-log-formatter-ecs = "==0.0.5"
 gunicorn = "*"
+django = "==3.2.14"
 
 [requires]
 python_version = "3.7"
