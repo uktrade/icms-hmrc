@@ -82,10 +82,9 @@ class HealthCheck(APIView):
             ).values_list("id", flat=True)
         )
 
-    @staticmethod
-    def _build_response(status, message, start_time):
+    def _build_response(self, status, message, start_time):
         duration_ms = (time.time() - start_time) * 1000
         response_time = "{:.3f}".format(duration_ms)
-        context = {"message": message, "response_time": response_time}
+        context = {"message": message, "response_time": response_time, "status": status}
 
-        return render("healthcheck.xml", context, content_type="application/xml", status=status)
+        return render(self.request, "healthcheck.xml", context, content_type="application/xml", status=status)
