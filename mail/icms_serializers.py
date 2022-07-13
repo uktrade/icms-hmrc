@@ -2,7 +2,7 @@ import re
 
 from rest_framework import serializers
 
-from .enums import LicenceTypeEnum
+from .enums import ControlledByEnum, LicenceTypeEnum, QuantityCodeEnum
 
 ICMS_CASE_REF_PATTERN = re.compile(
     r"""
@@ -18,7 +18,12 @@ ICMS_CASE_REF_PATTERN = re.compile(
     flags=re.IGNORECASE | re.VERBOSE,
 )
 
-FIREARM_LICENCES = [LicenceTypeEnum.IMPORT_DFL, LicenceTypeEnum.IMPORT_SIL, LicenceTypeEnum.IMPORT_OIL]
+IMPORT_LICENCE_TYPES = [
+    LicenceTypeEnum.IMPORT_DFL,
+    LicenceTypeEnum.IMPORT_SIL,
+    LicenceTypeEnum.IMPORT_OIL,
+    LicenceTypeEnum.IMPORT_SAN,
+]
 
 
 class AddressSerializer(serializers.Serializer):
@@ -42,15 +47,12 @@ class OrganisationSerializer(serializers.Serializer):
 
 class GoodSerializer(serializers.Serializer):
     description = serializers.CharField(max_length=2000)
-    # Only enable these when we need them for other application types.
-    # quantity = serializers.DecimalField(decimal_places=3, max_digits=13)
-    # unit = serializers.ChoiceField(choices=enums.UnitMapping.serializer_choices())
 
 
-class IcmsFaLicenceDataBaseSerializer(serializers.Serializer):
-    """Baseclass serializer for all firearm applications"""
+class IcmsLicenceDataBaseSerializer(serializers.Serializer):
+    """Baseclass serializer for all ICMS import applications."""
 
-    type = serializers.ChoiceField(choices=FIREARM_LICENCES)
+    type = serializers.ChoiceField(choices=IMPORT_LICENCE_TYPES)
     action = serializers.CharField()
     id = serializers.CharField()
     reference = serializers.CharField(max_length=35)
@@ -74,33 +76,72 @@ class IcmsFaLicenceDataBaseSerializer(serializers.Serializer):
         return data
 
 
-class FirearmOilLicenceDataSerializer(IcmsFaLicenceDataBaseSerializer):
+class FirearmOilLicenceDataSerializer(IcmsLicenceDataBaseSerializer):
     """FA-OIL licence data serializer"""
 
     type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_OIL])
 
 
-class FirearmDflLicenceDataSerializer(IcmsFaLicenceDataBaseSerializer):
+class FirearmDflLicenceDataSerializer(IcmsLicenceDataBaseSerializer):
     """FA-DFL licence data serializer."""
 
     type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_DFL])
 
 
-class FirearmSilGoods(GoodSerializer):
-    controlled_by = serializers.ChoiceField(choices=["O", "Q"], required=True)
-    quantity = serializers.DecimalField(decimal_places=3, max_digits=13, required=False, allow_null=True)
+class FirearmSilGoods(serializers.Serializer):
+    # Required fields
+    description = serializers.CharField(max_length=2000)
+    controlled_by = serializers.ChoiceField(choices=ControlledByEnum.choices, required=True)
+
+    # Conditional / Optional fields
+    # Format in CHIEF SPEC: 9(11).9(3)
+    quantity = serializers.DecimalField(decimal_places=3, max_digits=14, required=False, allow_null=True)
+    unit = serializers.ChoiceField(choices=QuantityCodeEnum.choices, required=False, allow_null=True)
 
     def validate(self, data):
-        """Conditionally check that quantity is set"""
-
         data = super().validate(data)
-
-        if data["controlled_by"] == "Q" and not data.get("quantity"):
-            raise serializers.ValidationError("'quantity' must be set when controlled_by equals 'Q'")
+        _validate_controlled_by(data)
 
         return data
 
 
-class FirearmSilLicenceDataSerializer(IcmsFaLicenceDataBaseSerializer):
+class SanctionGoodsSerializer(serializers.Serializer):
+    # Required fields
+    commodity = serializers.CharField(max_length=11)
+    controlled_by = serializers.ChoiceField(choices=ControlledByEnum.choices, required=True)
+
+    # Conditional / Optional fields
+    # Format in CHIEF SPEC: 9(11).9(3)
+    quantity = serializers.DecimalField(decimal_places=3, max_digits=14, required=False, allow_null=True)
+    unit = serializers.ChoiceField(choices=QuantityCodeEnum.choices, required=False, allow_null=True)
+
+    def validate(self, data):
+        data = super().validate(data)
+        _validate_controlled_by(data)
+
+        return data
+
+
+class FirearmSilLicenceDataSerializer(IcmsLicenceDataBaseSerializer):
+    """FA-SIL licence data serializer."""
+
     type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_SIL])
     goods = FirearmSilGoods(many=True)
+
+
+class SanctionLicenceDataSerializer(IcmsLicenceDataBaseSerializer):
+    """Sanctions licence data serializer."""
+
+    type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_SAN])
+    goods = SanctionGoodsSerializer(many=True)
+
+
+def _validate_controlled_by(data):
+    """Conditionally check that quantity / unit is set"""
+
+    if data["controlled_by"] == ControlledByEnum.QUANTITY:
+        if not data.get("quantity"):
+            raise serializers.ValidationError("'quantity' must be set when controlled_by equals 'Q'")
+
+        if not data.get("unit"):
+            raise serializers.ValidationError(f"'unit' must be set when controlled_by equals 'Q'")
