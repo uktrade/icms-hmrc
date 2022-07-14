@@ -2,11 +2,18 @@ import datetime
 import logging
 import re
 import textwrap
-from typing import TYPE_CHECKING, Iterable, Optional
+from typing import TYPE_CHECKING, Dict, Iterable, Optional
 
 from django.utils import timezone
 
-from mail.enums import LITE_HMRC_LICENCE_TYPE_MAPPING, ChiefSystemEnum, LicenceActionEnum, LicenceTypeEnum, UnitMapping
+from mail.enums import (
+    LITE_HMRC_LICENCE_TYPE_MAPPING,
+    ChiefSystemEnum,
+    ControlledByEnum,
+    LicenceActionEnum,
+    LicenceTypeEnum,
+    UnitMapping,
+)
 from mail.libraries import chiefprotocol, chieftypes
 from mail.libraries.edifact_validator import (
     FOREIGN_TRADER_ADDR_LINE_MAX_LEN,
@@ -315,17 +322,35 @@ def get_goods(licence_type: str, goods: Optional[list]) -> Iterable[chieftypes.R
 
     goods_iter = enumerate(goods, start=1)
 
-    if licence_type == LicenceTypeEnum.IMPORT_SIL:
-        # each line can have "controlled_by": "Q" or "O"
+    # Sanctions
+    if licence_type == LicenceTypeEnum.IMPORT_SAN:
         for idx, good in goods_iter:
-            controlled_by = good["controlled_by"]
-            kwargs = {"quantity_unit": "030", "quantity_issued": good["quantity"]} if controlled_by == "Q" else {}
+            kwargs = _get_controlled_by_kwargs(good)
 
-            yield chieftypes.LicenceDataLine(
-                line_num=idx, goods_description=good["description"], controlled_by=controlled_by, **kwargs
-            )
+            yield chieftypes.LicenceDataLine(line_num=idx, commodity=good["commodity"], **kwargs)
+
+    # FA-SIL
+    elif licence_type == LicenceTypeEnum.IMPORT_SIL:
+        for idx, good in goods_iter:
+            kwargs = _get_controlled_by_kwargs(good)
+
+            yield chieftypes.LicenceDataLine(line_num=idx, goods_description=good["description"], **kwargs)
 
     # FA-DFL and FA-OIL
     else:
         for idx, good in goods_iter:
-            yield chieftypes.LicenceDataLine(line_num=idx, goods_description=good["description"], controlled_by="O")
+            yield chieftypes.LicenceDataLine(
+                line_num=idx, goods_description=good["description"], controlled_by=ControlledByEnum.OPEN
+            )
+
+
+def _get_controlled_by_kwargs(good: Dict[str, str]) -> Dict[str, str]:
+    controlled_by = good["controlled_by"]
+    kwargs = {"controlled_by": controlled_by}
+
+    if controlled_by == ControlledByEnum.QUANTITY:
+        unit = int(good["unit"])
+        kwargs["quantity_unit"] = f"{unit:03}"
+        kwargs["quantity_issued"] = good["quantity"]
+
+    return kwargs
