@@ -1,8 +1,7 @@
 import enum
 from types import DynamicClassAttribute
 
-from django.utils.decorators import classproperty
-from django.utils.functional import Promise
+from django.utils.functional import Promise, classproperty
 
 
 # Backported from Django 4.x
