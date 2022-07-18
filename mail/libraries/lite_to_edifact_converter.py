@@ -2,11 +2,18 @@ import datetime
 import logging
 import re
 import textwrap
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Dict, Iterable, Optional
 
 from django.utils import timezone
 
-from mail.enums import LITE_HMRC_LICENCE_TYPE_MAPPING, ChiefSystemEnum, LicenceActionEnum, LicenceTypeEnum, UnitMapping
+from mail.enums import (
+    LITE_HMRC_LICENCE_TYPE_MAPPING,
+    ChiefSystemEnum,
+    ControlledByEnum,
+    LicenceActionEnum,
+    LicenceTypeEnum,
+    UnitMapping,
+)
 from mail.libraries import chiefprotocol, chieftypes
 from mail.libraries.edifact_validator import (
     FOREIGN_TRADER_ADDR_LINE_MAX_LEN,
@@ -244,7 +251,8 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
 
     payload = licence.data
     usage_code = "I"
-    licence_type = "OIL"
+    icms_licence_type = payload["type"]
+    chief_licence_type = LITE_HMRC_LICENCE_TYPE_MAPPING[icms_licence_type]
 
     supported_actions = [LicenceActionEnum.INSERT]
 
@@ -255,7 +263,7 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
         transaction_ref=payload["case_reference"],
         action=licence.action,
         licence_ref=licence.reference,
-        licence_type=licence_type,
+        licence_type=chief_licence_type,
         usage=usage_code,
         start_date=get_date_field(payload, "start_date"),
         end_date=get_date_field(payload, "end_date"),
@@ -281,16 +289,13 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
     if payload.get("country_group"):
         yield chieftypes.Country(group=payload.get("country_group"), **kwargs)
 
-    elif payload.get("countries"):
-        for country in payload.get("countries"):
-            country_id = get_country_id(country)
-            yield chieftypes.Country(code=country_id, **kwargs)
+    elif payload.get("country_code"):
+        yield chieftypes.Country(code=payload.get("country_code"), **kwargs)
 
     yield get_restrictions(licence)
 
-    if payload.get("goods"):
-        for idx, good in enumerate(payload.get("goods"), start=1):
-            yield chieftypes.LicenceDataLine(line_num=idx, goods_description=good["description"], controlled_by="O")
+    for g in get_goods(icms_licence_type, payload.get("goods")):
+        yield g
 
     yield chieftypes.End(start_record_type=chieftypes.Licence.type_)
 
@@ -309,3 +314,43 @@ def get_restrictions(licence: LicencePayload) -> chieftypes.Restrictions:
     text = restrictions.replace("\n", "|").strip()
 
     return chieftypes.Restrictions(text=text)
+
+
+def get_goods(licence_type: str, goods: Optional[list]) -> Iterable[chieftypes.Restrictions]:
+    if not goods:
+        return []
+
+    goods_iter = enumerate(goods, start=1)
+
+    # Sanctions
+    if licence_type == LicenceTypeEnum.IMPORT_SAN:
+        for idx, good in goods_iter:
+            kwargs = _get_controlled_by_kwargs(good)
+
+            yield chieftypes.LicenceDataLine(line_num=idx, commodity=good["commodity"], **kwargs)
+
+    # FA-SIL
+    elif licence_type == LicenceTypeEnum.IMPORT_SIL:
+        for idx, good in goods_iter:
+            kwargs = _get_controlled_by_kwargs(good)
+
+            yield chieftypes.LicenceDataLine(line_num=idx, goods_description=good["description"], **kwargs)
+
+    # FA-DFL and FA-OIL
+    else:
+        for idx, good in goods_iter:
+            yield chieftypes.LicenceDataLine(
+                line_num=idx, goods_description=good["description"], controlled_by=ControlledByEnum.OPEN
+            )
+
+
+def _get_controlled_by_kwargs(good: Dict[str, str]) -> Dict[str, str]:
+    controlled_by = good["controlled_by"]
+    kwargs = {"controlled_by": controlled_by}
+
+    if controlled_by == ControlledByEnum.QUANTITY:
+        unit = int(good["unit"])
+        kwargs["quantity_unit"] = f"{unit:03}"
+        kwargs["quantity_issued"] = good["quantity"]
+
+    return kwargs
