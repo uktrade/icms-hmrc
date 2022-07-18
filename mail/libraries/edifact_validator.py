@@ -219,24 +219,30 @@ def validate_licence_product_line(record):
     errors = []
     tokens = record.split("\\")
     record_type = tokens[1]
-    controlled_by = tokens[8]
 
     if len(tokens) != LICENCE_LINE_FIELDS_LEN:
         errors.append({record_type: f"{record_type} doesn't contain all necessary values"})
         return errors
 
-    if tokens[1] != "line":
-        errors.append({record_type: f"Invalid file header tag {tokens[1]}"})
+    if record_type != "line":
+        errors.append({record_type: f"Invalid file header tag {record_type}"})
 
-    if tokens[7] == "":
-        errors.append({record_type: "Product description cannot be empty"})
+    # Use chief type rather than indexing into tokens
+    ld = chieftypes.LicenceDataLine(*tokens)
 
-    if controlled_by not in CONTROLLED_BY_VALUES:
+    if settings.CHIEF_SOURCE_SYSTEM == "SPIRE":
+        if not ld.goods_description:
+            errors.append({record_type: "Product description cannot be empty"})
+    else:
+        if not ld.goods_description and not ld.commodity:
+            errors.append({record_type: "Product description or commodity code must be set"})
+
+    if ld.controlled_by not in CONTROLLED_BY_VALUES:
         errors.append({record_type: "Invalid controlled by value"})
 
     # Export check
     if settings.CHIEF_SOURCE_SYSTEM == "SPIRE":
-        if len(tokens[10]) != 3:
+        if len(ld.quantity_unit) != 3:
             errors.append({record_type: "Quantity unit field should be of 3 characters wide"})
 
     return errors

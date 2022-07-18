@@ -4,7 +4,7 @@ import time
 
 from background_task.models import Task
 from django.conf import settings
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.utils import timezone
 from rest_framework.status import HTTP_200_OK, HTTP_503_SERVICE_UNAVAILABLE
 from rest_framework.views import APIView
@@ -82,10 +82,9 @@ class HealthCheck(APIView):
             ).values_list("id", flat=True)
         )
 
-    @staticmethod
-    def _build_response(status, message, start_time):
+    def _build_response(self, status, message, start_time):
         duration_ms = (time.time() - start_time) * 1000
         response_time = "{:.3f}".format(duration_ms)
-        context = {"message": message, "response_time": response_time}
+        context = {"message": message, "response_time": response_time, "status": status}
 
-        return render_to_response("healthcheck.xml", context, content_type="application/xml", status=status)
+        return render(self.request, "healthcheck.xml", context, content_type="application/xml", status=status)
