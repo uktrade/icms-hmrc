@@ -12,17 +12,12 @@ class MailServer(object):
         user: str = settings.EMAIL_USER,
         password: str = settings.EMAIL_PASSWORD,
         pop3_port: int = settings.EMAIL_POP3_PORT,
-        smtp_port: int = settings.EMAIL_SMTP_PORT,
-        use_tls: bool = settings.EMAIL_USE_TLS,
     ):
-        self.smtp_port = smtp_port
         self.pop3_port = pop3_port
         self.password = password
         self.user = user
         self.hostname = hostname
         self.pop3_connection = None
-        self.smtp_connection = None
-        self.use_tls = use_tls
 
     def __eq__(self, other):
 
@@ -35,7 +30,6 @@ class MailServer(object):
             and self.user == other.user
             and self.password == other.password
             and self.pop3_port == other.pop3_port
-            and self.smtp_port == other.smtp_port
         )
 
     def connect_to_pop3(self) -> poplib.POP3_SSL:
@@ -49,18 +43,32 @@ class MailServer(object):
     def quit_pop3_connection(self):
         self.pop3_connection.quit()
 
-    def connect_to_smtp(self) -> smtplib.SMTP:
-        logging.info("establishing an smtp connection...")
-        self.smtp_connection = smtplib.SMTP(self.hostname, str(self.smtp_port), timeout=60)
-        logging.info("smtp connection established")
-        if self.use_tls:
-            logging.info("starting tls...")
-            self.smtp_connection.starttls()
-            logging.info("tls started")
-        logging.info("logging in...")
-        self.smtp_connection.login(self.user, self.password)
-        logging.info("logged in")
-        return self.smtp_connection
 
-    def quit_smtp_connection(self):
-        self.smtp_connection.quit()
+def get_smtp_connection():
+    """Connect to an SMTP server, specified by environment variables."""
+    # Note that EMAIL_HOSTNAME is not Django's EMAIL_HOST setting.
+    hostname = settings.EMAIL_HOSTNAME
+    port = str(settings.EMAIL_SMTP_PORT)
+    use_tls = settings.EMAIL_USE_TLS
+    username = settings.EMAIL_USER
+    password = settings.EMAIL_PASSWORD
+    logging.info("SMTP=%r:%r, TLS=%r, USERNAME=%r", hostname, port, use_tls, username)
+    conn = smtplib.SMTP(hostname, port, timeout=60)
+
+    if use_tls:
+        conn.starttls()
+
+    conn.login(username, password)
+
+    return conn
+
+
+def smtp_send(message):
+    conn = get_smtp_connection()
+    try:
+        # Result is an empty dict on success.
+        result = conn.send_message(message)
+    finally:
+        conn.quit()
+
+    return result
