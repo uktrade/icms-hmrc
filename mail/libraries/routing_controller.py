@@ -7,6 +7,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from conf.settings import SPIRE_ADDRESS
+from mail.auth import BasicAuthentication
 from mail.enums import ExtractTypeEnum, MailReadStatuses, ReceptionStatusEnum, SourceEnum
 from mail.libraries.builders import build_email_message
 from mail.libraries.data_processors import (
@@ -34,10 +35,14 @@ def get_spire_to_dit_mailserver() -> MailServer:
 
     These are licenceData and usageReply emails. They are processed by the service and sent to HMRC.
     """
-    return MailServer(
-        hostname=settings.INCOMING_EMAIL_HOSTNAME,
+    auth = BasicAuthentication(
         user=settings.INCOMING_EMAIL_USER,
         password=settings.INCOMING_EMAIL_PASSWORD,
+    )
+
+    return MailServer(
+        auth,
+        hostname=settings.INCOMING_EMAIL_HOSTNAME,
         pop3_port=settings.INCOMING_EMAIL_POP3_PORT,
     )
 
@@ -48,28 +53,40 @@ def get_hmrc_to_dit_mailserver() -> MailServer:
 
     These are licenceReply and usageData emails
     """
-    return MailServer(
-        hostname=settings.HMRC_TO_DIT_EMAIL_HOSTNAME,
+    auth = BasicAuthentication(
         user=settings.HMRC_TO_DIT_EMAIL_USER,
         password=settings.HMRC_TO_DIT_EMAIL_PASSWORD,
+    )
+
+    return MailServer(
+        auth,
+        hostname=settings.HMRC_TO_DIT_EMAIL_HOSTNAME,
         pop3_port=settings.HMRC_TO_DIT_EMAIL_POP3_PORT,
     )
 
 
 def get_mock_hmrc_mailserver() -> MailServer:
-    return MailServer(
-        hostname=settings.MOCK_HMRC_EMAIL_HOSTNAME,
+    auth = BasicAuthentication(
         user=settings.MOCK_HMRC_EMAIL_USER,
         password=settings.MOCK_HMRC_EMAIL_PASSWORD,
+    )
+
+    return MailServer(
+        auth,
+        hostname=settings.MOCK_HMRC_EMAIL_HOSTNAME,
         pop3_port=settings.MOCK_HMRC_EMAIL_POP3_PORT,
     )
 
 
 def get_spire_standin_mailserver() -> MailServer:
-    return MailServer(
-        hostname=settings.SPIRE_STANDIN_EMAIL_HOSTNAME,
+    auth = BasicAuthentication(
         user=settings.SPIRE_STANDIN_EMAIL_USER,
         password=settings.SPIRE_STANDIN_EMAIL_PASSWORD,
+    )
+
+    return MailServer(
+        auth,
+        hostname=settings.SPIRE_STANDIN_EMAIL_HOSTNAME,
         pop3_port=settings.SPIRE_STANDIN_EMAIL_POP3_PORT,
     )
 
@@ -102,7 +119,11 @@ def check_and_route_emails():
             )
             _collect_and_send(pending_message)
 
-        logger.info("No new emails found from %s or %s", hmrc_to_dit_server.user, spire_to_dit_server.user)
+        logger.info(
+            "No new emails found from %s or %s",
+            hmrc_to_dit_server.auth.user,
+            spire_to_dit_server.auth.user,
+        )
 
         publish_queue_status()
 

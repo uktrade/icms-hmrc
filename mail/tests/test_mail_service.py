@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from poplib import POP3_SSL
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 from django.test import SimpleTestCase
 from parameterized import parameterized
@@ -126,15 +126,43 @@ class MailServiceTests(LiteHMRCTestClient):
 
 class MailServerTests(SimpleTestCase):
     def test_mail_server_equal(self):
-        m1 = MailServer(hostname="host", user="u", password="p", pop3_port=1)  # nosec
+        auth = Mock()
 
-        m2 = MailServer(hostname="host", user="u", password="p", pop3_port=1)  # nosec
+        m1 = MailServer(auth, hostname="host", pop3_port=1)  # nosec
+        m2 = MailServer(auth, hostname="host", pop3_port=1)  # nosec
 
         self.assertEqual(m1, m2)
 
     def test_mail_server_not_equal(self):
-        m1 = MailServer(hostname="host", user="u", password="p", pop3_port=1)  # nosec
+        auth = Mock()
 
-        m2 = MailServer(hostname="host", user="u", password="p", pop3_port=2)  # nosec
+        m1 = MailServer(auth, hostname="host", pop3_port=1)  # nosec
+        m2 = MailServer(auth, hostname="host", pop3_port=2)  # nosec
 
         self.assertNotEqual(m1, m2)
+
+    def test_mail_server_connect_to_pop3(self):
+        hostname = "host"
+        pop3_port = 1
+
+        auth = Mock()
+        pop3conn = MagicMock(spec=POP3_SSL)
+
+        with patch("mail.servers.poplib") as mock_poplib:
+            mock_poplib.POP3_SSL = pop3conn
+
+            mail_server = MailServer(
+                auth,
+                hostname=hostname,
+                pop3_port=pop3_port,
+            )
+            mail_server.connect_to_pop3()
+
+        pop3conn.assert_called_with(
+            hostname,
+            pop3_port,
+            timeout=60,
+        )
+
+        mock_connection = pop3conn()
+        auth.authenticate.assert_called_with(mock_connection)
