@@ -5,7 +5,8 @@ from unittest.mock import MagicMock, Mock, patch
 from django.test import SimpleTestCase
 from parameterized import parameterized
 
-from mail.libraries.mailbox_service import get_message_iterator, read_last_message, read_last_three_emails
+from mail.auth import Authenticator
+from mail.libraries.mailbox_service import read_last_message, read_last_three_emails
 from mail.servers import MailServer
 from mail.tests.libraries.client import LiteHMRCTestClient
 
@@ -126,7 +127,7 @@ class MailServiceTests(LiteHMRCTestClient):
 
 class MailServerTests(SimpleTestCase):
     def test_mail_server_equal(self):
-        auth = Mock()
+        auth = Mock(spec=Authenticator)
 
         m1 = MailServer(auth, hostname="host", pop3_port=1)  # nosec
         m2 = MailServer(auth, hostname="host", pop3_port=1)  # nosec
@@ -134,7 +135,7 @@ class MailServerTests(SimpleTestCase):
         self.assertEqual(m1, m2)
 
     def test_mail_server_not_equal(self):
-        auth = Mock()
+        auth = Mock(spec=Authenticator)
 
         m1 = MailServer(auth, hostname="host", pop3_port=1)  # nosec
         m2 = MailServer(auth, hostname="host", pop3_port=2)  # nosec
@@ -145,7 +146,7 @@ class MailServerTests(SimpleTestCase):
         hostname = "host"
         pop3_port = 1
 
-        auth = Mock()
+        auth = Mock(spec=Authenticator)
         pop3conn = MagicMock(spec=POP3_SSL)
 
         with patch("mail.servers.poplib") as mock_poplib:
@@ -166,3 +167,13 @@ class MailServerTests(SimpleTestCase):
 
         mock_connection = pop3conn()
         auth.authenticate.assert_called_with(mock_connection)
+
+    def test_mail_server_user(self):
+        auth = Mock(spec=Authenticator)
+        auth.user = Mock()
+        mail_server = MailServer(
+            auth,
+            hostname="host",
+            pop3_port=1,
+        )
+        self.assertEqual(mail_server.user, auth.user)

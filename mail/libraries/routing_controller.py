@@ -94,7 +94,7 @@ def get_spire_standin_mailserver() -> MailServer:
 def check_and_route_emails():
     logger.info("Checking for emails")
     hmrc_to_dit_server = get_hmrc_to_dit_mailserver()
-    email_message_dtos = _get_email_message_dtos(hmrc_to_dit_server, number=None)
+    email_message_dtos = get_email_message_dtos(hmrc_to_dit_server, number=None)
     email_message_dtos = sort_dtos_by_date(email_message_dtos)
     logger.info("Incoming message dtos sorted by date: %s", email_message_dtos)
 
@@ -103,7 +103,7 @@ def check_and_route_emails():
         # if the config for the return path is different to outgoing mail path
         # then check the return path otherwise don't bother as it will contain the
         # same emails.
-        reply_message_dtos = _get_email_message_dtos(spire_to_dit_server)
+        reply_message_dtos = get_email_message_dtos(spire_to_dit_server)
         reply_message_dtos = sort_dtos_by_date(reply_message_dtos)
         logger.info("Reply message dtos sorted by date: %s", reply_message_dtos)
 
@@ -121,8 +121,8 @@ def check_and_route_emails():
 
         logger.info(
             "No new emails found from %s or %s",
-            hmrc_to_dit_server.auth.user,
-            spire_to_dit_server.auth.user,
+            hmrc_to_dit_server.user,
+            spire_to_dit_server.user,
         )
 
         publish_queue_status()
@@ -218,7 +218,7 @@ def _collect_and_send(mail: Mail):
             send_licence_data_to_hmrc(schedule=0)  # noqa
 
 
-def _get_email_message_dtos(server: MailServer, number: Optional[int] = 3) -> List[Tuple[EmailMessageDto, Callable]]:
+def get_email_message_dtos(server: MailServer, number: Optional[int] = 3) -> List[Tuple[EmailMessageDto, Callable]]:
     pop3_connection = server.connect_to_pop3()
     emails_iter = get_message_iterator(pop3_connection, server.user)
     if number:

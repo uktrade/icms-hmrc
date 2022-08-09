@@ -103,7 +103,7 @@ class EmailSelectTests(LiteHMRCTestClient):
         self.assertEqual(mail, mail_1)
 
     @mock.patch("mail.libraries.routing_controller.send")
-    @mock.patch("mail.libraries.routing_controller._get_email_message_dtos")
+    @mock.patch("mail.libraries.routing_controller.get_email_message_dtos")
     def test_case1_sending_of_pending_licencedata_mails(self, email_dtos, send_mail):
         """
         Ensure pending mails are sent and status updated as expected.
@@ -155,7 +155,7 @@ class EmailSelectTests(LiteHMRCTestClient):
         self.assertEqual(mail.status, ReceptionStatusEnum.REPLY_PENDING)
 
     @mock.patch("mail.libraries.routing_controller.send")
-    @mock.patch("mail.libraries.routing_controller._get_email_message_dtos")
+    @mock.patch("mail.libraries.routing_controller.get_email_message_dtos")
     def test_case2_sending_of_pending_usagedata_mails(self, email_dtos, send_mail):
         """
         Case2: When only usageData mails are pending. Multiple mails are possible if none
@@ -212,7 +212,7 @@ class EmailSelectTests(LiteHMRCTestClient):
             self.assertEqual(mail.status, ReceptionStatusEnum.REPLY_SENT)
 
     @mock.patch("mail.libraries.routing_controller.send")
-    @mock.patch("mail.libraries.routing_controller._get_email_message_dtos")
+    @mock.patch("mail.libraries.routing_controller.get_email_message_dtos")
     def test_case3_sending_of_pending_licencedata_and_usagedata_mails_1(self, email_dtos, send_mail):
         """
         Case3.1: When both licenceData and usageData mails are pending. This is possible if
@@ -294,7 +294,7 @@ class EmailSelectTests(LiteHMRCTestClient):
                 self.assertEqual(mail.status, ReceptionStatusEnum.REPLY_SENT)
 
     @mock.patch("mail.libraries.routing_controller.send")
-    @mock.patch("mail.libraries.routing_controller._get_email_message_dtos")
+    @mock.patch("mail.libraries.routing_controller.get_email_message_dtos")
     def test_case3_sending_of_pending_licencedata_and_usagedata_mails_2(self, email_dtos, send_mail):
         """
         Another variation of case3 is,
@@ -362,7 +362,7 @@ class EmailSelectTests(LiteHMRCTestClient):
         self.assertEqual(mail.status, ReceptionStatusEnum.REPLY_PENDING)
 
     @mock.patch("mail.libraries.routing_controller.send")
-    @mock.patch("mail.libraries.routing_controller._get_email_message_dtos")
+    @mock.patch("mail.libraries.routing_controller.get_email_message_dtos")
     def test_case4_sending_of_pending_licencedata_when_waiting_for_reply(self, email_dtos, send_mail):
         """
         Another variation of case3 is,

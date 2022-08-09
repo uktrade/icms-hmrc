@@ -13,7 +13,7 @@ from mail.tests.libraries.client import LiteHMRCTestClient
 
 class LITEHMRCResendEmailTests(LiteHMRCTestClient):
     @mock.patch("mail.libraries.routing_controller.send")
-    @mock.patch("mail.libraries.routing_controller._get_email_message_dtos")
+    @mock.patch("mail.libraries.routing_controller.get_email_message_dtos")
     def test_resend_licence_data_mail_to_hmrc(self, email_dtos, send_mail):
         """
         Tests resending of licence data mail to HMRC
@@ -57,7 +57,7 @@ class LITEHMRCResendEmailTests(LiteHMRCTestClient):
         self.assertEqual(send_mail.call_count, 2)
 
     @mock.patch("mail.libraries.routing_controller.send")
-    @mock.patch("mail.libraries.routing_controller._get_email_message_dtos")
+    @mock.patch("mail.libraries.routing_controller.get_email_message_dtos")
     def test_resend_licence_reply_mail_to_spire(self, email_dtos, send_mail):
         source_run_number = 49530
         hmrc_run_number = 49543
@@ -116,7 +116,7 @@ class LITEHMRCResendEmailTests(LiteHMRCTestClient):
         send_mail.assert_called_once()
 
     @mock.patch("mail.libraries.routing_controller.send")
-    @mock.patch("mail.libraries.routing_controller._get_email_message_dtos")
+    @mock.patch("mail.libraries.routing_controller.get_email_message_dtos")
     def test_resend_usage_data_mail_to_spire(self, email_dtos, send_mail):
         source_run_number = 49530
         hmrc_run_number = 49543
