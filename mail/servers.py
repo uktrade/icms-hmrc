@@ -20,7 +20,6 @@ class MailServer(object):
         self.pop3_connection = None
 
     def __eq__(self, other):
-
         if not isinstance(other, MailServer):
             return False
 
@@ -35,6 +34,10 @@ class MailServer(object):
 
     def quit_pop3_connection(self):
         self.pop3_connection.quit()
+
+    @property
+    def user(self):
+        return self.auth.user
 
 
 def get_smtp_connection():
