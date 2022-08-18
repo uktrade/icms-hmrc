@@ -28,3 +28,6 @@ exclude_lines =
 
     # Exclude type checking blocks
     if TYPE_CHECKING:
+
+    # Exclude unimplemented Protocol methods
+    \.\.\.
