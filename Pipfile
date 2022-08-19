@@ -33,6 +33,7 @@ gunicorn = "*"
 django = "==3.2.15"
 elastic-apm = "==6.7.2"
 django-jsonfield = "==1.4"
+msal = "~=1.18.0"
 
 [requires]
 python_version = "3.7"

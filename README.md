@@ -94,3 +94,19 @@ The tool 'bandit' is used. To run it `pipenv run bandit -r .`
 - `pre-commit install`
 * run following to scan all files for issues
   - `pre-commit run --all-files`
+
+# Mailbox authentication
+
+To authenticate with the mailboxes we have two separate authentication mechanisms
+
+## Basic authentication
+
+This authenticates using a username and password directly with the POP service.
+
+## Modern authentication
+
+For MS mailboxes the basic authentication is/has been removed as of 1st October 2022 and so we need to use modern authentication when accessing POP and SMTP accounts.
+
+This uses OAuth and the full documentation is https://docs.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth.
+
+The credentials need to be obtained from SRE who will provide them to you for the mailbox accounts that you require access to. We cannot do this ourselves as they are provided from the Azure infrastructure which we don't have access to.
