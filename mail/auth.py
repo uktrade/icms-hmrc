@@ -54,8 +54,8 @@ class ModernAuthentication:
     def _get_access_token(self):
         scopes = ["https://outlook.office.com/.default"]
 
-        result = self.app.acquire_token_silent(scopes, account=None)
-        if not result:
+        result = self.app.acquire_token_silent(scopes, account=None)  # This attempts to get the token from the cache
+        if not result:  # If we don't find the token in the cache then we go off and retrieve it from the provider
             result = self.app.acquire_token_for_client(scopes=scopes)
 
         return result["access_token"]
