@@ -29,7 +29,9 @@ class BasicAuthentication:
 
 class ModernAuthentication:
     """Uses MS modern authentication (which is OAuth) to authenticate a pop3
-    connection
+    connection.
+
+    https://docs.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth
     """
 
     def __init__(
