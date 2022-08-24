@@ -64,7 +64,7 @@ class ICMSEndToEndTests(testcases.TestCase):
             "start_date": "2022-06-06",
             "end_date": "2025-05-30",
             "organisation": {
-                "eori_number": "112233445566",
+                "eori_number": "GB112233445566000",
                 "name": "org name",
                 "address": {
                     "line_1": "line_1",
@@ -110,7 +110,7 @@ class ICMSEndToEndTests(testcases.TestCase):
         self.client.get(reverse("mail:set_all_to_reply_sent"))
 
         org_data = {
-            "eori_number": "665544332211",
+            "eori_number": "GB665544332211000",
             "name": "DFL Organisation",
             "address": {
                 "line_1": "line_1",

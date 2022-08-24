@@ -36,13 +36,31 @@ class AddressSerializer(serializers.Serializer):
 
 
 class OrganisationSerializer(serializers.Serializer):
-    # TODO: ICMSLST-1658 Revisit turn / eori_number
-    # turn = serializers.CharField(max_length=17)
-    eori_number = serializers.CharField(max_length=17)
+
+    # "GB" + 12 or 15 digits.
+    eori_number = serializers.CharField(min_length=14, max_length=17)
     name = serializers.CharField(max_length=80)
     address = AddressSerializer()
     start_date = serializers.DateField(required=False, allow_null=True)
     end_date = serializers.DateField(required=False, allow_null=True)
+
+    def validate_eori_number(self, value: str) -> str:
+        """Basic validation for EORI number.
+
+        https://www.tax.service.gov.uk/check-eori-number
+        """
+
+        # This may need to be extended to include other prefixes (XI) in the future.
+        if not value.upper().startswith("GB"):
+            raise serializers.ValidationError("'eori_number' must start with 'GB' prefix")
+
+        # Example value: GB123456789012345
+        eori_number_length = len(value[2:])
+
+        if eori_number_length != 12 and eori_number_length != 15:
+            raise serializers.ValidationError("'eori_number' must start with 'GB' followed by 12 or 15 numbers")
+
+        return value
 
 
 class GoodSerializer(serializers.Serializer):
