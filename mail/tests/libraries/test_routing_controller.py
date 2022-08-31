@@ -6,7 +6,6 @@ from django.test import override_settings
 from mail.libraries.routing_controller import (
     get_hmrc_to_dit_mailserver,
     get_mock_hmrc_mailserver,
-    get_spire_standin_mailserver,
     get_spire_to_dit_mailserver,
 )
 
@@ -80,26 +79,3 @@ class RoutingControllerTest(unittest.TestCase):
         )
 
         self.assertEqual(mock_hmrc_mailserver, mock_MailServer())
-
-    @patch("mail.libraries.routing_controller.BasicAuthentication")
-    @patch("mail.libraries.routing_controller.MailServer")
-    @override_settings(
-        SPIRE_STANDIN_EMAIL_USER="spire.standin.email.user@example.com",
-        SPIRE_STANDIN_EMAIL_PASSWORD="testpassword",
-        SPIRE_STANDIN_EMAIL_HOSTNAME="host.example.com",
-        SPIRE_STANDIN_EMAIL_POP3_PORT="123",
-    )
-    def test_get_spire_standin_mailserver(self, mock_MailServer, mock_BasicAuthentication):
-        spire_standin_mailserver = get_spire_standin_mailserver()
-
-        mock_BasicAuthentication.asset_called_with(
-            user="hmrc.to.dit.email.user@example.com",
-            password="testpassword",
-        )
-        mock_MailServer.assert_called_with(
-            mock_BasicAuthentication(),
-            hostname="host.example.com",
-            pop3_port="123",
-        )
-
-        self.assertEqual(spire_standin_mailserver, mock_MailServer())

@@ -78,19 +78,6 @@ def get_mock_hmrc_mailserver() -> MailServer:
     )
 
 
-def get_spire_standin_mailserver() -> MailServer:
-    auth = BasicAuthentication(
-        user=settings.SPIRE_STANDIN_EMAIL_USER,
-        password=settings.SPIRE_STANDIN_EMAIL_PASSWORD,
-    )
-
-    return MailServer(
-        auth,
-        hostname=settings.SPIRE_STANDIN_EMAIL_HOSTNAME,
-        pop3_port=settings.SPIRE_STANDIN_EMAIL_POP3_PORT,
-    )
-
-
 def check_and_route_emails():
     logger.info("Checking for emails")
     hmrc_to_dit_server = get_hmrc_to_dit_mailserver()
