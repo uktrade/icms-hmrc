@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from conf.settings import SPIRE_ADDRESS
-from mail.auth import BasicAuthentication
+from mail.auth import BasicAuthentication, ModernAuthentication
 from mail.enums import ExtractTypeEnum, MailReadStatuses, ReceptionStatusEnum, SourceEnum
 from mail.libraries.builders import build_email_message
 from mail.libraries.data_processors import (
@@ -35,9 +35,11 @@ def get_spire_to_dit_mailserver() -> MailServer:
 
     These are licenceData and usageReply emails. They are processed by the service and sent to HMRC.
     """
-    auth = BasicAuthentication(
+    auth = ModernAuthentication(
         user=settings.INCOMING_EMAIL_USER,
-        password=settings.INCOMING_EMAIL_PASSWORD,
+        client_id=settings.AZURE_AUTH_CLIENT_ID,
+        client_secret=settings.AZURE_AUTH_CLIENT_SECRET,
+        tenant_id=settings.AZURE_AUTH_TENANT_ID,
     )
 
     return MailServer(
@@ -53,9 +55,11 @@ def get_hmrc_to_dit_mailserver() -> MailServer:
 
     These are licenceReply and usageData emails
     """
-    auth = BasicAuthentication(
+    auth = ModernAuthentication(
         user=settings.HMRC_TO_DIT_EMAIL_USER,
-        password=settings.HMRC_TO_DIT_EMAIL_PASSWORD,
+        client_id=settings.AZURE_AUTH_CLIENT_ID,
+        client_secret=settings.AZURE_AUTH_CLIENT_SECRET,
+        tenant_id=settings.AZURE_AUTH_TENANT_ID,
     )
 
     return MailServer(
