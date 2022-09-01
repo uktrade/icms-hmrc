@@ -102,9 +102,17 @@ class EmailSelectTests(LiteHMRCTestClient):
 
         self.assertEqual(mail, mail_1)
 
+    @mock.patch("mail.libraries.routing_controller.get_spire_to_dit_mailserver")
+    @mock.patch("mail.libraries.routing_controller.get_hmrc_to_dit_mailserver")
     @mock.patch("mail.libraries.routing_controller.send")
     @mock.patch("mail.libraries.routing_controller.get_email_message_dtos")
-    def test_case1_sending_of_pending_licencedata_mails(self, email_dtos, send_mail):
+    def test_case1_sending_of_pending_licencedata_mails(
+        self,
+        email_dtos,
+        send_mail,
+        mock_get_hmrc_to_dit_mailserver,
+        mock_get_spire_to_dit_mailserver,
+    ):
         """
         Ensure pending mails are sent and status updated as expected.
 
@@ -154,9 +162,17 @@ class EmailSelectTests(LiteHMRCTestClient):
         send_mail.assert_called_once()
         self.assertEqual(mail.status, ReceptionStatusEnum.REPLY_PENDING)
 
+    @mock.patch("mail.libraries.routing_controller.get_spire_to_dit_mailserver")
+    @mock.patch("mail.libraries.routing_controller.get_hmrc_to_dit_mailserver")
     @mock.patch("mail.libraries.routing_controller.send")
     @mock.patch("mail.libraries.routing_controller.get_email_message_dtos")
-    def test_case2_sending_of_pending_usagedata_mails(self, email_dtos, send_mail):
+    def test_case2_sending_of_pending_usagedata_mails(
+        self,
+        email_dtos,
+        send_mail,
+        mock_get_hmrc_to_dit_mailserver,
+        mock_get_spire_to_dit_mailserver,
+    ):
         """
         Case2: When only usageData mails are pending. Multiple mails are possible if none
         are received over the weekend and both arrived on monday.
@@ -211,9 +227,17 @@ class EmailSelectTests(LiteHMRCTestClient):
             self.assertEqual(send_mail.call_count, int(i + 1))
             self.assertEqual(mail.status, ReceptionStatusEnum.REPLY_SENT)
 
+    @mock.patch("mail.libraries.routing_controller.get_spire_to_dit_mailserver")
+    @mock.patch("mail.libraries.routing_controller.get_hmrc_to_dit_mailserver")
     @mock.patch("mail.libraries.routing_controller.send")
     @mock.patch("mail.libraries.routing_controller.get_email_message_dtos")
-    def test_case3_sending_of_pending_licencedata_and_usagedata_mails_1(self, email_dtos, send_mail):
+    def test_case3_sending_of_pending_licencedata_and_usagedata_mails_1(
+        self,
+        email_dtos,
+        send_mail,
+        mock_get_hmrc_to_dit_mailserver,
+        mock_get_spire_to_dit_mailserver,
+    ):
         """
         Case3.1: When both licenceData and usageData mails are pending. This is possible if
         we haven't received any usageData files over the weekend and on monday they have
@@ -293,9 +317,17 @@ class EmailSelectTests(LiteHMRCTestClient):
             elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
                 self.assertEqual(mail.status, ReceptionStatusEnum.REPLY_SENT)
 
+    @mock.patch("mail.libraries.routing_controller.get_spire_to_dit_mailserver")
+    @mock.patch("mail.libraries.routing_controller.get_hmrc_to_dit_mailserver")
     @mock.patch("mail.libraries.routing_controller.send")
     @mock.patch("mail.libraries.routing_controller.get_email_message_dtos")
-    def test_case3_sending_of_pending_licencedata_and_usagedata_mails_2(self, email_dtos, send_mail):
+    def test_case3_sending_of_pending_licencedata_and_usagedata_mails_2(
+        self,
+        email_dtos,
+        send_mail,
+        mock_get_hmrc_to_dit_mailserver,
+        mock_get_spire_to_dit_mailserver,
+    ):
         """
         Another variation of case3 is,
 
@@ -361,9 +393,17 @@ class EmailSelectTests(LiteHMRCTestClient):
         send_mail.assert_called_once()
         self.assertEqual(mail.status, ReceptionStatusEnum.REPLY_PENDING)
 
+    @mock.patch("mail.libraries.routing_controller.get_spire_to_dit_mailserver")
+    @mock.patch("mail.libraries.routing_controller.get_hmrc_to_dit_mailserver")
     @mock.patch("mail.libraries.routing_controller.send")
     @mock.patch("mail.libraries.routing_controller.get_email_message_dtos")
-    def test_case4_sending_of_pending_licencedata_when_waiting_for_reply(self, email_dtos, send_mail):
+    def test_case4_sending_of_pending_licencedata_when_waiting_for_reply(
+        self,
+        email_dtos,
+        send_mail,
+        mock_get_hmrc_to_dit_mailserver,
+        mock_get_spire_to_dit_mailserver,
+    ):
         """
         Another variation of case3 is,
 

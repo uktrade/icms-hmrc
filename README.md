@@ -31,6 +31,7 @@ To run in docker do the following
   ```properties
   EMAIL_SMTP_PORT=587
   ```
+- You may need to acquire additional credentials from [Vault](https://vault.ci.uktrade.digital/)
 - To build and run a local Postfix [mail server](https://github.com/uktrade/mailserver)
 - To initilize database
 `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py migrate`
