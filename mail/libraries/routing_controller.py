@@ -87,7 +87,6 @@ def check_and_route_emails():
     hmrc_to_dit_server = get_hmrc_to_dit_mailserver()
     email_message_dtos = get_email_message_dtos(hmrc_to_dit_server, number=None)
     email_message_dtos = sort_dtos_by_date(email_message_dtos)
-    logger.info("Incoming message dtos sorted by date: %s", email_message_dtos)
 
     spire_to_dit_server = get_spire_to_dit_mailserver()
     if hmrc_to_dit_server != spire_to_dit_server:
@@ -96,7 +95,6 @@ def check_and_route_emails():
         # same emails.
         reply_message_dtos = get_email_message_dtos(spire_to_dit_server)
         reply_message_dtos = sort_dtos_by_date(reply_message_dtos)
-        logger.info("Reply message dtos sorted by date: %s", reply_message_dtos)
 
         email_message_dtos.extend(reply_message_dtos)
 
