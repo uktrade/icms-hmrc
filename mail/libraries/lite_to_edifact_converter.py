@@ -273,7 +273,7 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
     trader_address = trader.get("address")
 
     yield chieftypes.Trader(
-        turn=trader.get("eori_number"),
+        rpa_trader_id=trader.get("eori_number"),
         start_date=get_date_field(trader, "start_date"),
         end_date=get_date_field(trader, "end_date"),
         name=trader.get("name"),
