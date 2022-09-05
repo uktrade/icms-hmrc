@@ -1,10 +1,5 @@
 [run]
 omit =
-    ./*/apps.py
-    ./*/admin.py
-    ./*/urls.py
-    ./*/__init__.py
-    ./*/models.py
     ./*/migrations/*
     ./conf/settings.py
     ./conf/wsgi.py
@@ -33,3 +28,6 @@ exclude_lines =
 
     # Exclude type checking blocks
     if TYPE_CHECKING:
+
+    # Exclude unimplemented Protocol methods
+    \.\.\.

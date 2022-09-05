@@ -7,6 +7,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from conf.settings import SPIRE_ADDRESS
+from mail.auth import BasicAuthentication, ModernAuthentication
 from mail.enums import ExtractTypeEnum, MailReadStatuses, ReceptionStatusEnum, SourceEnum
 from mail.libraries.builders import build_email_message
 from mail.libraries.data_processors import (
@@ -21,9 +22,9 @@ from mail.libraries.helpers import (
     select_email_for_sending,
     sort_dtos_by_date,
 )
-from mail.libraries.mailbox_service import get_message_iterator, send_email
+from mail.libraries.mailbox_service import get_message_iterator
 from mail.models import Mail
-from mail.servers import MailServer
+from mail.servers import MailServer, smtp_send
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +35,17 @@ def get_spire_to_dit_mailserver() -> MailServer:
 
     These are licenceData and usageReply emails. They are processed by the service and sent to HMRC.
     """
-    return MailServer(
-        hostname=settings.INCOMING_EMAIL_HOSTNAME,
+    auth = ModernAuthentication(
         user=settings.INCOMING_EMAIL_USER,
-        password=settings.INCOMING_EMAIL_PASSWORD,
+        client_id=settings.AZURE_AUTH_CLIENT_ID,
+        client_secret=settings.AZURE_AUTH_CLIENT_SECRET,
+        tenant_id=settings.AZURE_AUTH_TENANT_ID,
+    )
+
+    return MailServer(
+        auth,
+        hostname=settings.INCOMING_EMAIL_HOSTNAME,
         pop3_port=settings.INCOMING_EMAIL_POP3_PORT,
-        smtp_port=settings.INCOMING_EMAIL_SMTP_PORT,
     )
 
 
@@ -49,39 +55,37 @@ def get_hmrc_to_dit_mailserver() -> MailServer:
 
     These are licenceReply and usageData emails
     """
-    return MailServer(
-        hostname=settings.HMRC_TO_DIT_EMAIL_HOSTNAME,
+    auth = ModernAuthentication(
         user=settings.HMRC_TO_DIT_EMAIL_USER,
-        password=settings.HMRC_TO_DIT_EMAIL_PASSWORD,
+        client_id=settings.AZURE_AUTH_CLIENT_ID,
+        client_secret=settings.AZURE_AUTH_CLIENT_SECRET,
+        tenant_id=settings.AZURE_AUTH_TENANT_ID,
+    )
+
+    return MailServer(
+        auth,
+        hostname=settings.HMRC_TO_DIT_EMAIL_HOSTNAME,
         pop3_port=settings.HMRC_TO_DIT_EMAIL_POP3_PORT,
-        smtp_port=settings.HMRC_TO_DIT_EMAIL_SMTP_PORT,
     )
 
 
 def get_mock_hmrc_mailserver() -> MailServer:
-    return MailServer(
-        hostname=settings.MOCK_HMRC_EMAIL_HOSTNAME,
+    auth = BasicAuthentication(
         user=settings.MOCK_HMRC_EMAIL_USER,
         password=settings.MOCK_HMRC_EMAIL_PASSWORD,
-        pop3_port=settings.MOCK_HMRC_EMAIL_POP3_PORT,
-        smtp_port=settings.MOCK_HMRC_EMAIL_SMTP_PORT,
     )
 
-
-def get_spire_standin_mailserver() -> MailServer:
     return MailServer(
-        hostname=settings.SPIRE_STANDIN_EMAIL_HOSTNAME,
-        user=settings.SPIRE_STANDIN_EMAIL_USER,
-        password=settings.SPIRE_STANDIN_EMAIL_PASSWORD,
-        pop3_port=settings.SPIRE_STANDIN_EMAIL_POP3_PORT,
-        smtp_port=settings.SPIRE_STANDIN_EMAIL_SMTP_PORT,
+        auth,
+        hostname=settings.MOCK_HMRC_EMAIL_HOSTNAME,
+        pop3_port=settings.MOCK_HMRC_EMAIL_POP3_PORT,
     )
 
 
 def check_and_route_emails():
     logger.info("Checking for emails")
     hmrc_to_dit_server = get_hmrc_to_dit_mailserver()
-    email_message_dtos = _get_email_message_dtos(hmrc_to_dit_server, number=None)
+    email_message_dtos = get_email_message_dtos(hmrc_to_dit_server, number=None)
     email_message_dtos = sort_dtos_by_date(email_message_dtos)
     logger.info("Incoming message dtos sorted by date: %s", email_message_dtos)
 
@@ -90,7 +94,7 @@ def check_and_route_emails():
         # if the config for the return path is different to outgoing mail path
         # then check the return path otherwise don't bother as it will contain the
         # same emails.
-        reply_message_dtos = _get_email_message_dtos(spire_to_dit_server)
+        reply_message_dtos = get_email_message_dtos(spire_to_dit_server)
         reply_message_dtos = sort_dtos_by_date(reply_message_dtos)
         logger.info("Reply message dtos sorted by date: %s", reply_message_dtos)
 
@@ -106,7 +110,11 @@ def check_and_route_emails():
             )
             _collect_and_send(pending_message)
 
-        logger.info("No new emails found from %s or %s", hmrc_to_dit_server.user, spire_to_dit_server.user)
+        logger.info(
+            "No new emails found from %s or %s",
+            hmrc_to_dit_server.user,
+            spire_to_dit_server.user,
+        )
 
         publish_queue_status()
 
@@ -163,11 +171,10 @@ def update_mail(mail: Mail, mail_dto: EmailMessageDto):
     mail.save()
 
 
-def send(server: MailServer, email_message_dto: EmailMessageDto):
+def send(email_message_dto: EmailMessageDto):
     logger.info("Preparing to send email")
-    smtp_connection = server.connect_to_smtp()
-    send_email(smtp_connection, build_email_message(email_message_dto))
-    server.quit_smtp_connection()
+    message = build_email_message(email_message_dto)
+    smtp_send(message)
 
 
 def _collect_and_send(mail: Mail):
@@ -183,8 +190,7 @@ def _collect_and_send(mail: Mail):
 
     if message_to_send_dto:
         if message_to_send_dto.receiver != SourceEnum.LITE and message_to_send_dto.subject:
-            server = get_spire_to_dit_mailserver()
-            send(server, message_to_send_dto)
+            send(message_to_send_dto)
             update_mail(mail, message_to_send_dto)
 
             logger.info(
@@ -203,7 +209,7 @@ def _collect_and_send(mail: Mail):
             send_licence_data_to_hmrc(schedule=0)  # noqa
 
 
-def _get_email_message_dtos(server: MailServer, number: Optional[int] = 3) -> List[Tuple[EmailMessageDto, Callable]]:
+def get_email_message_dtos(server: MailServer, number: Optional[int] = 3) -> List[Tuple[EmailMessageDto, Callable]]:
     pop3_connection = server.connect_to_pop3()
     emails_iter = get_message_iterator(pop3_connection, server.user)
     if number:

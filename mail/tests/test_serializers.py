@@ -1,6 +1,7 @@
 import uuid
 
 from django.test import TestCase, override_settings
+from parameterized import parameterized
 from rest_framework.exceptions import ErrorDetail
 
 from mail import icms_serializers
@@ -278,7 +279,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             "start_date": "2022-06-06",
             "end_date": "2025-05-30",
             "organisation": {
-                "eori_number": "112233445566",
+                "eori_number": "GB112233445566000",
                 "name": "org name",
                 "address": {
                     "line_1": "line_1",
@@ -325,7 +326,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             "start_date": "2022-06-06",
             "end_date": "2025-05-30",
             "organisation": {
-                "eori_number": "112233445566",
+                "eori_number": "GB112233445566000",
                 "name": "org name",
                 "address": {
                     "line_1": "line_1",
@@ -368,7 +369,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             "start_date": "2022-06-06",
             "end_date": "2025-05-30",
             "organisation": {
-                "eori_number": "112233445566",
+                "eori_number": "GB112233445566000",
                 "name": "org name",
                 "address": {
                     "line_1": "line_1",
@@ -453,6 +454,26 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
         for key in data.keys():
             self.assertIn(key, serializer.validated_data)
 
+    @parameterized.expand(
+        [
+            ("Prefix missing", "00000000000000", "'eori_number' must start with 'GB' prefix"),
+            ("EORI too short", "GB00000", "Ensure this field has at least 14 characters."),
+            ("EORI too long", "GB00000000000000000", "Ensure this field has no more than 17 characters."),
+            (
+                "EORI length not 12 or 15",
+                "GB0000000000000",
+                "'eori_number' must start with 'GB' followed by 12 or 15 numbers",
+            ),
+        ]
+    )
+    def test_eori_number_errors(self, name, eori, expected_error):
+        data = {"eori_number": eori}
+
+        serializer = icms_serializers.OrganisationSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+
+        self.assertEqual(str(serializer.errors["eori_number"][0]), expected_error, f"{name} test failed")
+
 
 def get_valid_fa_sil_payload():
     goods = [
@@ -473,7 +494,7 @@ def get_valid_fa_sil_payload():
         "start_date": "2022-06-29",
         "end_date": "2024-12-29",
         "organisation": {
-            "eori_number": "123456654321",
+            "eori_number": "GB123456654321000",
             "name": "SIL Organisation",
             "address": {
                 "line_1": "line_1",
@@ -506,7 +527,7 @@ def get_valid_sanctions_payload():
         "start_date": "2022-06-29",
         "end_date": "2024-12-29",
         "organisation": {
-            "eori_number": "112233445566",
+            "eori_number": "GB112233445566000",
             "name": "Sanction Organisation",
             "address": {
                 "line_1": "line_1",
