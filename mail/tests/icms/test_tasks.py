@@ -4,6 +4,7 @@ from typing import List
 from unittest.mock import create_autospec
 
 import pytest
+from django.test import override_settings
 
 from mail import servers
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
@@ -69,6 +70,13 @@ def mock_pop3_usage(mock_pop3):
     return mock_pop3
 
 
+@pytest.fixture()
+def correct_email_settings():
+    """Correct test email settings"""
+    with override_settings(HMRC_TO_DIT_EMAIL_USER="chief", HMRC_TO_DIT_EMAIL_HOSTNAME="hmrc_test_email.com"):
+        yield None
+
+
 def test_can_mock_email(mock_pop3):
     con = mock_pop3("dummy-host")
 
@@ -115,7 +123,7 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Patch where the pop3 connection is made
         self.monkeypatch.setattr(servers.poplib, "POP3_SSL", mock)
 
-    def test_process_licence_reply_email_success(self, mock_pop3):
+    def test_process_licence_reply_email_success(self, correct_email_settings, mock_pop3):
         self._patch_pop3_class(mock_pop3)
 
         # Check for emails and process them
@@ -133,7 +141,9 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Check the connection was closed automatically
         self.con.quit.assert_called_once()
 
-    def test_process_licence_reply_errors_with_multiple_attachments(self, mock_pop3_multiple_attachments):
+    def test_process_licence_reply_errors_with_multiple_attachments(
+        self, correct_email_settings, mock_pop3_multiple_attachments
+    ):
         self._patch_pop3_class(mock_pop3_multiple_attachments)
 
         # Only one attachment is accepted per licence reply email.
@@ -146,7 +156,9 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Check any scheduled deletes were reset
         self.con.rset.assert_called_once()
 
-    def test_process_licence_reply_errors_with_unknown_email_subject(self, mock_pop3_unknown_subject):
+    def test_process_licence_reply_errors_with_unknown_email_subject(
+        self, correct_email_settings, mock_pop3_unknown_subject
+    ):
         self._patch_pop3_class(mock_pop3_unknown_subject)
 
         with pytest.raises(ValueError, match="Unable to process email with subject: All about cakes"):
@@ -158,7 +170,9 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Check any scheduled deletes were reset
         self.con.rset.assert_called_once()
 
-    def test_process_licence_reply_errors_with_invalid_reply_subject(self, mock_pop3_invalid_reply_subject):
+    def test_process_licence_reply_errors_with_invalid_reply_subject(
+        self, correct_email_settings, mock_pop3_invalid_reply_subject
+    ):
         self._patch_pop3_class(mock_pop3_invalid_reply_subject)
 
         with pytest.raises(
@@ -172,7 +186,7 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Check any scheduled deletes were reset
         self.con.rset.assert_called_once()
 
-    def test_process_usage_email_errors_until_implemented(self, mock_pop3_usage):
+    def test_process_usage_email_errors_until_implemented(self, correct_email_settings, mock_pop3_usage):
         self._patch_pop3_class(mock_pop3_usage)
 
         with pytest.raises(NotImplementedError):
@@ -184,7 +198,7 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Check any scheduled deletes were reset
         self.con.rset.assert_called_once()
 
-    def test_process_email_usage_fake_success(self, mock_pop3_usage):
+    def test_process_email_usage_fake_success(self, correct_email_settings, mock_pop3_usage):
         self._patch_pop3_class(mock_pop3_usage)
         mock_save_usage = create_autospec(spec=tasks._save_usage_data_email)
         self.monkeypatch.setattr(tasks, "_save_usage_data_email", mock_save_usage)
@@ -197,7 +211,7 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Check the connection was closed automatically
         self.con.quit.assert_called_once()
 
-    def test_rollback_when_we_get_an_error_in_one_of_the_files(self, transactional_db):
+    def test_rollback_when_we_get_an_error_in_one_of_the_files(self, correct_email_settings, transactional_db):
         """Test a scenario where there is a good licence file and a bad usage file.
 
         Everything should roll back if we can't process everything.
@@ -242,6 +256,44 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         assert self.mail.status == ReceptionStatusEnum.REPLY_PENDING
         assert not self.mail.response_filename
         assert not self.mail.response_data
+
+    @override_settings(HMRC_TO_DIT_EMAIL_USER="chief", HMRC_TO_DIT_EMAIL_HOSTNAME="fake-valid-domain.com")
+    def test_unknown_email_sender_domain(self, mock_pop3):
+        self._patch_pop3_class(mock_pop3)
+
+        with pytest.raises(
+            ValueError,
+            match=(
+                'Unable to verify incoming email: From:"HMRC, CHIEF" <chief@hmrc_test_email.com>, '
+                "Subject: CHIEF_licenceReply_29236_202209231140"
+            ),
+        ):
+            tasks.process_licence_reply_and_usage_emails()
+
+        # Check the connection was closed automatically
+        self.con.quit.assert_called_once()
+
+        # Check any scheduled deletes were reset
+        self.con.rset.assert_called_once()
+
+    @override_settings(HMRC_TO_DIT_EMAIL_USER="fake-valid-user", HMRC_TO_DIT_EMAIL_HOSTNAME="hmrc_test_email.com")
+    def test_unknown_email_sender_user(self, mock_pop3):
+        self._patch_pop3_class(mock_pop3)
+
+        with pytest.raises(
+            ValueError,
+            match=(
+                'Unable to verify incoming email: From:"HMRC, CHIEF" <chief@hmrc_test_email.com>, '
+                "Subject: CHIEF_licenceReply_29236_202209231140"
+            ),
+        ):
+            tasks.process_licence_reply_and_usage_emails()
+
+        # Check the connection was closed automatically
+        self.con.quit.assert_called_once()
+
+        # Check any scheduled deletes were reset
+        self.con.rset.assert_called_once()
 
 
 # Note: Only added this test to cover a "partial" coverage line.

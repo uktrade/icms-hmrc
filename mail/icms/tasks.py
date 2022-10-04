@@ -2,6 +2,7 @@
 
 import email
 import logging
+from email.headerregistry import Address, UniqueAddressHeader
 
 from django.conf import settings
 from django.db import transaction
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 def process_licence_reply_and_usage_emails():
     """Downloads licenceReply and usageData emails from HMRC mailbox and stores in Mail model."""
+
     logger.info("Checking for reply and usage emails")
 
     auth = _get_hmrc_mailbox_auth()
@@ -29,6 +31,12 @@ def process_licence_reply_and_usage_emails():
                 logger.debug("Processing msg_id %s", msg_id)
 
                 mail = pop3.get_email(con, msg_id)
+
+                _check_sender_valid(
+                    mail,
+                    expected_sender_domain=settings.HMRC_TO_DIT_EMAIL_HOSTNAME,
+                    expected_sender_user=settings.HMRC_TO_DIT_EMAIL_USER,
+                )
 
                 subject = mail.get("Subject")
                 logger.debug("Subject of email being processed: %s", subject)
@@ -59,12 +67,29 @@ def process_licence_reply_and_usage_emails():
 
 
 def _get_hmrc_mailbox_auth() -> Authenticator:
-    # TODO: Replace with ModernAuthentication when needed
+    # TODO: ICMSLST-1759 Replace with ModernAuthentication
 
     return BasicAuthentication(
         user=settings.INCOMING_EMAIL_USER,
         password=settings.INCOMING_EMAIL_PASSWORD,
     )
+
+
+def _check_sender_valid(mail: email.message.EmailMessage, *, expected_sender_domain: str, expected_sender_user) -> None:
+    """Check the sender is valid"""
+
+    # TODO: ICMSLST-1760 Revisit this before going live.
+
+    mail_from_header: UniqueAddressHeader = mail.get("From")
+    mail_from: Address = mail_from_header.addresses[0]
+
+    if mail_from.domain != expected_sender_domain or mail_from.username != expected_sender_user:
+        subject = mail.get("Subject")
+        err_msg = f"Unable to verify incoming email: From:{mail_from}, Subject: {subject}"
+
+        logger.warning(err_msg)
+
+        raise ValueError(err_msg)
 
 
 def _save_licence_reply_email(reply_email: email.message.EmailMessage) -> None:
@@ -85,7 +110,8 @@ def _save_licence_reply_email(reply_email: email.message.EmailMessage) -> None:
     payload_bytes = reply_file.get_payload(decode=True)
 
     ld = LicenceData.objects.get(hmrc_run_number=run_number)
-    mail = Mail.objects.select_for_update().get(id=ld.mail.id)
+
+    mail = Mail.objects.select_for_update().get(id=ld.mail.id, status=ReceptionStatusEnum.REPLY_PENDING)
 
     mail.status = ReceptionStatusEnum.REPLY_RECEIVED
     mail.response_filename = file_name
@@ -95,7 +121,7 @@ def _save_licence_reply_email(reply_email: email.message.EmailMessage) -> None:
 
     mail.save()
 
-    logger.info("Updated mail instance: %s with licence reply", mail.id)
+    logger.info("Updated mail instance: %s with licence reply (subject: %s - filename: %s", mail.id, subject, file_name)
 
 
 def _get_run_number_from_subject(s: str) -> int:
