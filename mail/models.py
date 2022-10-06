@@ -4,6 +4,7 @@ import uuid
 from datetime import timedelta
 from typing import List
 
+from django.conf import settings
 from django.db import IntegrityError, models
 from django.utils import timezone
 from model_utils.models import TimeStampedModel
@@ -22,16 +23,22 @@ logger = logging.getLogger(__name__)
 
 class Mail(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True)
-    edi_filename = models.TextField(null=True, blank=True)
-    edi_data = models.TextField(null=True, blank=True)
-    status = models.CharField(choices=ReceptionStatusEnum.choices, default=ReceptionStatusEnum.PENDING, max_length=20)
+
+    # For licence_data / licence_reply emails they are saved on a single db record.
+    # e.g. the licence_reply email is saved on the licence_data record
     extract_type = models.CharField(choices=ExtractTypeEnum.choices, max_length=20, null=True)
 
+    # Status of mail through the lite-hmrc workflow
+    status = models.CharField(choices=ReceptionStatusEnum.choices, default=ReceptionStatusEnum.PENDING, max_length=20)
+
+    # licenceData fields
+    edi_filename = models.TextField(null=True, blank=True)
+    edi_data = models.TextField(null=True, blank=True)
     sent_filename = models.TextField(blank=True, null=True)
     sent_data = models.TextField(blank=True, null=True)
     sent_at = models.DateTimeField(blank=True, null=True)
 
+    # licenceReply / Usage fields
     response_filename = models.TextField(blank=True, null=True)
     response_data = models.TextField(blank=True, null=True)
     response_date = models.DateTimeField(blank=True, null=True)
@@ -42,6 +49,7 @@ class Mail(models.Model):
 
     raw_data = models.TextField()
 
+    created_at = models.DateTimeField(auto_now_add=True, blank=True)
     currently_processing_at = models.DateTimeField(null=True)
     currently_processed_by = models.CharField(null=True, max_length=100)
 
@@ -67,8 +75,9 @@ class Mail(models.Model):
 
         super(Mail, self).save(*args, **kwargs)
 
-        if self.response_data and ReplyStatusEnum.REJECTED in self.response_data:
-            self.notify_users(self.id, self.response_date)
+        if settings.SEND_REJECTED_EMAIL:
+            if self.response_data and ReplyStatusEnum.REJECTED in self.response_data:
+                self.notify_users(self.id, self.response_date)
 
     def set_locking_time(self, offset: int = 0):
         self.currently_processing_at = timezone.now() + timedelta(seconds=offset)
