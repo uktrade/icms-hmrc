@@ -16,6 +16,8 @@ Copy the template .env file: `cp local.env .env`
 
 Copy the template local_settings.sample if required: `cp local_settings.sample local_settings.py`
 
+if using local_settings.py remember to add this to your .env `DJANGO_SETTINGS_MODULE=local_settings`
+
 
 ### Running in Docker
 To run in docker do the following
