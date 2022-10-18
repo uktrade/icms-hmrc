@@ -1,9 +1,12 @@
 import pathlib
 import poplib
-from typing import List
-from unittest.mock import create_autospec
+from http import HTTPStatus
+from typing import TYPE_CHECKING, List
+from unittest import mock
+from urllib import parse
 
 import pytest
+from django.conf import settings
 from django.test import override_settings
 
 from mail import servers
@@ -12,15 +15,18 @@ from mail.icms import tasks
 from mail.models import LicenceData, Mail, SourceEnum
 from mail.utils import pop3
 
+if TYPE_CHECKING:
+    from requests_mock import Mocker
+
 
 @pytest.fixture
 def mock_pop3():
     """Mock pop3 to return a known response (CHIEF_licenceReply_29236_202209231140.eml)"""
 
-    mock_pop3 = create_autospec(spec=poplib.POP3_SSL)
+    mock_pop3 = mock.create_autospec(spec=poplib.POP3_SSL)
 
     # The return value of calling a magic mock is another instance of the mock with the same spec
-    # mock = create_autospec(spec=SomeClass)
+    # mock = mock.create_autospec(spec=SomeClass)
     # mock.return_value == mock()
     # Therefore we need to mock the methods on the return_value attribute
     # See here: https://docs.python.org/3/library/unittest.mock.html#calling
@@ -77,6 +83,12 @@ def correct_email_settings():
         yield None
 
 
+@pytest.fixture
+def licence_reply_example() -> str:
+    filename = "mail/tests/files/icms/CHIEF_licenceReply_accepted_and_rejected_example"
+    return pathlib.Path(filename).read_text()
+
+
 def test_can_mock_email(mock_pop3):
     con = mock_pop3("dummy-host")
 
@@ -92,7 +104,7 @@ def test_can_mock_email(mock_pop3):
 
     assert file_name == "CHIEF_licenceReply_29236_202209231140"
 
-    expected_file = get_expected_file()
+    expected_file = TestProcessLicenceReplyAndUsageEmailTask.get_expected_file()
 
     actual_file = reply_file.get_payload(decode=True).decode()
 
@@ -123,6 +135,11 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Patch where the pop3 connection is made
         self.monkeypatch.setattr(servers.poplib, "POP3_SSL", mock)
 
+    @staticmethod
+    def get_expected_file() -> str:
+        filename = "mail/tests/files/icms/CHIEF_licenceReply_29236_202209231140_attachment"
+        return pathlib.Path(filename).read_text()
+
     def test_process_licence_reply_email_success(self, correct_email_settings, mock_pop3):
         self._patch_pop3_class(mock_pop3)
 
@@ -133,7 +150,7 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         mail = LicenceData.objects.get(hmrc_run_number=29236).mail
         assert mail.status == ReceptionStatusEnum.REPLY_RECEIVED
         assert mail.response_filename == "CHIEF_licenceReply_29236_202209231140"
-        assert mail.response_data == get_expected_file()
+        assert mail.response_data == self.get_expected_file()
 
         # Successful processing should delete the message
         self.con.dele.assert_called_with("1")
@@ -200,7 +217,7 @@ class TestProcessLicenceReplyAndUsageEmailTask:
 
     def test_process_email_usage_fake_success(self, correct_email_settings, mock_pop3_usage):
         self._patch_pop3_class(mock_pop3_usage)
-        mock_save_usage = create_autospec(spec=tasks._save_usage_data_email)
+        mock_save_usage = mock.create_autospec(spec=tasks._save_usage_data_email)
         self.monkeypatch.setattr(tasks, "_save_usage_data_email", mock_save_usage)
 
         tasks.process_licence_reply_and_usage_emails()
@@ -217,7 +234,7 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         Everything should roll back if we can't process everything.
         """
 
-        mock_pop3_cls = create_autospec(spec=poplib.POP3_SSL)
+        mock_pop3_cls = mock.create_autospec(spec=poplib.POP3_SSL)
         # Return multiple message id's (licenceReply and Usage)
         mock_pop3_cls.return_value.list.return_value = (b"+OK", [b"1 12345", b"2 54321"], 1234)
 
@@ -232,7 +249,7 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         self._patch_pop3_class(mock_pop3_cls)
 
         # Let's make the _save_usage_data_email fail with a custom error
-        mock__save_usage_data_email = create_autospec(
+        mock__save_usage_data_email = mock.create_autospec(
             spec=tasks._save_usage_data_email, side_effect=RuntimeError("Something unexpected has happened...")
         )
 
@@ -306,6 +323,174 @@ def get_licence_reply_msg_list(filename: str) -> List[bytes]:
     return pathlib.Path(f"mail/tests/files/icms/{filename}").read_bytes().split(b"\r\n")
 
 
-def get_expected_file() -> str:
-    filename = "mail/tests/files/icms/CHIEF_licenceReply_29236_202209231140_attachment"
-    return pathlib.Path(filename).read_text()
+@mock.patch("mail.requests.hawk_authentication_enabled", lambda: True)
+class TestSendLicenceDataToICMSTask:
+    @pytest.fixture(autouse=True)
+    def _setup(self, db, requests_mock: "Mocker", licence_reply_example):
+        # Create a mail object that has data to send to ICMS
+        self.mail = Mail.objects.create(
+            status=ReceptionStatusEnum.REPLY_RECEIVED,
+            extract_type=ExtractTypeEnum.LICENCE_DATA,
+            edi_filename="the_licence_data_file",
+            edi_data="lovely data",
+            sent_filename="the_licence_data_file",
+            sent_data="lovely data",
+            response_filename="CHIEF_licenceReply_29236_202209231140",
+            response_data=licence_reply_example,
+        )
+        self.ld = LicenceData.objects.create(
+            licence_ids="[88514]", hmrc_run_number=29236, source=SourceEnum.ICMS, mail=self.mail
+        )
+
+        self.rq = requests_mock
+
+    def test_send_licence_data_to_icms_success(self, caplog):
+        # Mock the response that ICMS sends back
+        url = parse.urljoin(settings.ICMS_API_URL, "license-data-callback")
+        self.rq.post(url, status_code=HTTPStatus.OK, json={})
+
+        with mock.patch("mail.requests.verify_api_response", spec=True) as verify_resp:
+            # Send the licence data to ICMS
+            tasks.send_licence_data_to_icms()
+
+            verify_resp.assert_called_once()
+
+        self.mail.refresh_from_db()
+
+        # Check the hawk headers is there
+        assert "hawk-authentication" in self.rq.last_request.headers
+
+        # Check the mail has been updated
+        assert self.mail.status == ReceptionStatusEnum.REPLY_SENT
+
+        # Check what data we sent to ICMS
+        assert self.rq.last_request.json() == {
+            "accepted": [{"reference": "ABC12345"}, {"reference": "ABC12346"}, {"reference": "ABC12348"}],
+            "rejected": [
+                {
+                    "reference": "ABC12347",
+                    "errors": [
+                        {"error_code": "1234", "error_text": "Invalid thingy"},
+                        {"error_code": "76543", "error_text": "Invalid commodity “1234A6” in line " "23"},
+                    ],
+                }
+            ],
+            "run_number": "29236",
+        }
+
+        last_log_msg = caplog.messages[-1]
+        assert last_log_msg == (
+            f"Successfully sent mail (id: {self.mail.id}, filename: {self.mail.response_filename})"
+            f" to ICMS for processing"
+        )
+
+    def test_send_licence_data_to_icms_http_error(self, caplog):
+        # Mock the response that ICMS sends back - an internal server error
+        url = parse.urljoin(settings.ICMS_API_URL, "license-data-callback")
+        self.rq.post(url, status_code=HTTPStatus.INTERNAL_SERVER_ERROR, json={}, reason="test reason")
+
+        # Send the licence data to ICMS using the data we know should pass
+        with mock.patch("mail.requests.verify_api_response", spec=True) as verify_resp:
+            # Send the licence data to ICMS
+            tasks.send_licence_data_to_icms()
+
+            verify_resp.assert_called_once()
+
+        last_log_msg = caplog.messages[-1]
+        assert last_log_msg == (
+            "Failed to send licence reply data to ICMS (Check ICMS sentry):"
+            " 500 Server Error: test reason for url: http://web:8080/license-data-callback"
+        )
+
+        # Check the mail status hasn't changed
+        self.mail.refresh_from_db()
+
+        assert self.mail.status == ReceptionStatusEnum.REPLY_RECEIVED
+
+
+def test_no_mail_found(db, caplog):
+    tasks.send_licence_data_to_icms()
+
+    assert caplog.messages == ["Checking for licence data to send to ICMS", "No licence date found to send to ICMS"]
+
+
+def test_multiple_mail_raises_error(db, licence_reply_example):
+    Mail.objects.create(
+        status=ReceptionStatusEnum.REPLY_RECEIVED,
+        extract_type=ExtractTypeEnum.LICENCE_DATA,
+        edi_filename="the_licence_data_file",
+        edi_data="lovely data",
+        sent_filename="the_licence_data_file",
+        sent_data="lovely data",
+        response_filename="CHIEF_licenceReply_29236_202209231140",
+        response_data=licence_reply_example,
+    )
+
+    Mail.objects.create(
+        status=ReceptionStatusEnum.REPLY_RECEIVED,
+        extract_type=ExtractTypeEnum.LICENCE_DATA,
+        edi_filename="the_licence_data_file",
+        edi_data="lovely data",
+        sent_filename="the_licence_data_file",
+        sent_data="lovely data",
+        response_filename="CHIEF_licenceReply_29237_202209231140",
+        response_data=licence_reply_example,
+    )
+
+    with pytest.raises(ValueError, match="Unable to process mail as there are more than 1 records."):
+        tasks.send_licence_data_to_icms()
+
+
+def test_file_with_errors_raises_errors(db, caplog):
+    mail = Mail.objects.create(
+        status=ReceptionStatusEnum.REPLY_RECEIVED,
+        extract_type=ExtractTypeEnum.LICENCE_DATA,
+        edi_filename="the_licence_data_file",
+        edi_data="lovely data",
+        sent_filename="the_licence_data_file",
+        sent_data="lovely data",
+        response_filename="CHIEF_licenceReply_29237_202209231140",
+    )
+
+    file_with_file_error = (
+        "1\\fileHeader\\CHIEF\\ILBDOTI\\licenceReply\\202209231140\\29236\n"
+        "2\\fileError\\18\\Record type 'fileHeader' not recognised\\99\n"
+        "3\\accepted\\ABC12348\n"
+        "4\\fileTrailer\\1\\0\\1\n"
+    )
+
+    mail.response_data = file_with_file_error
+    mail.save()
+
+    with pytest.raises(
+        ValueError,
+        match=rf"Unable to process mail \(id: {mail.id}, filename: {mail.response_filename}\) as it has file errors.",
+    ):
+        tasks.send_licence_data_to_icms()
+
+        assert caplog.messages == [
+            "Checking for licence data to send to ICMS",
+            f"Unable to process mail (id: {mail.id}, filename: {mail.response_filename}) as it has file errors.",
+            "File error: position: 99, code: 18, error_msg: Record type 'fileHeader' not recognised",
+        ]
+
+    file_with_file_error_and_file_trailer_errors = (
+        "1\\fileHeader\\CHIEF\\ILBDOTI\\licenceReply\\202209231140\\29236\n"
+        "2\\fileError\\18\\Record type 'fileHeader' not recognised\\99\n"
+        "3\\accepted\\ABC12348\n"
+        "4\\fileTrailer\\0\\1\\1\n"
+    )
+    mail.response_data = file_with_file_error_and_file_trailer_errors
+    mail.save()
+    with pytest.raises(
+        ValueError,
+        match=rf"Unable to process mail \(id: {mail.id}, filename: {mail.response_filename}\) as it has file errors.",
+    ):
+        tasks.send_licence_data_to_icms()
+
+        assert caplog.messages == [
+            "Checking for licence data to send to ICMS",
+            f"Unable to process mail (id: {mail.id}, filename: {mail.response_filename}) as it has file errors.",
+            "File error: position: 99, code: 18, error_msg: Record type 'fileHeader' not recognised",
+            "File trailer count is different from processor count of accepted and rejected",
+        ]

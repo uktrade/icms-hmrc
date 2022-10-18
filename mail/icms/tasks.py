@@ -1,15 +1,19 @@
 """ICMS tasks that get periodically ran via django management commands."""
-
 import email
 import logging
 from email.headerregistry import Address, UniqueAddressHeader
+from typing import Any, Dict
+from urllib import parse
 
+import requests
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
+from mail import requests as mail_requests
 from mail.auth import Authenticator, BasicAuthentication
-from mail.enums import ReceptionStatusEnum
+from mail.chief.licence_reply import LicenceReplyProcessor
+from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
 from mail.models import LicenceData, Mail
 from mail.utils import pop3
 
@@ -56,9 +60,84 @@ def process_licence_reply_and_usage_emails():
             raise e
 
 
-# def send_licence_data_to_icms():
-#     """Checks Mail model for any licence reply records to send to ICMS."""
-#     raise NotImplementedError
+def send_licence_data_to_icms():
+    """Checks Mail model for any licence reply records to send to ICMS."""
+
+    logger.info("Checking for licence data to send to ICMS")
+
+    licence_reply_mail_qs = Mail.objects.filter(
+        extract_type=ExtractTypeEnum.LICENCE_DATA, status=ReceptionStatusEnum.REPLY_RECEIVED
+    )
+
+    mail_to_process = licence_reply_mail_qs.count()
+
+    if mail_to_process == 0:
+        logger.info("No licence date found to send to ICMS")
+        return
+
+    if mail_to_process > 1:
+        raise ValueError("Unable to process mail as there are more than 1 records.")
+
+    mail = licence_reply_mail_qs.select_for_update().first()
+
+    processor = LicenceReplyProcessor.load_from_mail(mail)
+
+    if not processor.file_valid():
+        error_msg = f"Unable to process mail (id: {mail.id}, filename: {mail.response_filename}) as it has file errors."
+        logger.warning(error_msg)
+
+        for file_error in processor.file_errors:
+            logger.warning(
+                "File error: position: %s, code: %s, error_msg: %s",
+                file_error.position,
+                file_error.code,
+                file_error.text,
+            )
+
+        if not processor.file_trailer_valid():
+            logger.warning("File trailer count is different from processor count of accepted and rejected")
+
+        raise ValueError(error_msg)
+
+    licence_reply_data = _get_licence_reply_data(processor)
+
+    url = parse.urljoin(settings.ICMS_API_URL, "license-data-callback")
+    response: requests.Response = mail_requests.post(
+        url,
+        licence_reply_data,
+        hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
+        timeout=settings.LITE_API_REQUEST_TIMEOUT,
+    )
+
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as e:
+        logger.error("Failed to send licence reply data to ICMS (Check ICMS sentry): %s", str(e))
+
+        return
+
+    # Update the status if everything was successful
+    mail.status = ReceptionStatusEnum.REPLY_SENT
+    mail.save()
+    logger.info(f"Successfully sent mail (id: {mail.id}, filename: {mail.response_filename}) to ICMS for processing")
+
+
+def _get_licence_reply_data(processor: LicenceReplyProcessor) -> Dict[str, Any]:
+    licence_reply_data = {
+        "run_number": processor.file_header.run_num,
+        "accepted": [{"reference": at.transaction_ref} for at in processor.accepted_licences],
+        "rejected": [
+            {
+                "reference": rt.header.transaction_ref,
+                "errors": [{"error_code": error.code, "error_text": error.text} for error in rt.errors],
+            }
+            for rt in processor.rejected_licences
+        ],
+    }
+
+    return licence_reply_data
+
+
 #
 #
 # def send_usage_data_to_icms():

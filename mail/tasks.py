@@ -13,6 +13,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework.status import HTTP_207_MULTI_STATUS, HTTP_208_ALREADY_REPORTED
 
+from mail import requests as mail_requests
 from mail.enums import ChiefSystemEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.builders import build_licence_data_mail
 from mail.libraries.data_processors import build_request_mail_message_dto
@@ -20,7 +21,6 @@ from mail.libraries.lite_to_edifact_converter import EdifactValidationError
 from mail.libraries.routing_controller import check_and_route_emails, send, update_mail
 from mail.libraries.usage_data_decomposition import build_json_payload_from_data_blocks, split_edi_data_by_id
 from mail.models import LicenceIdMapping, LicencePayload, Mail, UsageData
-from mail.requests import put
 from mail.servers import smtp_send
 
 logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ def send_licence_usage_figures_to_lite_api(lite_usage_data_id):
         lite_usage_data.lite_payload = payload
         lite_usage_data.save()
 
-        response = put(
+        response = mail_requests.put(
             lite_api_url,
             lite_usage_data.lite_payload,
             hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,

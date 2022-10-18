@@ -64,7 +64,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
             spire_run_number=0,
         )
 
-    @mock.patch("mail.tasks.put")
+    @mock.patch("mail.tasks.mail_requests.put")
     def test_schedule_usages_for_lite_api_207_ok(self, put_request):
         put_request.return_value = MockResponse(
             json={
@@ -111,7 +111,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
         self.assertEqual(self.usage_data.lite_accepted_licences, ["GBSIEL/2020/0000008/P"])
         self.assertEqual(self.usage_data.lite_rejected_licences, ["GBSIEL/2020/0000009/P"])
 
-    @mock.patch("mail.tasks.put")
+    @mock.patch("mail.tasks.mail_requests.put")
     def test_schedule_usages_for_lite_api_208_ok(self, put_request):
         original_sent_at = self.usage_data.lite_sent_at
         original_accepted_licences = self.usage_data.lite_accepted_licences
@@ -132,7 +132,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
         self.assertEqual(self.usage_data.lite_accepted_licences, original_accepted_licences)
         self.assertEqual(self.usage_data.lite_rejected_licences, original_rejected_licences)
 
-    @mock.patch("mail.tasks.put")
+    @mock.patch("mail.tasks.mail_requests.put")
     def test_schedule_usages_for_lite_api_400_bad_request(self, put_request):
         put_request.return_value = MockResponse(status_code=HTTP_400_BAD_REQUEST)
 
@@ -151,7 +151,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
 
     @mock.patch("mail.tasks.schedule_max_tried_task_as_new_task")
     @mock.patch("mail.tasks.Task.objects.get")
-    @mock.patch("mail.tasks.put")
+    @mock.patch("mail.tasks.mail_requests.put")
     def test_schedule_usages_for_lite_api_max_tried_task(self, put_request, get_task, schedule_new_task):
         put_request.return_value = MockResponse(status_code=HTTP_400_BAD_REQUEST)
         get_task.return_value = MockTask(settings.MAX_ATTEMPTS - 1)
@@ -180,7 +180,7 @@ class UpdateUsagesTaskTests(LiteHMRCTestClient):
 
         send_licence_usage_figures.assert_called_with(str(self.usage_data.id), schedule=mock.ANY)
 
-    @mock.patch("mail.tasks.put")
+    @mock.patch("mail.tasks.mail_requests.put")
     def test_licence_usage_ignore_licence_completion(self, put_request):
         """
         Test that ensures that licenceUsage transaction that has a completion date
