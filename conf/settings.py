@@ -211,6 +211,9 @@ HAWK_CREDENTIALS = {
 LITE_API_URL = env("LITE_API_URL")
 LITE_API_REQUEST_TIMEOUT = 60  # Maximum time, in seconds, to wait between bytes of a response
 
+# The URL used to send licence reply data to ICMS
+ICMS_API_URL = env("ICMS_API_URL", default="http://web:8080/")
+
 # Background Tasks
 BACKGROUND_TASK_ENABLED = env.bool("BACKGROUND_TASK_ENABLED", default=True)
 BACKGROUND_TASK_RUN_ASYNC = True
@@ -246,3 +249,5 @@ DEFAULT_ENCODING = "iso-8859-1"
 AZURE_AUTH_CLIENT_ID = env.str("AZURE_AUTH_CLIENT_ID")
 AZURE_AUTH_CLIENT_SECRET = env.str("AZURE_AUTH_CLIENT_SECRET")
 AZURE_AUTH_TENANT_ID = env.str("AZURE_AUTH_TENANT_ID")
+
+SEND_REJECTED_EMAIL = env.bool("SEND_REJECTED_EMAIL", default=True)

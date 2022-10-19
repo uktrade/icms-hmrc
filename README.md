@@ -4,12 +4,19 @@
 This project is meant for sending licence updates to HMRC and receiving usage reporting. Information like licence updates
 and usage are exchanged as mail attachment between Lite and HMRC
 
+Tasks are managed using this project: [Django Background Tasks](https://github.com/arteria/django-background-tasks/blob/master/docs/index.rst)
+
+The entry point for configuring the tasks is defined here: `lite-hmrc/mail/apps.py`
+
+
 # Build and Run
 An `.env` file is expected at the root of project.
 
 Copy the template .env file: `cp local.env .env`
 
 Copy the template local_settings.sample if required: `cp local_settings.sample local_settings.py`
+
+if using local_settings.py remember to add this to your .env `DJANGO_SETTINGS_MODULE=local_settings`
 
 
 ### Running in Docker
@@ -24,6 +31,7 @@ To run in docker do the following
 - Initial setup (run once):
   - Run migrations: `make migrate`
   - Create super user: `make createsuperuser`
+- Start the task runner: `make process-tasks`
 
 
 ### Running locally
@@ -33,11 +41,10 @@ To run in docker do the following
   ```
 - You may need to acquire additional credentials from [Vault](https://vault.ci.uktrade.digital/)
 - To build and run a local Postfix [mail server](https://github.com/uktrade/mailserver)
-- To initilize database
-`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py migrate`
+- To initialise database: `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py migrate`
 - To create database superuser `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py createsuperuser`
-- To start the application
-`PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py runserver`
+- To start the application: `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py runserver`
+- To start the task runner: `PIPENV_DOTENV_LOCATION=.env pipenv run ./manage.py process_tasks --log-std`
 - check out [mailserver](https://github.com/uktrade/mailserver) to a local folder
 has the same parent folder of this repo
 - `docker-compose up --build -d`

@@ -15,6 +15,7 @@ ipdb = "*"
 pytest = "*"
 pytest-django = "*"
 pytest-cov = "*"
+requests-mock = "*"
 
 [packages]
 djangorestframework = "~=3.9"
