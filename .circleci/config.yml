@@ -52,11 +52,6 @@ jobs:
           command: pipenv run pytest --cov=. --cov-report xml --cov-config=.coveragerc
       - store_test_results:
           path: test-results
-
-      - run:
-          name: Run Bandit tests
-          command: |
-            pipenv run bandit -r .
       - run:
           name: Upload code coverage
           command: ./codecov
@@ -90,6 +85,11 @@ jobs:
       - run:
           name: isort
           command: pipenv run isort --check --diff .
+
+      - run:
+          name: Bandit
+          command: |
+            pipenv run bandit -r .
 
   check_background_tasks_up:
     machine:
