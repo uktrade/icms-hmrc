@@ -28,7 +28,11 @@ class LicenceDataIngestView(APIView):
             data = request.data["licence"]
         except KeyError:
             errors = [{"licence": "This field is required."}]
-
+            logger.error(
+                "Failed to create licence data for %s due to %s",
+                request.data,
+                errors,
+            )
             return JsonResponse(status=status.HTTP_400_BAD_REQUEST, data={"errors": errors})
 
         serializer_cls = self.get_serializer_cls(data["type"])
@@ -36,6 +40,11 @@ class LicenceDataIngestView(APIView):
 
         if not serializer.is_valid():
             errors = [{"licence": serializer.errors}]
+            logger.error(
+                "Failed to create licence data for %s due to %s",
+                data,
+                errors,
+            )
             return JsonResponse(status=status.HTTP_400_BAD_REQUEST, data={"errors": errors})
 
         if data["action"] == LicenceActionEnum.UPDATE:
