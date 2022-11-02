@@ -218,14 +218,14 @@ class LiteLicenceDataSerializerTestCase(TestCase):
 @override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
 class ICMSLicenceDataSerializerTestCase(TestCase):
     def test_invalid_case_reference(self):
-        data = {"case_reference": "asdf/"}
+        data = {"reference": "asdf/"}
 
         serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
 
         self.assertFalse(serializer.is_valid())
 
         expected_error = [ErrorDetail(string="This value does not match the required pattern.", code="invalid")]
-        self.assertEqual(serializer.errors["case_reference"], expected_error)
+        self.assertEqual(serializer.errors["reference"], expected_error)
 
     def test_valid_case_reference(self):
         data = {"case_reference": "IMA/2022/00001"}
@@ -273,9 +273,9 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
         data = {
             "type": "OIL",
             "action": "insert",
-            "id": str(uuid.uuid4()),
-            "reference": "GBOIL2222222C",
-            "case_reference": "IMA/2022/00001",
+            "id": "deaa301d-d978-473b-b76b-da275f28f447",
+            "reference": "IMA/2022/00001",
+            "licence_reference": "GBOIL2222222C",
             "start_date": "2022-06-06",
             "end_date": "2025-05-30",
             "organisation": {
@@ -288,8 +288,6 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
                     "line_4": "line_4",
                     "line_5": "line_5",
                     "postcode": "S118ZZ",  # /PS-IGNORE
-                    "start_date": None,
-                    "end_date": None,
                 },
             },
             "country_group": "G001",
@@ -320,9 +318,9 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
         data = {
             "type": "OIL",
             "action": "insert",
-            "id": str(uuid.uuid4()),
-            "reference": "GBOIL2222222C",
-            "case_reference": "IMA/2022/00001",
+            "id": "deaa301d-d978-473b-b76b-da275f28f447",
+            "reference": "IMA/2022/00001",
+            "licence_reference": "GBOIL2222222C",
             "start_date": "2022-06-06",
             "end_date": "2025-05-30",
             "organisation": {
@@ -335,8 +333,6 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
                     "line_4": "line_4",
                     "line_5": "line_5",
                     "postcode": "S118ZZ",  # /PS-IGNORE
-                    "start_date": None,
-                    "end_date": None,
                 },
             },
             "restrictions": "Some restrictions.\n\n Some more restrictions",
@@ -364,8 +360,8 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             "type": "DFL",
             "action": "insert",
             "id": str(uuid.uuid4()),
-            "reference": "GBOIL2222222C",
-            "case_reference": "IMA/2022/00001",
+            "reference": "IMA/2022/00001",
+            "licence_reference": "GBSIL1111111C",
             "start_date": "2022-06-06",
             "end_date": "2025-05-30",
             "organisation": {
@@ -489,8 +485,8 @@ def get_valid_fa_sil_payload():
         "type": "SIL",
         "action": "insert",
         "id": str(uuid.uuid4()),
-        "reference": "GBSIL3333333H",
-        "case_reference": "IMA/2022/00003",
+        "reference": "IMA/2022/00003",
+        "licence_reference": "GBSIL3333333H",
         "start_date": "2022-06-29",
         "end_date": "2024-12-29",
         "organisation": {
@@ -522,8 +518,8 @@ def get_valid_sanctions_payload():
         "type": "SAN",
         "action": "insert",
         "id": str(uuid.uuid4()),
-        "reference": "GBSAN4444444A",
-        "case_reference": "IMA/2022/00004",
+        "reference": "IMA/2022/00004",
+        "licence_reference": "GBSAN4444444A",
         "start_date": "2022-06-29",
         "end_date": "2024-12-29",
         "organisation": {

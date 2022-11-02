@@ -123,12 +123,19 @@ def send_licence_data_to_icms():
 
 
 def _get_licence_reply_data(processor: LicenceReplyProcessor) -> Dict[str, Any]:
+    # Load all LicencePayload records linked to the current LicenceData record
+    ld: LicenceData = LicenceData.objects.get(hmrc_run_number=processor.file_header.run_num)
+    current_licences = ld.licence_payloads.all().values_list("lite_id", "reference", named=True)
+
+    # Create a mapping of transaction reference to the UUID ICMS sent originally
+    id_map = {lp.reference: str(lp.lite_id) for lp in current_licences}
+
     licence_reply_data = {
         "run_number": processor.file_header.run_num,
-        "accepted": [{"reference": at.transaction_ref} for at in processor.accepted_licences],
+        "accepted": [{"id": id_map[at.transaction_ref]} for at in processor.accepted_licences],
         "rejected": [
             {
-                "reference": rt.header.transaction_ref,
+                "id": id_map[rt.header.transaction_ref],
                 "errors": [{"error_code": error.code, "error_text": error.text} for error in rt.errors],
             }
             for rt in processor.rejected_licences

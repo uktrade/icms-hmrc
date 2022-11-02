@@ -1,4 +1,5 @@
 import datetime
+import uuid
 from pathlib import Path
 
 from django.conf import settings
@@ -86,11 +87,12 @@ class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
     def setUp(self) -> None:
         self.licence = LicencePayload.objects.create(
             lite_id="deaa301d-d978-473b-b76b-da275f28f447",
-            reference="GBOIL2222222C",
+            reference="IMA/2022/00001",
             action=LicenceActionEnum.INSERT,
             data={
                 "type": LicenceTypeEnum.IMPORT_OIL.value,
-                "case_reference": "IMA/2022/00001",
+                "reference": "IMA/2022/00001",
+                "licence_reference": "GBOIL2222222C",
                 "start_date": "2022-06-06",
                 "end_date": "2025-05-30",
                 "organisation": {
@@ -120,11 +122,8 @@ class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
             },
         )
 
-        self.test_file = Path("mail/tests/files/icms/icms_chief_licence_data_file_fa_oil")
-        self.assertTrue(self.test_file.is_file())
-
-    def test_generate_icms_licence_file(self):
-        self.assertEqual(self.licence.reference, "GBOIL2222222C")
+    def test_generate_licence_data_file(self):
+        self.assertEqual(self.licence.reference, "IMA/2022/00001")
 
         licences = LicencePayload.objects.filter(pk=self.licence.pk)
         run_number = 1
@@ -134,7 +133,29 @@ class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
 
         self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
 
-        expected_content = self.test_file.read_text()
+        test_file = Path("mail/tests/files/icms/licence_data_files/fa_oil_insert")
+        expected_content = test_file.read_text()
+        self.assertEqual(expected_content, file_content)
+
+    def test_generate_licence_data_file_replace(self):
+        # Get the original licence data
+        replace_data = self.licence.data
+        replace_data["reference"] = "IMA/2022/00001/1"
+        replace_data["organisation"]["name"] = "org new name"
+
+        replace_licence = LicencePayload.objects.create(
+            lite_id=uuid.uuid4(), reference="IMA/2022/00001/1", action=LicenceActionEnum.REPLACE, data=replace_data
+        )
+
+        licences = LicencePayload.objects.filter(pk=replace_licence.pk)
+        run_number = 2
+        when = datetime.datetime(2022, 1, 2, 10, 11, 00)
+
+        filename, file_content = builders.build_licence_data_file(licences, run_number, when)
+
+        self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_2_202201021011")
+        test_file = Path("mail/tests/files/icms/licence_data_files/fa_oil_replace")
+        expected_content = test_file.read_text()
         self.assertEqual(expected_content, file_content)
 
 
@@ -158,11 +179,12 @@ class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
 
         LicencePayload.objects.create(
             lite_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
-            reference="GBSIL1111111C",
+            reference="IMA/2022/00002",
             action=LicenceActionEnum.INSERT,
             data={
                 "type": LicenceTypeEnum.IMPORT_DFL.value,
-                "case_reference": "IMA/2022/00002",
+                "reference": "IMA/2022/00002",
+                "licence_reference": "GBSIL1111111C",
                 "start_date": "2022-01-14",
                 "end_date": "2022-07-14",
                 "organisation": org_data,
@@ -174,11 +196,12 @@ class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
 
         LicencePayload.objects.create(
             lite_id="f4142c5a-19f8-40b4-a9a8-46362eaa85c6",
-            reference="GBSIL9089278D",
+            reference="IMA/2022/00003",
             action=LicenceActionEnum.INSERT,
             data={
                 "type": LicenceTypeEnum.IMPORT_DFL.value,
-                "case_reference": "IMA/2022/00003",
+                "reference": "IMA/2022/00003",
+                "licence_reference": "GBSIL9089278D",
                 "start_date": "2022-01-14",
                 "end_date": "2022-07-14",
                 "organisation": org_data,
@@ -188,10 +211,10 @@ class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
             },
         )
 
-        self.test_file = Path("mail/tests/files/icms/icms_chief_licence_data_file_fa_dfl")
+        self.test_file = Path("mail/tests/files/icms/licence_data_files/fa_dfl_insert")
         self.assertTrue(self.test_file.is_file())
 
-    def test_generate_icms_licence_file(self):
+    def test_generate_licence_data_file(self):
         # There should be two licences
         licences = LicencePayload.objects.all()
         self.assertEqual(licences.count(), 2)
@@ -236,11 +259,12 @@ class TestBuildICMSLicenceDataFASIL(testcases.TestCase):
 
         LicencePayload.objects.create(
             lite_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
-            reference="GBSIL3333333H",
+            reference="IMA/2022/00003",
             action=LicenceActionEnum.INSERT,
             data={
                 "type": LicenceTypeEnum.IMPORT_SIL.value,
-                "case_reference": "IMA/2022/00003",
+                "reference": "IMA/2022/00003",
+                "licence_reference": "GBSIL3333333H",
                 "start_date": "2022-06-29",
                 "end_date": "2024-12-29",
                 "organisation": org_data,
@@ -250,10 +274,10 @@ class TestBuildICMSLicenceDataFASIL(testcases.TestCase):
             },
         )
 
-        self.test_file = Path("mail/tests/files/icms/icms_chief_licence_data_file_fa_sil")
+        self.test_file = Path("mail/tests/files/icms/licence_data_files/fa_sil_insert")
         self.assertTrue(self.test_file.is_file())
 
-    def test_generate_icms_licence_file(self):
+    def test_generate_licence_data_file(self):
         licences = LicencePayload.objects.all()
         self.assertEqual(licences.count(), 1)
 
@@ -294,11 +318,12 @@ class TestBuildICMSLicenceDataSanction(testcases.TestCase):
 
         LicencePayload.objects.create(
             lite_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
-            reference="GBSAN4444444A",
+            reference="IMA/2022/00004",
             action=LicenceActionEnum.INSERT,
             data={
                 "type": LicenceTypeEnum.IMPORT_SAN.value,
-                "case_reference": "IMA/2022/00004",
+                "reference": "IMA/2022/00004",
+                "licence_reference": "GBSAN4444444A",
                 "start_date": "2022-06-29",
                 "end_date": "2024-12-29",
                 "organisation": org_data,
@@ -308,10 +333,10 @@ class TestBuildICMSLicenceDataSanction(testcases.TestCase):
             },
         )
 
-        self.test_file = Path("mail/tests/files/icms/icms_chief_licence_data_file_sanction")
+        self.test_file = Path("mail/tests/files/icms/licence_data_files/sanction_insert")
         self.assertTrue(self.test_file.is_file())
 
-    def test_generate_icms_licence_file(self):
+    def test_generate_licence_data_file(self):
         licences = LicencePayload.objects.all()
         self.assertEqual(licences.count(), 1)
 

@@ -72,9 +72,15 @@ class IcmsLicenceDataBaseSerializer(serializers.Serializer):
 
     type = serializers.ChoiceField(choices=IMPORT_LICENCE_TYPES)
     action = serializers.CharField()
+
+    # Unique UUID of this payload (as reference is not unique)
     id = serializers.CharField()
-    reference = serializers.CharField(max_length=35)
-    case_reference = serializers.RegexField(ICMS_CASE_REF_PATTERN, max_length=17)
+
+    # The ICMS case reference (Unique per licenceData file - can be resent if updates fail)
+    reference = serializers.RegexField(ICMS_CASE_REF_PATTERN, max_length=17)
+
+    # The ICMS licence reference
+    licence_reference = serializers.CharField(max_length=35)
     start_date = serializers.DateField()
     end_date = serializers.DateField()
     organisation = OrganisationSerializer()
