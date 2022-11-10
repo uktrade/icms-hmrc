@@ -1,5 +1,6 @@
 import pathlib
 import poplib
+import uuid
 from http import HTTPStatus
 from typing import TYPE_CHECKING, List
 from unittest import mock
@@ -10,13 +11,20 @@ from django.conf import settings
 from django.test import override_settings
 
 from mail import servers
-from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
+from mail.enums import ChiefSystemEnum, ExtractTypeEnum, LicenceActionEnum, ReceptionStatusEnum
 from mail.icms import tasks
-from mail.models import LicenceData, Mail, SourceEnum
+from mail.models import LicenceData, LicencePayload, Mail, SourceEnum
 from mail.utils import pop3
 
 if TYPE_CHECKING:
     from requests_mock import Mocker
+
+
+@pytest.fixture(autouse=True)
+def icms_source():
+    """Ensure all tests have the CHIEF_SOURCE_SYSTEM set to ICMS"""
+    with override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS):
+        yield
 
 
 @pytest.fixture
@@ -126,7 +134,7 @@ class TestProcessLicenceReplyAndUsageEmailTask:
             sent_filename="the_licence_data_file",
             sent_data="lovely data",
         )
-        LicenceData.objects.create(licence_ids="[88514]", hmrc_run_number=29236, source=SourceEnum.ICMS, mail=self.mail)
+        LicenceData.objects.create(licence_ids="", hmrc_run_number=29236, source=SourceEnum.ICMS, mail=self.mail)
 
     def _patch_pop3_class(self, mock):
         # Store con reference to check what was called later
@@ -327,6 +335,8 @@ def get_licence_reply_msg_list(filename: str) -> List[bytes]:
 class TestSendLicenceDataToICMSTask:
     @pytest.fixture(autouse=True)
     def _setup(self, db, requests_mock: "Mocker", licence_reply_example):
+        self.rq = requests_mock
+
         # Create a mail object that has data to send to ICMS
         self.mail = Mail.objects.create(
             status=ReceptionStatusEnum.REPLY_RECEIVED,
@@ -338,11 +348,20 @@ class TestSendLicenceDataToICMSTask:
             response_filename="CHIEF_licenceReply_29236_202209231140",
             response_data=licence_reply_example,
         )
-        self.ld = LicenceData.objects.create(
-            licence_ids="[88514]", hmrc_run_number=29236, source=SourceEnum.ICMS, mail=self.mail
-        )
+        ld = LicenceData.objects.create(licence_ids="", hmrc_run_number=29236, source=SourceEnum.ICMS, mail=self.mail)
 
-        self.rq = requests_mock
+        # fake some licence payload references for the test file
+        for reference in ["ABC12345", "ABC12346", "ABC12348", "ABC12347"]:
+            payload = LicencePayload.objects.create(
+                lite_id=uuid.uuid4(), reference=reference, action=LicenceActionEnum.INSERT, is_processed=True
+            )
+            ld.licence_payloads.add(payload)
+
+        # Store the ICMS UUID that was sent from ICMS.
+        self.id_1 = str(LicencePayload.objects.get(reference="ABC12345").lite_id)
+        self.id_2 = str(LicencePayload.objects.get(reference="ABC12346").lite_id)
+        self.id_3 = str(LicencePayload.objects.get(reference="ABC12348").lite_id)
+        self.id_4 = str(LicencePayload.objects.get(reference="ABC12347").lite_id)
 
     def test_send_licence_data_to_icms_success(self, caplog):
         # Mock the response that ICMS sends back
@@ -365,10 +384,10 @@ class TestSendLicenceDataToICMSTask:
 
         # Check what data we sent to ICMS
         assert self.rq.last_request.json() == {
-            "accepted": [{"reference": "ABC12345"}, {"reference": "ABC12346"}, {"reference": "ABC12348"}],
+            "accepted": [{"id": self.id_1}, {"id": self.id_2}, {"id": self.id_3}],
             "rejected": [
                 {
-                    "reference": "ABC12347",
+                    "id": self.id_4,
                     "errors": [
                         {"error_code": "1234", "error_text": "Invalid thingy"},
                         {"error_code": "76543", "error_text": "Invalid commodity “1234A6” in line " "23"},

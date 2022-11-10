@@ -9,7 +9,7 @@ from django.utils import timezone
 from rest_framework.status import HTTP_200_OK, HTTP_503_SERVICE_UNAVAILABLE
 from rest_framework.views import APIView
 
-from mail.enums import ReceptionStatusEnum, ReplyStatusEnum
+from mail.enums import ChiefSystemEnum, ReceptionStatusEnum, ReplyStatusEnum
 from mail.models import Mail
 from mail.tasks import LICENCE_DATA_TASK_QUEUE, MANAGE_INBOX_TASK_QUEUE
 
@@ -26,7 +26,7 @@ class HealthCheck(APIView):
             logging.error("%s is not responsive", LICENCE_DATA_TASK_QUEUE)
             return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
 
-        if not self._is_inbox_polling_task_responsive():
+        if settings.CHIEF_SOURCE_SYSTEM == ChiefSystemEnum.SPIRE and not self._is_inbox_polling_task_responsive():
             logging.error("%s is not responsive", MANAGE_INBOX_TASK_QUEUE)
             return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, "not OK", start_time)
 

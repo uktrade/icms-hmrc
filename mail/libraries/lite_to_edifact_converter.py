@@ -197,7 +197,6 @@ def licences_to_edifact(
     # File trailer includes the number of licences, but +1 for each "update"
     # because this code represents those as "cancel" followed by "insert".
     num_transactions = chiefprotocol.count_transactions(lines)
-    file_trailer = ("fileTrailer", num_transactions)
     file_trailer = chieftypes.FileTrailer(transaction_count=num_transactions)
     lines.append(file_trailer)
 
@@ -254,15 +253,19 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
     icms_licence_type = payload["type"]
     chief_licence_type = LITE_HMRC_LICENCE_TYPE_MAPPING[icms_licence_type]
 
-    supported_actions = [LicenceActionEnum.INSERT]
+    # ICMS only sends "insert", "replace" or "cancel" payloads.
+    # If there are errors with a "replace" the licence is normally revoked within ICMS and a
+    # new licence is applied for with the new requirements.
+    supported_actions = [LicenceActionEnum.INSERT, LicenceActionEnum.REPLACE]
 
     if licence.action not in supported_actions:
         raise NotImplementedError(f"Action {licence.action} not supported yet")
 
     yield chieftypes.Licence(
-        transaction_ref=payload["case_reference"],
         action=licence.action,
-        licence_ref=licence.reference,
+        # reference = ICMS case reference
+        transaction_ref=payload["reference"],
+        licence_ref=payload["licence_reference"],
         licence_type=chief_licence_type,
         usage=usage_code,
         start_date=get_date_field(payload, "start_date"),

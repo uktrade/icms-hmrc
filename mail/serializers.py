@@ -19,7 +19,9 @@ class LicenceDataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LicenceData
-        fields = "__all__"
+        # licence_payloads get set when LicenceData is created here:
+        # mail/libraries/builders.py -> build_licence_data_mail
+        exclude = ("licence_payloads",)
 
     def create(self, validated_data):
         instance, _ = LicenceData.objects.get_or_create(**validated_data)

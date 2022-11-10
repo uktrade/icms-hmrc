@@ -216,7 +216,12 @@ def build_licence_data_mail(licences: "QuerySet[LicencePayload]", source: Source
     )
     logger.info("New Mail instance (%s) created for filename %s", mail.id, file_name)
     licence_ids = json.dumps([licence.reference for licence in licences])
-    LicenceData.objects.create(hmrc_run_number=run_number, source=source, mail=mail, licence_ids=licence_ids)
+    licence_data = LicenceData.objects.create(
+        hmrc_run_number=run_number, source=source, mail=mail, licence_ids=licence_ids
+    )
+
+    # Keep a reference of all licence_payloads linked to this LicenceData instance
+    licence_data.licence_payloads.set(licences)
 
     return mail
 
