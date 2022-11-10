@@ -1,0 +1,13 @@
+#!/bin/zsh
+
+echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+echo "Converting licencePayload records to a mail record"
+make pipenv COMMAND="run ./manage.py dev_process_licence_payload"
+
+echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+echo "Faking HMRC licence reply response"
+make pipenv COMMAND="run ./manage.py dev_fake_licence_reply accept"
+
+echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+echo "Sending HMRC response to ICMS"
+make pipenv COMMAND="run ./manage.py dev_send_licence_data_to_icms"

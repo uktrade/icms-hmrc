@@ -334,7 +334,7 @@ def get_licence_reply_msg_list(filename: str) -> List[bytes]:
 @mock.patch("mail.requests.hawk_authentication_enabled", lambda: True)
 class TestSendLicenceDataToICMSTask:
     @pytest.fixture(autouse=True)
-    def _setup(self, db, requests_mock: "Mocker", licence_reply_example):
+    def _setup(self, transactional_db, requests_mock: "Mocker", licence_reply_example):
         self.rq = requests_mock
 
         # Create a mail object that has data to send to ICMS

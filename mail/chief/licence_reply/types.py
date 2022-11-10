@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import ClassVar
 
 """
 ---------------------
@@ -71,9 +72,11 @@ class FileHeader:
     runNum              9(7)        M           The run number from the input file.
     """
 
+    record_type: ClassVar[str] = "fileHeader"
+
     source_system: str
     destination: str
-    date_id: str
+    data_id: str
     creation_datetime: str
     run_num: int
 
@@ -89,6 +92,8 @@ class FileError:
                                             If supplied for a record out of sequence it is the expected number.
     """
 
+    record_type: ClassVar[str] = "fileError"
+
     code: str
     text: str
     position: str
@@ -101,6 +106,8 @@ class AcceptedTransaction:
     Attribute       Format      Presence    Comments
     transactionRef  X(..17)     M           As given for the transaction on the input file.
     """
+
+    record_type: ClassVar[str] = "accepted"
 
     transaction_ref: str
 
@@ -115,6 +122,8 @@ class RejectedTransactionHeader:
     transactionRef  X(..17)     M           As given for the transaction on the input file.
     """
 
+    record_type: ClassVar[str] = "rejected"
+
     transaction_ref: str
 
 
@@ -127,6 +136,8 @@ class RejectedTransactionError:
     text            X(..130)    M           The error text should identify the position of the error or the erroneous
                                             data (e.g. “invalid commodity on line 17”)
     """
+
+    record_type: ClassVar[str] = "error"
 
     code: str
     text: str
@@ -141,6 +152,8 @@ class RejectedTransactionTrailer:
     recordCount     9(5)        M           Count of records containing transaction data including the header
                                             and this trailer record.
     """
+
+    record_type: ClassVar[str] = "end"
 
     start_record_type: str
     record_count: int
@@ -158,6 +171,8 @@ class FileTrailer:
     rejectedCount   9(5)        M           Can be zero.
     fileErrorCount  9(5)        M           Can be zero.
     """
+
+    record_type: ClassVar[str] = "fileTrailer"
 
     accepted_count: int
     rejected_count: int

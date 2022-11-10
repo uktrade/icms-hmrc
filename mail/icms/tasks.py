@@ -60,6 +60,7 @@ def process_licence_reply_and_usage_emails():
             raise e
 
 
+@transaction.atomic()
 def send_licence_data_to_icms():
     """Checks Mail model for any licence reply records to send to ICMS."""
 

@@ -175,6 +175,9 @@ class LicencePayload(models.Model):
         if settings.CHIEF_SOURCE_SYSTEM == ChiefSystemEnum.SPIRE:
             LicenceIdMapping.objects.get_or_create(lite_id=self.lite_id, reference=self.reference)
 
+    def __str__(self):
+        return f"LicencePayload(lite_id={self.lite_id}, reference={self.reference}, action={self.action})"
+
 
 class LicenceIdMapping(models.Model):
     lite_id = models.UUIDField(primary_key=True, null=False, blank=False)
