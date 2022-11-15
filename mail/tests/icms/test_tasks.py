@@ -365,7 +365,7 @@ class TestSendLicenceDataToICMSTask:
 
     def test_send_licence_data_to_icms_success(self, caplog):
         # Mock the response that ICMS sends back
-        url = parse.urljoin(settings.ICMS_API_URL, "license-data-callback")
+        url = parse.urljoin(settings.ICMS_API_URL, "chief/license-data-callback")
         self.rq.post(url, status_code=HTTPStatus.OK, json={})
 
         with mock.patch("mail.requests.verify_api_response", spec=True) as verify_resp:
@@ -389,8 +389,8 @@ class TestSendLicenceDataToICMSTask:
                 {
                     "id": self.id_4,
                     "errors": [
-                        {"error_code": "1234", "error_text": "Invalid thingy"},
-                        {"error_code": "76543", "error_text": "Invalid commodity “1234A6” in line " "23"},
+                        {"error_code": "1234", "error_msg": "Invalid thingy"},
+                        {"error_code": "76543", "error_msg": "Invalid commodity “1234A6” in line " "23"},
                     ],
                 }
             ],
@@ -405,7 +405,7 @@ class TestSendLicenceDataToICMSTask:
 
     def test_send_licence_data_to_icms_http_error(self, caplog):
         # Mock the response that ICMS sends back - an internal server error
-        url = parse.urljoin(settings.ICMS_API_URL, "license-data-callback")
+        url = parse.urljoin(settings.ICMS_API_URL, "chief/license-data-callback")
         self.rq.post(url, status_code=HTTPStatus.INTERNAL_SERVER_ERROR, json={}, reason="test reason")
 
         # Send the licence data to ICMS using the data we know should pass
@@ -418,7 +418,7 @@ class TestSendLicenceDataToICMSTask:
         last_log_msg = caplog.messages[-1]
         assert last_log_msg == (
             "Failed to send licence reply data to ICMS (Check ICMS sentry):"
-            " 500 Server Error: test reason for url: http://web:8080/license-data-callback"
+            " 500 Server Error: test reason for url: http://web:8080/chief/license-data-callback"
         )
 
         # Check the mail status hasn't changed

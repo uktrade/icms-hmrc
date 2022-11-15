@@ -101,11 +101,11 @@ def send_licence_data_to_icms():
 
     licence_reply_data = _get_licence_reply_data(processor)
 
-    url = parse.urljoin(settings.ICMS_API_URL, "license-data-callback")
+    url = parse.urljoin(settings.ICMS_API_URL, "chief/license-data-callback")
     response: requests.Response = mail_requests.post(
         url,
         licence_reply_data,
-        hawk_credentials=settings.HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
+        hawk_credentials=settings.LITE_API_ID,
         timeout=settings.LITE_API_REQUEST_TIMEOUT,
     )
 
@@ -136,7 +136,7 @@ def _get_licence_reply_data(processor: LicenceReplyProcessor) -> Dict[str, Any]:
         "rejected": [
             {
                 "id": id_map[rt.header.transaction_ref],
-                "errors": [{"error_code": error.code, "error_text": error.text} for error in rt.errors],
+                "errors": [{"error_code": error.code, "error_msg": error.text} for error in rt.errors],
             }
             for rt in processor.rejected_licences
         ],
