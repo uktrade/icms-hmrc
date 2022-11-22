@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import create_autospec
 
 import pytest
@@ -5,7 +6,7 @@ from django.test import override_settings
 from django.utils import timezone
 
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, ReplyStatusEnum
-from mail.models import Mail
+from mail.models import LicencePayload, Mail
 
 
 class TestSendNotifyEmail:
@@ -48,3 +49,10 @@ class TestSendNotifyEmail:
         self.mail.save()
 
         self.mock_notify_users.assert_not_called()
+
+
+def test_licence_payload_model__str__():
+    lite_id = uuid.uuid4()
+    lp = LicencePayload(lite_id=lite_id, reference="IMA/2022/00001", action="insert")
+
+    assert f"LicencePayload(lite_id={lite_id}, reference=IMA/2022/00001, action=insert)" == str(lp)
