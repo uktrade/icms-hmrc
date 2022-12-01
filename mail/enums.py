@@ -92,6 +92,7 @@ class LicenceActionEnum(TextChoices):
     INSERT = "insert"
     CANCEL = "cancel"
     UPDATE = "update"
+    REPLACE = "replace"
 
 
 # Django's choices don't support groups, so we are using @classproperty.

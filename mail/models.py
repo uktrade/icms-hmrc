@@ -10,6 +10,7 @@ from django.utils import timezone
 from model_utils.models import TimeStampedModel
 
 from mail.enums import (
+    ChiefSystemEnum,
     ExtractTypeEnum,
     LicenceActionEnum,
     MailReadStatuses,
@@ -104,6 +105,9 @@ class LicenceData(models.Model):
     source_run_number = models.IntegerField(null=True)
     source = models.CharField(choices=SourceEnum.choices, max_length=10)
     mail = models.ForeignKey(Mail, on_delete=models.DO_NOTHING)
+    licence_payloads = models.ManyToManyField(
+        "LicencePayload", help_text="LicencePayload records linked to this LicenceData instance", related_name="+"
+    )
 
     class Meta:
         ordering = ["mail__created_at"]
@@ -150,12 +154,12 @@ class LicencePayload(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     lite_id = models.UUIDField(null=False, blank=False, unique=False)
     reference = models.CharField(null=False, blank=False, max_length=35)
-    action = models.CharField(choices=LicenceActionEnum.choices, null=False, blank=False, max_length=6)
+    action = models.CharField(choices=LicenceActionEnum.choices, null=False, blank=False, max_length=7)
     data = models.JSONField(default=dict)
     received_at = models.DateTimeField(default=timezone.now)
     is_processed = models.BooleanField(default=False)
 
-    # For updates only
+    # For LITE updates only
     old_lite_id = models.UUIDField(null=True, blank=False, unique=False)
     old_reference = models.CharField(null=True, blank=False, max_length=35)
 
@@ -165,7 +169,14 @@ class LicencePayload(models.Model):
 
     def save(self, *args, **kwargs):
         super(LicencePayload, self).save(*args, **kwargs)
-        LicenceIdMapping.objects.get_or_create(lite_id=self.lite_id, reference=self.reference)
+
+        # This causes errors for ICMS as reference doesn't need to be unique.
+        # reference only needs to be unique within a licenceData file.
+        if settings.CHIEF_SOURCE_SYSTEM == ChiefSystemEnum.SPIRE:
+            LicenceIdMapping.objects.get_or_create(lite_id=self.lite_id, reference=self.reference)
+
+    def __str__(self):
+        return f"LicencePayload(lite_id={self.lite_id}, reference={self.reference}, action={self.action})"
 
 
 class LicenceIdMapping(models.Model):

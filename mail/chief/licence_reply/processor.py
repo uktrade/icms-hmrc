@@ -5,39 +5,47 @@ from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
 from mail.libraries import chiefprotocol
 from mail.models import Mail
 
-from . import types
+from .types import (
+    AcceptedTransaction,
+    FileError,
+    FileHeader,
+    FileTrailer,
+    RejectedTransactionError,
+    RejectedTransactionHeader,
+    RejectedTransactionTrailer,
+)
 
 
 @dataclass()
 class RejectedTransaction:
     """This isn't a chief type but represents all attributes of a rejected transaction."""
 
-    header: types.RejectedTransactionHeader
-    errors: List[types.RejectedTransactionError] = field(default_factory=list)
-    end: types.RejectedTransactionTrailer = None
+    header: RejectedTransactionHeader
+    errors: List[RejectedTransactionError] = field(default_factory=list)
+    end: RejectedTransactionTrailer = None
 
 
 class LicenceReplyProcessor:
     LINE_MAP = {
-        "fileHeader": types.FileHeader,
-        "fileError": types.FileError,
-        "accepted": types.AcceptedTransaction,
-        "rejected": types.RejectedTransactionHeader,
-        "error": types.RejectedTransactionError,
-        "end": types.RejectedTransactionTrailer,
-        "fileTrailer": types.FileTrailer,
+        FileHeader.record_type: FileHeader,
+        FileError.record_type: FileError,
+        AcceptedTransaction.record_type: AcceptedTransaction,
+        RejectedTransactionHeader.record_type: RejectedTransactionHeader,
+        RejectedTransactionError.record_type: RejectedTransactionError,
+        RejectedTransactionTrailer.record_type: RejectedTransactionTrailer,
+        FileTrailer.record_type: FileTrailer,
     }
 
     def __init__(self, data: str) -> None:
         self._valid = False
 
         # File attributes
-        self.file_header: Optional[types.FileHeader] = None
-        self.file_errors: List[types.FileError] = []
-        self.file_trailer: Optional[types.FileTrailer] = None
+        self.file_header: Optional[FileHeader] = None
+        self.file_errors: List[FileError] = []
+        self.file_trailer: Optional[FileTrailer] = None
 
         # Licence attributes
-        self._accepted: List[types.AcceptedTransaction] = []
+        self._accepted: List[AcceptedTransaction] = []
         self._rejected: List[RejectedTransaction] = []
 
         # Used when iterating over rejected applications
@@ -58,7 +66,7 @@ class LicenceReplyProcessor:
         return cls(mail.response_data)
 
     @property
-    def accepted_licences(self) -> List[types.AcceptedTransaction]:
+    def accepted_licences(self) -> List[AcceptedTransaction]:
         self._check_is_valid("accepted_licences")
 
         return self._accepted
@@ -88,25 +96,25 @@ class LicenceReplyProcessor:
         except KeyError:
             raise ValueError(f"Unable to process file: Unknown field_type on line {line_no}")
 
-        if field_type == "fileHeader":
+        if field_type == FileHeader.record_type:
             self.file_header = record
 
-        elif field_type == "fileError":
+        elif field_type == FileError.record_type:
             self.file_errors.append(record)
 
-        elif field_type == "accepted":
+        elif field_type == AcceptedTransaction.record_type:
             self._accepted.append(record)
 
-        elif field_type == "rejected":
+        elif field_type == RejectedTransactionHeader.record_type:
             # Create a new current rejected value (rejected transaction spans multiple lines)
             self._current_rejected = RejectedTransaction(header=record)
 
-        elif field_type == "error":
+        elif field_type == RejectedTransactionError.record_type:
             if not self._current_rejected:
                 raise ValueError(f"Unable to process file: rejected record is out of sequence on line {line_no}")
             self._current_rejected.errors.append(record)
 
-        elif field_type == "end":
+        elif field_type == RejectedTransactionTrailer.record_type:
             if not self._current_rejected:
                 raise ValueError(f"Unable to process file: rejected record is out of sequence on line {line_no}")
 
@@ -118,7 +126,7 @@ class LicenceReplyProcessor:
             # Reset current rejected
             self._current_rejected = None
 
-        elif field_type == "fileTrailer":
+        elif field_type == FileTrailer.record_type:  # pragma: no cover
             self.file_trailer = record
 
     def file_valid(self) -> bool:

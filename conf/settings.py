@@ -197,13 +197,19 @@ HAWK_AUTHENTICATION_ENABLED = env.bool("HAWK_AUTHENTICATION_ENABLED", default=Tr
 HAWK_RECEIVER_NONCE_EXPIRY_SECONDS = 60
 HAWK_ALGORITHM = "sha256"
 HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS = "hmrc-integration"
+LITE_API_ID = "lite-api"
+
 HAWK_CREDENTIALS = {
     HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS: {
         "id": HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
         "key": env("LITE_HMRC_INTEGRATION_HAWK_KEY"),
         "algorithm": HAWK_ALGORITHM,
     },
-    "lite-api": {"id": "lite-api", "key": env("LITE_API_HAWK_KEY"), "algorithm": HAWK_ALGORITHM},
+    LITE_API_ID: {
+        "id": LITE_API_ID,
+        "key": env("LITE_API_HAWK_KEY"),
+        "algorithm": HAWK_ALGORITHM,
+    },
 }
 
 # The URL for licence usage callbacks. If there is no path component, defaults
