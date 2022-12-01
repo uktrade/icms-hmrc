@@ -103,6 +103,17 @@ The tool 'bandit' is used. To run it `pipenv run bandit -r .`
 * run following to scan all files for issues
   - `pre-commit run --all-files`
 
+# Deploying to production
+
+Important settings:
+
+- SPIRE_ADDRESS: email address used by SPIRE system (legacy).
+- SPIRE_INCOMING_EMAIL_ADDRESS: same as SPIRE_ADDRESS?
+- HMRC_ADDRESS: email address used by HMRC / CHIEF to process licenses.
+- LITE_HMRC_INTEGRATION_HAWK_KEY: part of Hawk authentication protocol.
+- LITE_API_HAWK_KEY: part of Hawk authentication protocol.
+- LITE_API_URL: full URL for API to send usage response data.
+
 # Mailbox authentication
 
 To authenticate with the mailboxes we have two separate authentication mechanisms

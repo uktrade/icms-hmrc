@@ -111,6 +111,11 @@ SPIRE_INCOMING_EMAIL_ADDRESS = env("SPIRE_INCOMING_EMAIL_ADDRESS", default="spir
 SPIRE_FROM_ADDRESS = env("SPIRE_FROM_ADDRESS", default="spire@example.com")  # /PS-IGNORE
 HMRC_TO_DIT_REPLY_ADDRESS = env("HMRC_TO_DIT_REPLY_ADDRESS", default="hmrctodit@example.com")  # /PS-IGNORE
 
+# This sets EMAIL_FILE_PATH, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_HOST,
+# EMAIL_PORT, EMAIL_BACKEND and optionally sets EMAIL_USE_TLS.
+_email_url = env.email_url("EMAIL_URL", default="smtp://localhost")
+vars().update(_email_url)
+
 EMAIL_PASSWORD = env("EMAIL_PASSWORD")
 EMAIL_HOSTNAME = env("EMAIL_HOSTNAME")
 EMAIL_USER = env("EMAIL_USER")

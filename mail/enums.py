@@ -207,6 +207,10 @@ class MailReadStatuses(TextChoices):
     UNPROCESSABLE = "UNPROCESSABLE"
 
 
+# Used to select from multiple SMTP outgoing server settings.
+SMTPConnection = enum.Enum("SMTPConnection", ["SPIRE", "INCOMING", "MOCK", "HMRC"])
+
+
 class LicenceStatusEnum(TextChoices):
     OPEN = "open"
     EXHAUST = "exhaust"

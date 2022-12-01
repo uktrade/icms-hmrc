@@ -1,11 +1,11 @@
 import logging
 import threading
 
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from conf.settings import LOCK_INTERVAL, SYSTEM_INSTANCE_UUID
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
 from mail.libraries.builders import build_reply_mail_message_dto, build_request_mail_message_dto
 from mail.libraries.data_converters import (
@@ -143,13 +143,15 @@ def lock_db_for_sending_transaction(mail: Mail) -> bool:
     previous_locking_process_id = mail.currently_processed_by
     if (
         not previous_locking_process_id
-        or (timezone.now() - mail.currently_processing_at).total_seconds() > LOCK_INTERVAL
+        or (timezone.now() - mail.currently_processing_at).total_seconds() > settings.LOCK_INTERVAL
     ):
         with transaction.atomic():
             _mail = Mail.objects.select_for_update().get(id=mail.id)
             if _mail.currently_processed_by != previous_locking_process_id:
                 return False
-            _mail.currently_processed_by = str(SYSTEM_INSTANCE_UUID) + "-" + str(threading.currentThread().ident)
+            _mail.currently_processed_by = (
+                str(settings.SYSTEM_INSTANCE_UUID) + "-" + str(threading.currentThread().ident)
+            )
             _mail.set_locking_time()
             _mail.save()
 
