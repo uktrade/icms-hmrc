@@ -1,6 +1,18 @@
 version: "3.8"
 
 services:
+    redis:
+        networks:
+          - backend
+
+    celery-worker:
+        networks:
+          - backend
+
+    celery-beat:
+        networks:
+          - backend
+
     mailhog:
         networks:
           - backend

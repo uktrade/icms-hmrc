@@ -34,6 +34,9 @@ cov-report:
 run-icms:
 	docker-compose -f docker-compose.yml -f docker-compose-icms.yml up --build -d
 
+stop-icms:
+	docker-compose down
+
 process-tasks:
 	docker exec -it lite-hmrc-intg pipenv run ./manage.py process_tasks --log-std
 

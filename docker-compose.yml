@@ -15,11 +15,20 @@ services:
     ports:
       - 5432:5432
 
+  # TODO: Decide on redis version - for now use the icms version
+  redis:
+    image: redis:5.0.6
+    ports:
+      - "6379:6379"
+
+  # TODO: Decide if redis is required by web
   lite-hmrc-intg:
     container_name: "lite-hmrc-intg"
     env_file:
       - .env
-    build: .
+    build:
+      context: .
+      dockerfile: "Dockerfile"
     platform: linux/amd64
     volumes:
       - .:/app
@@ -36,6 +45,31 @@ services:
       - 8025:8025  # HTTP
       - 587:1025  # SMTP
     image: mailhog/mailhog
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: "Dockerfile"
+    env_file:
+      - .env
+    command: pipenv run celery -A conf worker -l INFO
+    volumes:
+        - .:/code
+    depends_on:
+      - lite-hmrc-postgres
+      - redis
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: "Dockerfile"
+    env_file:
+      - .env
+    volumes:
+      - ./:/app/
+    command: pipenv run celery -A conf beat -l INFO
+    depends_on:
+      - redis
 
 volumes:
   maildata:

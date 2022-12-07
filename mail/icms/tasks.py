@@ -10,6 +10,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
+from conf import celery_app
 from mail import requests as mail_requests
 from mail.auth import Authenticator, BasicAuthentication
 from mail.chief.licence_reply import LicenceReplyProcessor
@@ -18,6 +19,11 @@ from mail.models import LicenceData, Mail
 from mail.utils import pop3
 
 logger = logging.getLogger(__name__)
+
+
+@celery_app.task(name="icms:example_task")
+def example_task() -> None:
+    logger.info("This is an example")
 
 
 def process_licence_reply_and_usage_emails():

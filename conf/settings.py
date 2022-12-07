@@ -1,4 +1,5 @@
 import os
+import ssl
 import sys
 import uuid
 
@@ -25,6 +26,7 @@ DEBUG = env.bool("DEBUG", default=False)
 
 ALLOWED_HOSTS = "*"
 
+VCAP_SERVICES = env.json("VCAP_SERVICES", default={})
 
 # Application definition
 
@@ -258,3 +260,18 @@ AZURE_AUTH_CLIENT_SECRET = env.str("AZURE_AUTH_CLIENT_SECRET")
 AZURE_AUTH_TENANT_ID = env.str("AZURE_AUTH_TENANT_ID")
 
 SEND_REJECTED_EMAIL = env.bool("SEND_REJECTED_EMAIL", default=True)
+
+
+# Celery / Redis config
+if "redis" in VCAP_SERVICES:
+    REDIS_URL = VCAP_SERVICES["redis"][0]["credentials"]["uri"]
+    CELERY_BROKER_USE_SSL = {"ssl_cert_reqs": ssl.CERT_REQUIRED}
+else:
+    REDIS_URL = env.str("REDIS_URL", default="redis://redis:6379")
+
+CELERY_BROKER_URL = REDIS_URL
+
+# Explicit paths to celery tasks.
+CELERY_IMPORTS = [
+    "mail.icms.tasks",
+]
