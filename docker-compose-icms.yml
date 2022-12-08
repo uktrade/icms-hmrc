@@ -13,6 +13,10 @@ services:
         networks:
           - backend
 
+    celery-flower:
+        networks:
+          - backend
+
     mailhog:
         networks:
           - backend

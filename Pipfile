@@ -16,6 +16,7 @@ pytest = "*"
 pytest-django = "*"
 pytest-cov = "*"
 requests-mock = "*"
+flower = "==1.2"
 
 [packages]
 djangorestframework = "~=3.9"
