@@ -36,7 +36,7 @@ class TestDevProcessLicenceReply:
     def call_command(*args, **kwargs):
         call_command("dev_fake_licence_reply", *args, **kwargs)
 
-    @override_settings(DEBUG=False)
+    @override_settings(APP_ENV="PRODUCTION")
     def test_dev_fake_licence_reply_disabled(self, db, capsys):
         self.call_command()
 
@@ -55,7 +55,7 @@ class TestDevProcessLicenceReply:
         self.setup_test_data()
 
         mock_timezone = mock.create_autospec(timezone)
-        mock_timezone.now.return_value = datetime.datetime(2022, 11, 10, 14, 10, 00)
+        mock_timezone.now.return_value = datetime.datetime(2022, 11, 10, 14, 10, 00, tzinfo=timezone.utc)
         monkeypatch.setattr(dev_fake_licence_reply, "timezone", mock_timezone)
 
         # test
@@ -88,7 +88,7 @@ class TestDevProcessLicenceReply:
         self.setup_test_data()
 
         mock_timezone = mock.create_autospec(timezone)
-        mock_timezone.now.return_value = datetime.datetime(2022, 11, 10, 14, 10, 00)
+        mock_timezone.now.return_value = datetime.datetime(2022, 11, 10, 14, 10, 00, tzinfo=timezone.utc)
         monkeypatch.setattr(dev_fake_licence_reply, "timezone", mock_timezone)
 
         # test
@@ -130,7 +130,7 @@ class TestDevProcessLicenceReply:
         self.setup_test_data()
 
         mock_timezone = mock.create_autospec(timezone)
-        mock_timezone.now.return_value = datetime.datetime(2022, 11, 10, 14, 10, 00)
+        mock_timezone.now.return_value = datetime.datetime(2022, 11, 10, 14, 10, 00, tzinfo=timezone.utc)
         monkeypatch.setattr(dev_fake_licence_reply, "timezone", mock_timezone)
 
         # test

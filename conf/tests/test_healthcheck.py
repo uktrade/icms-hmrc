@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from background_task.models import Task
 from django.conf import settings
-from django.test import testcases
+from django.test import override_settings, testcases
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -18,6 +18,12 @@ class TestHealthcheck(testcases.TestCase):
         self.url = reverse("healthcheck")
 
     def test_healthcheck_return_ok(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.context["message"], "OK")
+        self.assertEqual(response.context["status"], status.HTTP_200_OK)
+
+    @override_settings(CHIEF_SOURCE_SYSTEM="ILBDOTI")
+    def test_healthcheck_return_ok_icms(self):
         response = self.client.get(self.url)
         self.assertEqual(response.context["message"], "OK")
         self.assertEqual(response.context["status"], status.HTTP_200_OK)

@@ -7,25 +7,40 @@ from urllib import parse
 
 import requests
 from django.conf import settings
+from django.core.management import call_command
 from django.db import transaction
 from django.utils import timezone
 
 from conf import celery_app
 from mail import requests as mail_requests
+from mail import utils
 from mail.auth import Authenticator, BasicAuthentication
 from mail.chief.licence_reply import LicenceReplyProcessor
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
 from mail.models import LicenceData, Mail
+from mail.tasks import send_licence_data_to_hmrc_shared
 from mail.utils import pop3
 
 logger = logging.getLogger(__name__)
 
 
-@celery_app.task(name="icms:example_task")
-def example_task() -> None:
-    logger.info("This is an example")
+@celery_app.task(name="icms:send_licence_data_to_hmrc")
+def send_licence_data_to_hmrc():
+    send_licence_data_to_hmrc_shared()
 
 
+@celery_app.task(name="icms:fake_licence_reply")
+def fake_licence_reply():
+    if utils.get_app_env() == "PRODUCTION":
+        logger.info("This command is only for development environments")
+        return
+
+    # TODO: Add support for changing this value
+    response = "accept"
+    call_command("dev_fake_licence_reply", response)
+
+
+@celery_app.task(name="icms:process_licence_reply_and_usage_emails")
 def process_licence_reply_and_usage_emails():
     """Downloads licenceReply and usageData emails from HMRC mailbox and stores in Mail model."""
 
@@ -66,6 +81,7 @@ def process_licence_reply_and_usage_emails():
             raise e
 
 
+@celery_app.task(name="icms:send_licence_data_to_icms")
 @transaction.atomic()
 def send_licence_data_to_icms():
     """Checks Mail model for any licence reply records to send to ICMS."""

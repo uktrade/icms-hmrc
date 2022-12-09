@@ -1,11 +1,11 @@
 import dataclasses
 from typing import Iterable, List
 
-from django.conf import settings
 from django.core.management import BaseCommand, CommandParser
 from django.db import transaction
 from django.utils import timezone
 
+from mail import utils
 from mail.chief.licence_reply import types
 from mail.enums import ReceptionStatusEnum
 from mail.libraries.chiefprotocol import FIELD_SEP, LINE_SEP
@@ -42,7 +42,7 @@ class Command(BaseCommand):
     def handle(self, outcome, *args, **options):
         self.stdout.write(f"Desired outcome: {outcome}")
 
-        if not settings.DEBUG:
+        if utils.get_app_env() == "PRODUCTION":
             self.stdout.write("This command is only for development environments")
             return
 

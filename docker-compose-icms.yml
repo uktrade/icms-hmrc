@@ -1,13 +1,19 @@
 version: "3.8"
 
 services:
-    redis:
-        networks:
-          - backend
+    lite-hmrc-intg:
+      networks:
+        - backend
+        - icms_public
 
     celery-worker:
         networks:
           - backend
+          - icms_public
+
+    redis:
+      networks:
+        - backend
 
     celery-beat:
         networks:
@@ -25,12 +31,7 @@ services:
         networks:
           - backend
 
-    lite-hmrc-intg:
-        networks:
-          - backend
-          - icms_backend
-
 networks:
   backend:
-  icms_backend:
-    name: "icms_backend"
+  icms_public:
+    name: "icms_public"

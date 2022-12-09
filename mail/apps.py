@@ -24,11 +24,9 @@ class MailConfig(AppConfig):
         Task.objects.filter(queue=LICENCE_DATA_TASK_QUEUE).delete()
 
         if settings.BACKGROUND_TASK_ENABLED:
-            # Tasks common to ICMS and LITE/SPIRE
-            send_licence_data_to_hmrc(repeat=settings.LITE_LICENCE_DATA_POLL_INTERVAL, repeat_until=None)  # noqa
-
             # LITE/SPIRE Tasks
             if settings.CHIEF_SOURCE_SYSTEM == ChiefSystemEnum.SPIRE:
+                send_licence_data_to_hmrc(repeat=settings.LITE_LICENCE_DATA_POLL_INTERVAL, repeat_until=None)  # noqa
                 manage_inbox(repeat=settings.INBOX_POLL_INTERVAL, repeat_until=None)  # noqa
 
                 usage_updates_not_sent_to_lite = UsageData.objects.filter(has_lite_data=True, lite_sent_at__isnull=True)

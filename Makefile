@@ -1,8 +1,8 @@
 test:
-	pipenv run pytest # --disable-warnings
+	pipenv run pytest ${args} # --disable-warnings
 
 test-in:
-	docker exec -it lite-hmrc-intg make test
+	docker exec -it lite-hmrc-intg make test args="${args}"
 
 migrate:
 	docker exec -it lite-hmrc-intg pipenv run ./manage.py migrate
@@ -35,7 +35,7 @@ run-icms:
 	docker-compose -f docker-compose.yml -f docker-compose-icms.yml up --build -d
 
 stop-icms:
-	docker-compose down
+	docker-compose stop
 
 process-tasks:
 	docker exec -it lite-hmrc-intg pipenv run ./manage.py process_tasks --log-std

@@ -4,7 +4,7 @@ import urllib.parse
 from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import List, MutableMapping, Tuple
+from typing import List, MutableMapping, Optional, Tuple
 
 from background_task import background
 from background_task.models import Task
@@ -202,11 +202,19 @@ def _handle_exception(message, lite_usage_data_id):
 
 
 @background(queue=LICENCE_DATA_TASK_QUEUE, schedule=0)
-def send_licence_data_to_hmrc():
-    """Sends LITE (or ICMS) licence updates to HMRC
+def send_licence_data_to_hmrc() -> Optional[bool]:
+    """django-background-task version of send_licence_data_to_hmrc"""
+    return send_licence_data_to_hmrc_shared()
 
-    Return: True if successful
+
+def send_licence_data_to_hmrc_shared() -> Optional[bool]:
+    """Sends LITE (or ICMS) licence updates to HMRC.
+
+    This code is shared between two tasks currently:
+      - mail/tasks -> def send_licence_data_to_hmrc (django-background-task task)
+      - mail/icms/tasks -> def send_licence_data_to_hmrc (celery task)
     """
+
     source = SourceEnum.ICMS if settings.CHIEF_SOURCE_SYSTEM == ChiefSystemEnum.ICMS else SourceEnum.LITE
     logger.info(f"Sending {source} licence updates to HMRC")
 
