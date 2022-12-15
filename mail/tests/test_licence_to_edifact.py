@@ -228,7 +228,7 @@ class GenerateLinesForLicenceTest(LiteHMRCTestClient):
             "start_date": "1",
             "end_date": "2",
             "organisation": {
-                "address": {},
+                "address": {"line_1": "Required line 1 address"},
             },
             "address": {},
             "type": "oiel",  # One of the OPEN_LICENCES.
@@ -247,7 +247,7 @@ class GenerateLinesForLicenceTest(LiteHMRCTestClient):
             "start_date": "1",
             "end_date": "2",
             "organisation": {
-                "address": {},
+                "address": {"line_1": "Required line 1 address"},
             },
             "address": {},
             "type": "oiel",  # One of the OPEN_LICENCES.
