@@ -79,6 +79,7 @@ def generate_lines_for_licence(licence: LicencePayload) -> Iterable[chieftypes._
 
     if licence.action != LicenceActionEnum.CANCEL:
         trader = payload.get("organisation")
+        trader = sanitize_foreign_trader_address(trader)
 
         yield chieftypes.Trader(
             rpa_trader_id=trader.get("eori_number", ""),
