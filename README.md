@@ -12,7 +12,11 @@ The entry point for configuring the tasks is defined here: `lite-hmrc/mail/apps.
 # Build and Run
 An `.env` file is expected at the root of project.
 
+To make setup easy for those running in Docker there is a `docker.env` file provided which you can use in place of the `local.env` if you prefer.
+
 Copy the template .env file: `cp local.env .env`
+
+Or alternatively on Docker: `cp docker.env .env`
 
 Copy the template local_settings.sample if required: `cp local_settings.sample local_settings.py`
 
@@ -21,12 +25,7 @@ if using local_settings.py remember to add this to your .env `DJANGO_SETTINGS_MO
 
 ### Running in Docker
 To run in docker do the following
-- Configure .env file - Using local.env as a starting point:
-  ```properties
-  DATABASE_URL=postgres://postgres:password@lite-hmrc-postgres:5432/postgres
-  MAILHOG_URL=http://mailhog:8025
-  EMAIL_HOSTNAME=mailhog
-  ```
+- Set up a `.env` file using `docker.env` as starting point (all the config given in `docker.env` should be sufficient to run containers and run tests)
 - Start the containers: `docker-compose up --build`
 - Initial setup (run once):
   - Run migrations: `make migrate`
