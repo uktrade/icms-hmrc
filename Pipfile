@@ -35,7 +35,7 @@ django = "==3.2.16"
 elastic-apm = "==6.7.2"
 django-jsonfield = "==1.4"
 msal = "~=1.18.0"
-setuptools = "~=63.4.1"
+setuptools = "~=65.5.1"
 
 [requires]
 python_version = "3.7"
