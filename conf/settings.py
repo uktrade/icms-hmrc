@@ -130,6 +130,7 @@ LITE_LICENCE_DATA_POLL_INTERVAL = env.int("LITE_LICENCE_DATA_POLL_INTERVAL", def
 EMAIL_AWAITING_REPLY_TIME = env.int("EMAIL_AWAITING_REPLY_TIME", default=3600)
 EMAIL_AWAITING_CORRECTIONS_TIME = env.int("EMAIL_AWAITING_CORRECTIONS_TIME", default=3600)
 NOTIFY_USERS = env.json("NOTIFY_USERS", default=[])
+LICENSE_POLL_INTERVAL = env.int("LICENSE_POLL_INTERVAL", default=300)
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
