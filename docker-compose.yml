@@ -20,6 +20,7 @@ services:
     env_file:
       - .env
     build: .
+    platform: linux/amd64
     volumes:
       - .:/app
     ports:
