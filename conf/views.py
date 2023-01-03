@@ -49,11 +49,15 @@ class HealthCheck(APIView):
         if settings.CHIEF_SOURCE_SYSTEM == ChiefSystemEnum.SPIRE:
             if not self._is_lite_licence_update_task_responsive():
                 logging.error("%s is not responsive", LICENCE_DATA_TASK_QUEUE)
-                return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, self.ERROR_LICENCE_DATA_TASK_QUEUE, start_time)
+                return self._build_response(
+                    HTTP_503_SERVICE_UNAVAILABLE, self.ERROR_LICENCE_DATA_TASK_QUEUE, start_time
+                )
 
             if not self._is_inbox_polling_task_responsive():
                 logging.error("%s is not responsive", MANAGE_INBOX_TASK_QUEUE)
-                return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, self.ERROR_MANAGE_INBOX_TASK_QUEUE, start_time)
+                return self._build_response(
+                    HTTP_503_SERVICE_UNAVAILABLE, self.ERROR_MANAGE_INBOX_TASK_QUEUE, start_time
+                )
 
         logging.info("All services are responsive")
         return self._build_response(HTTP_200_OK, "OK", start_time)
