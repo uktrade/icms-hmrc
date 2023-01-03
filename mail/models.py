@@ -158,6 +158,8 @@ class LicencePayload(models.Model):
     data = models.JSONField(default=dict)
     received_at = models.DateTimeField(default=timezone.now)
     is_processed = models.BooleanField(default=False)
+    # This allows us to skip License requests to be skipped
+    skip_process = models.BooleanField(default=False)
 
     # For LITE updates only
     old_lite_id = models.UUIDField(null=True, blank=False, unique=False)

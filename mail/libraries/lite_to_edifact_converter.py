@@ -79,6 +79,7 @@ def generate_lines_for_licence(licence: LicencePayload) -> Iterable[chieftypes._
 
     if licence.action != LicenceActionEnum.CANCEL:
         trader = payload.get("organisation")
+        trader = sanitize_trader_address(trader)
 
         yield chieftypes.Trader(
             rpa_trader_id=trader.get("eori_number", ""),
@@ -238,6 +239,35 @@ def sanitize_foreign_trader_address(trader):
     addr_lines = textwrap.wrap(addr_line, width=FOREIGN_TRADER_ADDR_LINE_MAX_LEN, break_long_words=False)
     if len(addr_lines) > FOREIGN_TRADER_NUM_ADDR_LINES:
         addr_lines = addr_lines[:FOREIGN_TRADER_NUM_ADDR_LINES]
+
+    for index, line in enumerate(addr_lines, start=1):
+        address[f"line_{index}"] = line
+
+    return trader
+
+
+def sanitize_trader_address(trader):
+    """
+    Trader address is split into 5 lines.
+    When any since one of these lines exceed 35 chars we need to break then up into lines
+    There is a possibility of truncating the address here if this happens we log it
+    """
+    address = trader["address"]
+
+    addr_line = " ".join(address.get(f"line_{i+1}") for i in range(5) if address.get(f"line_{i+1}"))
+
+    addr_line = addr_line.replace("\n", " ").replace("\r", " ")
+    # replace special characters
+    addr_line = addr_line.replace("#", "")
+    addr_lines = textwrap.wrap(addr_line, width=FOREIGN_TRADER_ADDR_LINE_MAX_LEN, break_long_words=False)
+    if len(addr_lines) > FOREIGN_TRADER_NUM_ADDR_LINES:
+        addr_lines = addr_lines[:FOREIGN_TRADER_NUM_ADDR_LINES]
+        logging.info(
+            "Truncating trader address as we exceeded %d, original_address: %s, truncated_address: %s",
+            FOREIGN_TRADER_ADDR_LINE_MAX_LEN,
+            addr_line,
+            addr_lines,
+        )
 
     for index, line in enumerate(addr_lines, start=1):
         address[f"line_{index}"] = line

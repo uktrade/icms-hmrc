@@ -58,6 +58,7 @@ class LicenceDataIngestView(APIView):
             action=data["action"],
             old_lite_id=data.get("old_id"),
             old_reference=data.get("old_reference"),
+            skip_process=False,
             defaults=dict(
                 lite_id=data["id"],
                 reference=data["reference"],

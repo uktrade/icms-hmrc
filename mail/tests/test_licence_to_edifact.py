@@ -42,7 +42,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             + "{:04d}{:02d}{:02d}{:02d}{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             + "\\1234\\N"
             + "\n2\\licence\\20200000001P\\insert\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
-            + f"\n3\\trader\\\\{trader['eori_number']}\\20200602\\20220602\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Farnborough\\GU40 2LX"
+            + f"\n3\\trader\\\\{trader['eori_number']}\\20200602\\20220602\\Organisation\\might 248 James Key Apt. 515 Apt.\\942 West Ashleyton Farnborough\\Apt. 942\\West Ashleyton\\Farnborough\\GU40 2LX"
             + "\n4\\country\\GB\\\\D"
             + "\n5\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
             + "\n6\\restrictions\\Provisos may apply please see licence"
@@ -103,7 +103,7 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
             + "\n2\\licence\\20200000001P\\cancel\\GBSIEL/2020/0000001/P\\SIE\\E\\20200602\\20220602"
             + "\n3\\end\\licence\\2"
             + "\n4\\licence\\20200000001Pa\\insert\\GBSIEL/2020/0000001/P/a\\SIE\\E\\20200602\\20220703"
-            + f"\n5\\trader\\\\{trader['eori_number']}\\20200602\\20220703\\Organisation\\might\\248 James Key Apt. 515\\Apt. 942\\West Ashleyton\\Farnborough\\GU40 2LX"
+            + f"\n5\\trader\\\\{trader['eori_number']}\\20200602\\20220703\\Organisation\\might 248 James Key Apt. 515 Apt.\\942 West Ashleyton Farnborough\\Apt. 942\\West Ashleyton\\Farnborough\\GU40 2LX"
             + "\n6\\country\\GB\\\\D"
             + "\n7\\foreignTrader\\End User\\42 Road, London, Buckinghamshire\\\\\\\\\\\\GB"
             + "\n8\\restrictions\\Provisos may apply please see licence"
@@ -173,8 +173,78 @@ class LicenceToEdifactTests(LiteHMRCTestClient):
         )
         licences = LicencePayload.objects.filter(is_processed=False)
         edifact_file = licences_to_edifact(licences, 1234, "FOO")
+
         foreign_trader_line = edifact_file.split("\n")[4]
         self.assertEqual(foreign_trader_line, expected_trader_line)
+
+    @parameterized.expand(
+        [
+            (
+                "TEST12345 IFailedTooLong Ltd - Registered address",
+                "BIGMAM MANOR",
+                "NEW TESCO LANE",
+                "HARROW",
+                "MIDDLESEX",
+                "3\\trader\\\\GB123456789000\\20200602\\20220602\\Advanced Firearms Limited\\TEST12345 IFailedTooLong Ltd -\\Registered address BIGMAM MANOR NEW\\TESCO LANE HARROW MIDDLESEX\\HARROW\\MIDDLESEX\\GU40 2LX",
+            ),
+            (
+                "TEST12345",
+                "BIGMAM MANOR IFailedTooLong Ltd - Registered address",
+                "NEW TESCO LANE",
+                "HARROW",
+                "MIDDLESEX",
+                "3\\trader\\\\GB123456789000\\20200602\\20220602\\Advanced Firearms Limited\\TEST12345 BIGMAM MANOR\\IFailedTooLong Ltd - Registered\\address NEW TESCO LANE HARROW\\MIDDLESEX\\MIDDLESEX\\GU40 2LX",
+            ),
+            (
+                "TEST12345",
+                "BIGMAM MANOR",
+                "NEW TESCO LANE - IFailedTooLong Ltd - Registered address",
+                "HARROW",
+                "MIDDLESEX",
+                "3\\trader\\\\GB123456789000\\20200602\\20220602\\Advanced Firearms Limited\\TEST12345 BIGMAM MANOR NEW TESCO\\LANE - IFailedTooLong Ltd -\\Registered address HARROW MIDDLESEX\\HARROW\\MIDDLESEX\\GU40 2LX",
+            ),
+            (
+                "TEST12345 - IFailedTooLong Ltd - Registered address",
+                "BIGMAM MANOR - IFailedTooLong Ltd - Registered address",
+                "NEW TESCO LANE - IFailedTooLong Ltd - Registered address",
+                "HARROW - IFailedTooLong Ltd - Registered address",
+                "MIDDLESEX - IFailedTooLong Ltd - Registered address",
+                "3\\trader\\\\GB123456789000\\20200602\\20220602\\Advanced Firearms Limited\\TEST12345 - IFailedTooLong Ltd -\\Registered address BIGMAM MANOR -\\IFailedTooLong Ltd - Registered\\address NEW TESCO LANE -\\IFailedTooLong Ltd - Registered\\GU40 2LX",
+            ),
+            (
+                "this is short address",
+                "BIGMAM MANOR",
+                "NEW TESCO LANE",
+                "HARROW",
+                "MIDDLESEX",
+                "3\\trader\\\\GB123456789000\\20200602\\20220602\\Advanced Firearms Limited\\this is short address BIGMAM MANOR\\NEW TESCO LANE HARROW MIDDLESEX\\NEW TESCO LANE\\HARROW\\MIDDLESEX\\GU40 2LX",
+            ),
+        ]
+    )
+    def test_trader_address_sanitize(
+        self, address_line_1, address_line_2, address_line_3, address_line_4, address_line_5, expected_trader_line
+    ):
+        lp = LicencePayload.objects.get()
+        lp.is_processed = True
+        lp.save()
+        payload = self.licence_payload_json.copy()
+        payload["licence"]["organisation"]["name"] = "Advanced Firearms Limited"
+        payload["licence"]["organisation"]["address"]["line_1"] = address_line_1
+        payload["licence"]["organisation"]["address"]["line_2"] = address_line_2
+        payload["licence"]["organisation"]["address"]["line_3"] = address_line_3
+        payload["licence"]["organisation"]["address"]["line_4"] = address_line_4
+        payload["licence"]["organisation"]["address"]["line_5"] = address_line_5
+        LicencePayload.objects.create(
+            reference="GBSIEL/2021/0000001/P",
+            data=payload["licence"],
+            action=LicenceActionEnum.INSERT,
+            lite_id="00000000-0000-0000-0000-9792333e8cc8",
+        )
+        licences = LicencePayload.objects.filter(is_processed=False)
+
+        edifact_file = licences_to_edifact(licences, 1234, "FOO")
+        trader_line = edifact_file.split("\n")[2]
+        self.assertEqual(trader_line, expected_trader_line)
 
 
 class GenerateLinesForLicenceTest(LiteHMRCTestClient):
@@ -183,7 +253,7 @@ class GenerateLinesForLicenceTest(LiteHMRCTestClient):
             "start_date": "1",
             "end_date": "2",
             "organisation": {
-                "address": {},
+                "address": {"line_1": "Required line 1 address"},
             },
             "address": {},
             "type": "oiel",  # One of the OPEN_LICENCES.
@@ -202,7 +272,7 @@ class GenerateLinesForLicenceTest(LiteHMRCTestClient):
             "start_date": "1",
             "end_date": "2",
             "organisation": {
-                "address": {},
+                "address": {"line_1": "Required line 1 address"},
             },
             "address": {},
             "type": "oiel",  # One of the OPEN_LICENCES.
