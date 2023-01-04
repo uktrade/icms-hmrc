@@ -1,5 +1,4 @@
 import logging
-import os
 import urllib.parse
 from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
@@ -307,10 +306,3 @@ def manage_inbox():
             exc_info=True,
         )
         raise exc
-
-
-@background(queue="test_queue", schedule=0)
-def emit_test_file():
-    test_file_path = os.path.join(settings.BASE_DIR, ".background-tasks-is-ready")
-    with open(test_file_path, "w") as test_file:
-        test_file.write("OK")
