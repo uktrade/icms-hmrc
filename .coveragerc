@@ -1,13 +1,12 @@
 [run]
 omit =
     ./*/migrations/*
+    ./conf/celery.py
     ./conf/settings.py
     ./conf/wsgi.py
     ./static/management/*
     *test*
     .venv/*
-    mail/management/commands/dev_process_licence_payload.py
-    mail/management/commands/dev_send_licence_data_to_icms.py
     mail/admin.py
 
 branch = True

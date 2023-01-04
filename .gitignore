@@ -78,3 +78,6 @@ mailserver/*
 
 # pii file
 .pii-secret-hook
+
+# Celery files
+celerybeat-schedule

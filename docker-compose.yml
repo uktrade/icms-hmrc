@@ -15,18 +15,25 @@ services:
     ports:
       - 5432:5432
 
+  redis:
+    image: redis:5.0.6
+    ports:
+      - "6379"
+
   lite-hmrc-intg:
     container_name: "lite-hmrc-intg"
     env_file:
       - .env
-    build: .
-    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: "Dockerfile"
     volumes:
       - .:/app
     ports:
       - 8000:8000
     depends_on:
       - lite-hmrc-postgres
+      - redis
     expose:
       - 8000
     command: pipenv run ./manage.py runserver 0.0.0.0:8000
@@ -37,5 +44,33 @@ services:
       - 587:1025  # SMTP
     image: mailhog/mailhog
 
+  celery-worker:
+    build:
+      context: .
+      dockerfile: "Dockerfile"
+    env_file:
+      - .env
+    command: pipenv run celery -A conf worker -l INFO --events
+    volumes:
+        - .:/code
+    depends_on:
+      - lite-hmrc-postgres
+      - redis
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: "Dockerfile"
+    command: pipenv run celery -A conf beat -l INFO
+    depends_on:
+      - redis
+
+  celery-flower:
+    build: .
+    command: pipenv run celery -A conf flower --loglevel=DEBUG --port=9090
+    ports:
+      - "9090:9090"
+    depends_on:
+      - redis
 volumes:
   maildata:

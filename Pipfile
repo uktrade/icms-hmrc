@@ -16,6 +16,7 @@ pytest = "*"
 pytest-django = "*"
 pytest-cov = "*"
 requests-mock = "*"
+flower = "==1.2"
 
 [packages]
 djangorestframework = "~=3.9"
@@ -36,6 +37,11 @@ django-jsonfield = "==1.4"
 msal = "~=1.18.0"
 psycopg2-binary = "~=2.9.3"
 setuptools = "~=65.5.1"
+celery = {version = "==5.2.7", extras = ["redis"]}
+# Celery calls entry_points().get() in a lot of places and that has been removed from later versions of importlib-metadata
+# celery 5.3.0 should have fixed all of these calls, when that happens remove importlib-metadata as a dependency.
+# https://importlib-metadata.readthedocs.io/en/latest/history.html#v5-0-0
+importlib-metadata = "==4.13.0"
 
 [requires]
 python_version = "3.7"

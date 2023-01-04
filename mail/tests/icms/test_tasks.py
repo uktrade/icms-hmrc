@@ -513,3 +513,36 @@ def test_file_with_errors_raises_errors(db, caplog):
             "File error: position: 99, code: 18, error_msg: Record type 'fileHeader' not recognised",
             "File trailer count is different from processor count of accepted and rejected",
         ]
+
+
+class TestSendLicenceDataToHMRC:
+    @pytest.fixture(autouse=True)
+    def _setup(self, db):
+        ...
+
+    def test_task_is_called(self, caplog):
+        tasks.send_licence_data_to_hmrc()
+
+        assert caplog.messages == ["Sending ICMS licence updates to HMRC", "There are currently no licences to send"]
+
+
+class TestFakeLicenceReply:
+    @pytest.fixture(autouse=True)
+    def _setup(self, db):
+        ...
+
+    def test_task_is_called(self, caplog, capsys):
+        tasks.fake_licence_reply()
+
+        captured = capsys.readouterr()
+        assert captured.out.split("\n") == [
+            "Desired outcome: accept",
+            "No mail records with reply_pending status",
+            "",
+        ]
+
+    @override_settings(APP_ENV="PRODUCTION")
+    def test_run_in_prod_returns_early(self, caplog):
+        tasks.fake_licence_reply()
+
+        assert caplog.messages == ["This command is only for development environments"]
