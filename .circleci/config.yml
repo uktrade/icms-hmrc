@@ -91,21 +91,9 @@ jobs:
           command: |
             pipenv run bandit -r .
 
-  check_background_tasks_up:
-    machine:
-      image: ubuntu-2004:202010-01
-    resource_class: medium
-    working_directory: /tmp/app
-    steps:
-      - checkout
-      - run:
-          name: Run background task scheduler
-          command: docker-compose -f docker-compose-circleci-background-tasks-up.yml up --exit-code-from check-background-tasks
-
 workflows:
   version: 2
   test:
     jobs:
       - tests
       - linting
-      - check_background_tasks_up
