@@ -1,10 +1,9 @@
 import logging
 from typing import Optional
 
-from django.conf import settings
 from django.db import transaction
 
-from mail.enums import ChiefSystemEnum, ReceptionStatusEnum, SourceEnum
+from mail.enums import ReceptionStatusEnum, SourceEnum
 from mail.libraries.builders import build_licence_data_mail, build_request_mail_message_dto
 from mail.libraries.lite_to_edifact_converter import EdifactValidationError
 from mail.libraries.routing_controller import send, update_mail
@@ -20,7 +19,7 @@ def send_licence_data_to_hmrc_shared() -> Optional[bool]:
       - mail/icms/tasks -> def send_licence_data_to_hmrc (celery task)
     """
 
-    source = SourceEnum.ICMS if settings.CHIEF_SOURCE_SYSTEM == ChiefSystemEnum.ICMS else SourceEnum.LITE
+    source = SourceEnum.ICMS
     logger.info(f"Sending {source} licence updates to HMRC")
 
     if Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT).count():

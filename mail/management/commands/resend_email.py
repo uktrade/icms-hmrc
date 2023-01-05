@@ -94,17 +94,6 @@ class Command(BaseCommand):
             if mail.status != ReceptionStatusEnum.REPLY_PENDING:
                 logger.error("Mail is expected to be in 'reply_pending' status but current status is %s", mail.status)
                 return
-        # this does happen occassionally
-        elif mail.extract_type == ExtractTypeEnum.LICENCE_REPLY:
-            destination = SourceEnum.SPIRE
-            if mail.status != ReceptionStatusEnum.REPLY_SENT:
-                logger.error("Mail is expected to be in 'reply_sent' status but current status is %s", mail.status)
-                return
-        elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
-            destination = SourceEnum.SPIRE
-            if mail.status != ReceptionStatusEnum.REPLY_SENT:
-                logger.error("Mail is expected to be in 'reply_sent' status but current status is %s", mail.status)
-                return
         else:
             logger.error("Unexpected extract_type for the mail %s", mail.edi_filename)
             return

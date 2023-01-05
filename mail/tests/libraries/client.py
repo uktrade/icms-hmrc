@@ -1,5 +1,4 @@
 import json
-import logging
 
 from django.test import testcases
 from django.utils import timezone

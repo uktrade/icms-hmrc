@@ -4,19 +4,11 @@ import uuid
 from datetime import timedelta
 from typing import List
 
-from django.conf import settings
 from django.db import IntegrityError, models
 from django.utils import timezone
 from model_utils.models import TimeStampedModel
 
-from mail.enums import (
-    ChiefSystemEnum,
-    ExtractTypeEnum,
-    LicenceActionEnum,
-    MailReadStatuses,
-    ReceptionStatusEnum,
-    SourceEnum,
-)
+from mail.enums import ExtractTypeEnum, LicenceActionEnum, MailReadStatuses, ReceptionStatusEnum, SourceEnum
 
 logger = logging.getLogger(__name__)
 
@@ -151,14 +143,6 @@ class LicencePayload(models.Model):
     class Meta:
         unique_together = [["lite_id", "action"]]
         ordering = ["received_at"]
-
-    def save(self, *args, **kwargs):
-        super(LicencePayload, self).save(*args, **kwargs)
-
-        # This causes errors for ICMS as reference doesn't need to be unique.
-        # reference only needs to be unique within a licenceData file.
-        if settings.CHIEF_SOURCE_SYSTEM == ChiefSystemEnum.SPIRE:
-            LicenceIdMapping.objects.get_or_create(lite_id=self.lite_id, reference=self.reference)
 
     def __str__(self):
         return f"LicencePayload(lite_id={self.lite_id}, reference={self.reference}, action={self.action})"

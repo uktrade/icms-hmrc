@@ -13,8 +13,7 @@ from unidecode import unidecode
 from mail.enums import ExtractTypeEnum, SourceEnum
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.libraries.lite_to_edifact_converter import licences_to_edifact
-from mail.libraries.usage_data_decomposition import build_edifact_file_from_data_blocks, split_edi_data_by_id
-from mail.models import LicenceData, Mail, UsageData
+from mail.models import LicenceData, Mail
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +28,7 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
     receiver = None
     attachment = [None, None]
     run_number = 0
+
     if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
         sender = settings.INCOMING_EMAIL_USER
         receiver = settings.OUTGOING_EMAIL_USER
@@ -38,19 +38,6 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
             build_sent_filename(mail.edi_filename, run_number),
             build_sent_file_data(mail.edi_data, run_number),
         ]
-
-    elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
-        sender = settings.HMRC_ADDRESS
-        receiver = settings.SPIRE_ADDRESS
-        update = UsageData.objects.get(mail=mail)
-        run_number = update.spire_run_number
-        spire_data, _ = split_edi_data_by_id(mail.edi_data)
-        if len(spire_data) > 2:  # if SPIRE blocks contain more than just a header & footer
-            file = build_edifact_file_from_data_blocks(spire_data)
-            attachment = [
-                build_sent_filename(mail.edi_filename, run_number),
-                build_sent_file_data(file, run_number),
-            ]
 
     logger.info(
         "Preparing request Mail dto of extract type %s, sender %s, receiver %s with filename %s",
@@ -90,18 +77,6 @@ def _build_request_mail_message_dto_internal(mail: Mail) -> EmailMessageDto:
         sender = settings.EMAIL_USER
         receiver = settings.SPIRE_ADDRESS
         attachment = [mail.sent_response_filename, mail.sent_response_data]
-    elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
-        sender = settings.EMAIL_USER
-        receiver = settings.SPIRE_ADDRESS
-        update = UsageData.objects.get(mail=mail)
-        run_number = update.spire_run_number
-        spire_data, _ = split_edi_data_by_id(mail.edi_data)
-        if len(spire_data) > 2:  # if SPIRE blocks contain more than just a header & footer
-            file = build_edifact_file_from_data_blocks(spire_data)
-            attachment = [
-                build_sent_filename(mail.edi_filename, run_number),
-                build_sent_file_data(file, run_number),
-            ]
     else:
         return None
 

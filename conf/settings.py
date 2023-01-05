@@ -82,6 +82,7 @@ DATABASES = {"default": env.db()}
 
 # Which system identifier to use in licence requests to HMRC's CHIEF system.
 # LITE (and SPIRE) uses "SPIRE". ICMS uses "ILBDOTI".
+# TODO: Change to ICMS
 CHIEF_SOURCE_SYSTEM = env("CHIEF_SOURCE_SYSTEM", default="SPIRE")
 
 INCOMING_EMAIL_PASSWORD = env("INCOMING_EMAIL_PASSWORD", default="")
