@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "background_task",
     "mail.apps.MailConfig",
 ]
 
@@ -220,14 +219,6 @@ LITE_API_REQUEST_TIMEOUT = 60  # Maximum time, in seconds, to wait between bytes
 
 # The URL used to send licence reply data to ICMS
 ICMS_API_URL = env("ICMS_API_URL", default="http://web:8080/")
-
-# TODO: Delete these settings when removing django-background-tasks
-# Background Tasks
-BACKGROUND_TASK_ENABLED = env.bool("BACKGROUND_TASK_ENABLED", default=True)
-BACKGROUND_TASK_RUN_ASYNC = True
-# Number of times a task is retried given a failure occurs with exponential back-off = ((current_attempt ** 4) + 5)
-MAX_ATTEMPTS = 7  # e.g. 7th attempt occurs approx 40 minutes after 1st attempt (assuming instantaneous failures)
-MAX_RUN_TIME = env("BACKGROUND_TASK_MAX_RUN_TIME", default=900)
 
 # Sentry
 if env.str("SENTRY_DSN", ""):

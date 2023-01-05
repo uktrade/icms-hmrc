@@ -4,9 +4,9 @@
 This project is meant for sending licence updates to HMRC and receiving usage reporting. Information like licence updates
 and usage are exchanged as mail attachment between Lite and HMRC
 
-Tasks are managed using this project: [Django Background Tasks](https://github.com/arteria/django-background-tasks/blob/master/docs/index.rst)
+Tasks are managed using this project: [Celery](https://github.com/celery/celery)
 
-The entry point for configuring the tasks is defined here: `lite-hmrc/mail/apps.py`
+The entry point for configuring the tasks is defined here: `icms-hmrc/conf/celery.py`
 
 
 # Build and Run
