@@ -80,10 +80,6 @@ WSGI_APPLICATION = "conf.wsgi.application"
 
 DATABASES = {"default": env.db()}
 
-ENABLE_MOCK_HMRC_SERVICE = env.bool("ENABLE_MOCK_HMRC_SERVICE", default=False)
-if ENABLE_MOCK_HMRC_SERVICE:
-    INSTALLED_APPS += ["mock_hmrc.apps.MockHmrcConfig"]
-
 # Which system identifier to use in licence requests to HMRC's CHIEF system.
 # LITE (and SPIRE) uses "SPIRE". ICMS uses "ILBDOTI".
 CHIEF_SOURCE_SYSTEM = env("CHIEF_SOURCE_SYSTEM", default="SPIRE")
@@ -224,6 +220,7 @@ LITE_API_REQUEST_TIMEOUT = 60  # Maximum time, in seconds, to wait between bytes
 # The URL used to send licence reply data to ICMS
 ICMS_API_URL = env("ICMS_API_URL", default="http://web:8080/")
 
+# TODO: Delete these settings when removing django-background-tasks
 # Background Tasks
 BACKGROUND_TASK_ENABLED = env.bool("BACKGROUND_TASK_ENABLED", default=True)
 BACKGROUND_TASK_RUN_ASYNC = True

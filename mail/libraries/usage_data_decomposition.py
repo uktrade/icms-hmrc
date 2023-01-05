@@ -1,7 +1,4 @@
-from collections import defaultdict
-
-from mail.enums import LicenceStatusEnum, SourceEnum
-from mail.libraries.helpers import get_good_id, get_licence_id, get_licence_status
+from mail.enums import SourceEnum
 from mail.models import LicenceIdMapping, TransactionMapping, UsageData
 
 
@@ -72,59 +69,6 @@ def build_edifact_file_from_data_blocks(data_blocks: list) -> str:
 
     spire_file = spire_file[:-1]
     return spire_file
-
-
-def build_json_payload_from_data_blocks(data_blocks: list) -> dict:
-    payload = defaultdict(list)
-    licence_reference = None
-
-    for block in data_blocks:
-        licence_payload = {
-            "id": "",
-            "action": "",
-            "completion_date": "",
-            "goods": [],
-        }
-
-        for line in block:
-            good_payload = {
-                "id": "",
-                "usage": "",
-                "value": "",
-                "currency": "",
-            }
-
-            line_array = line.split("\\")
-            if "licenceUsage" in line and "end" not in line:
-                licence_reference = line_array[3]
-                licence_status_code = line_array[4]
-                licence_payload["action"] = get_licence_status(licence_status_code)
-
-                # completion date is only include when licence is complete (i.e., not Open)
-                if licence_status_code != "O" and len(line_array) >= 6:
-                    licence_payload["completion_date"] = line_array[5]
-                licence_payload["id"] = get_licence_id(licence_reference)
-
-            if "line" == line_array[0]:
-
-                good_payload["id"] = get_good_id(line_number=line_array[1], licence_reference=licence_reference)
-                good_payload["usage"] = line_array[2]
-                good_payload["value"] = line_array[3]
-                if len(line_array) == 5:
-                    good_payload["currency"] = line_array[4]
-
-                licence_payload["goods"].append(good_payload)
-
-        payload[licence_payload["action"]].append(licence_payload)
-
-    """
-    We only need to process usage data of licences that are Open, i.e., not all the
-    products on that licence are not completely used and there is usage data to report to.
-    Once the licence is completed then the status is not Open so they can be ignored
-    otherwise it will result in double counting.
-    """
-
-    return {"licences": payload[LicenceStatusEnum.OPEN]}
 
 
 def id_owner(licence_reference) -> str:

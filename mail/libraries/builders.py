@@ -11,9 +11,7 @@ from django.utils import timezone
 from unidecode import unidecode
 
 from mail.enums import ExtractTypeEnum, SourceEnum
-from mail.libraries.combine_usage_replies import combine_lite_and_spire_usage_responses
 from mail.libraries.email_message_dto import EmailMessageDto
-from mail.libraries.helpers import convert_source_to_sender
 from mail.libraries.lite_to_edifact_converter import licences_to_edifact
 from mail.libraries.usage_data_decomposition import build_edifact_file_from_data_blocks, split_edi_data_by_id
 from mail.models import LicenceData, Mail, UsageData
@@ -142,65 +140,6 @@ def build_sent_file_data(file_data: str, run_number: int) -> str:
     file_data_line_1 = "\\".join(file_data_line_1)
 
     return file_data_line_1 + "\n" + file_data_lines[1]
-
-
-def build_reply_mail_message_dto(mail) -> EmailMessageDto:
-    sender = settings.HMRC_ADDRESS
-    receiver = settings.SPIRE_ADDRESS
-    run_number = None
-
-    if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
-        licence_data = LicenceData.objects.get(mail=mail)
-        run_number = licence_data.source_run_number
-        receiver = convert_source_to_sender(licence_data.source)
-        logger.info(
-            "[%s] Source %s run number: %s, HMRC run number: %s",
-            mail.extract_type,
-            licence_data.source,
-            run_number,
-            licence_data.hmrc_run_number,
-        )
-    elif mail.extract_type == ExtractTypeEnum.LICENCE_REPLY:
-        licence_data = LicenceData.objects.get(mail=mail)
-        run_number = licence_data.source_run_number
-        receiver = convert_source_to_sender(licence_data.source)
-        logger.info(
-            "[%s] Source %s run number: %s, HMRC run number: %s",
-            mail.extract_type,
-            licence_data.source,
-            run_number,
-            licence_data.hmrc_run_number,
-        )
-    elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
-        usage_data = UsageData.objects.get(mail=mail)
-        run_number = usage_data.hmrc_run_number
-        sender = settings.SPIRE_ADDRESS
-        receiver = settings.HMRC_ADDRESS
-        mail.response_data = combine_lite_and_spire_usage_responses(mail)
-
-    attachment = [
-        build_sent_filename(mail.response_filename, run_number),
-        build_sent_file_data(mail.response_data, run_number),
-    ]
-
-    logger.info(
-        "Preparing reply Mail dto of extract type %s, sender %s, receiver %s with filename %s",
-        mail.extract_type,
-        sender,
-        receiver,
-        attachment[0],
-    )
-
-    return EmailMessageDto(
-        run_number=run_number,
-        sender=sender,
-        receiver=receiver,
-        subject=attachment[0],
-        date=timezone.now(),
-        body=None,
-        attachment=attachment,
-        raw_data=None,
-    )
 
 
 def build_licence_data_mail(licences: "QuerySet[LicencePayload]", source: SourceEnum) -> Mail:
