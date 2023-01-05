@@ -27,6 +27,7 @@ services:
     build:
       context: .
       dockerfile: "Dockerfile"
+    platform: linux/amd64
     volumes:
       - .:/app
     ports:
@@ -51,6 +52,7 @@ services:
     env_file:
       - .env
     command: pipenv run celery -A conf worker -l INFO --events
+    platform: linux/amd64
     volumes:
         - .:/code
     depends_on:
@@ -62,12 +64,14 @@ services:
       context: .
       dockerfile: "Dockerfile"
     command: pipenv run celery -A conf beat -l INFO
+    platform: linux/amd64
     depends_on:
       - redis
 
   celery-flower:
     build: .
     command: pipenv run celery -A conf flower --loglevel=DEBUG --port=9090
+    platform: linux/amd64
     ports:
       - "9090:9090"
     depends_on:

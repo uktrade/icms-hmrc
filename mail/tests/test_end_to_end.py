@@ -6,8 +6,9 @@ from django.conf import settings
 from django.test import override_settings, testcases
 from django.urls import reverse
 
-from mail.enums import ChiefSystemEnum
-from mail.models import LicenceData, LicencePayload
+from mail.enums import ChiefSystemEnum, ReceptionStatusEnum
+from mail.icms import tasks
+from mail.models import LicenceData, LicencePayload, Mail
 from mail.tests.test_serializers import get_valid_fa_sil_payload, get_valid_sanctions_payload
 
 
@@ -27,7 +28,7 @@ def get_smtp_body():
 class ICMSEndToEndTests(testcases.TestCase):
     def test_icms_send_email_to_hmrc_fa_oil_e2e(self):
         clear_stmp_mailbox()
-        self.client.get(reverse("mail:set_all_to_reply_sent"))
+        Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
 
         data = {
             "type": "OIL",
@@ -66,7 +67,8 @@ class ICMSEndToEndTests(testcases.TestCase):
         resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
         self.assertEqual(resp.status_code, 201)
 
-        self.client.get(reverse("mail:send_updates_to_hmrc"))
+        tasks.send_licence_data_to_hmrc.apply()
+
         body = get_smtp_body().replace("\r", "")
         ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
 
@@ -88,7 +90,7 @@ class ICMSEndToEndTests(testcases.TestCase):
 
     def test_icms_send_email_to_hmrc_fa_dfl_e2e(self):
         clear_stmp_mailbox()
-        self.client.get(reverse("mail:set_all_to_reply_sent"))
+        Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
 
         org_data = {
             "eori_number": "GB665544332211000",
@@ -136,7 +138,7 @@ class ICMSEndToEndTests(testcases.TestCase):
         resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
         self.assertEqual(resp.status_code, 201)
 
-        self.client.get(reverse("mail:send_updates_to_hmrc"))
+        tasks.send_licence_data_to_hmrc.apply()
         body = get_smtp_body().replace("\r", "")
         ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
 
@@ -152,13 +154,13 @@ class ICMSEndToEndTests(testcases.TestCase):
 
     def test_icms_send_email_to_hmrc_fa_sil_e2e(self):
         clear_stmp_mailbox()
-        self.client.get(reverse("mail:set_all_to_reply_sent"))
+        Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
 
         data = get_valid_fa_sil_payload()
         resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
         self.assertEqual(resp.status_code, 201)
 
-        self.client.get(reverse("mail:send_updates_to_hmrc"))
+        tasks.send_licence_data_to_hmrc.apply()
         body = get_smtp_body().replace("\r", "")
         ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
 
@@ -173,13 +175,13 @@ class ICMSEndToEndTests(testcases.TestCase):
 
     def test_icms_send_email_to_hmrc_sanctions_e2e(self):
         clear_stmp_mailbox()
-        self.client.get(reverse("mail:set_all_to_reply_sent"))
+        Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
 
         data = get_valid_sanctions_payload()
         resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
         self.assertEqual(resp.status_code, 201)
 
-        self.client.get(reverse("mail:send_updates_to_hmrc"))
+        tasks.send_licence_data_to_hmrc.apply()
         body = get_smtp_body().replace("\r", "")
         ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
 

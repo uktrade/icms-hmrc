@@ -7,10 +7,9 @@ from rest_framework.views import APIView
 
 from conf.authentication import HawkOnlyAuthentication
 from mail import icms_serializers
-from mail.enums import LicenceActionEnum, LicenceTypeEnum, ReceptionStatusEnum
-from mail.models import LicenceData, LicenceIdMapping, LicencePayload, Mail
+from mail.enums import LicenceActionEnum, LicenceTypeEnum
+from mail.models import LicenceData, LicenceIdMapping, LicencePayload
 from mail.serializers import MailSerializer
-from mail.tasks import send_licence_data_to_hmrc
 
 if TYPE_CHECKING:
     from rest_framework.serializers import Serializer  # noqa
@@ -83,29 +82,6 @@ class LicenceDataIngestView(APIView):
         }
 
         return serializers[app_type]
-
-
-class SendLicenceUpdatesToHmrc(APIView):
-    authentication_classes = (HawkOnlyAuthentication,)
-
-    def get(self, _):
-        """Force the task of sending licence data to HMRC (I assume for testing?)"""
-
-        success = send_licence_data_to_hmrc.now()
-        if success:
-            return JsonResponse({}, status=status.HTTP_200_OK)
-        else:
-            return JsonResponse({}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class SetAllToReplySent(APIView):
-    """Updates status of all emails to REPLY_SENT"""
-
-    authentication_classes = (HawkOnlyAuthentication,)
-
-    def get(self, _):
-        Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
-        return JsonResponse({}, status=status.HTTP_200_OK)
 
 
 class Licence(APIView):

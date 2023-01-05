@@ -1,8 +1,6 @@
 import logging
-import urllib.parse
 from typing import Optional
 
-from background_task import background
 from django.conf import settings
 from django.db import transaction
 
@@ -15,37 +13,10 @@ from mail.models import LicencePayload, Mail
 logger = logging.getLogger(__name__)
 
 
-LICENCE_DATA_TASK_QUEUE = "licences_updates_queue"
-
-
-# Send Usage Figures to LITE API
-def get_lite_api_url():
-    """The URL for the licence usage callback, from the LITE_API_URL setting.
-
-    If the configured URL has no path, use `/licences/hmrc-integration/`.
-    """
-    url = settings.LITE_API_URL
-    components = urllib.parse.urlparse(url)
-
-    if components.path in ("", "/"):
-        components = components._replace(path="/licences/hmrc-integration/")
-        url = urllib.parse.urlunparse(components)
-
-    return url
-
-
-# TODO: Come back to deleting this
-@background(queue=LICENCE_DATA_TASK_QUEUE, schedule=0)
-def send_licence_data_to_hmrc() -> Optional[bool]:
-    """django-background-task version of send_licence_data_to_hmrc"""
-    return send_licence_data_to_hmrc_shared()
-
-
 def send_licence_data_to_hmrc_shared() -> Optional[bool]:
-    """Sends LITE (or ICMS) licence updates to HMRC.
+    """Sends ICMS licence updates to HMRC.
 
-    This code is shared between two tasks currently:
-      - mail/tasks -> def send_licence_data_to_hmrc (django-background-task task)
+    Code is used in one place:
       - mail/icms/tasks -> def send_licence_data_to_hmrc (celery task)
     """
 
