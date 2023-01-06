@@ -50,8 +50,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # TODO: Check what this is doing - HTTP_X_CORRELATION_ID
-    "conf.middleware.LoggingMiddleware",
     "conf.middleware.HawkSigningMiddleware",
 ]
 
