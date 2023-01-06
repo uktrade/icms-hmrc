@@ -84,6 +84,7 @@ class LicenceDataIngestView(APIView):
         return serializers[app_type]
 
 
+# TODO: remove (replace call in test with db lookup)
 class Licence(APIView):
     authentication_classes = (HawkOnlyAuthentication,)
 

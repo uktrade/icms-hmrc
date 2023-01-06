@@ -23,9 +23,9 @@ class LicenceToEdifactValidationTests(unittest.TestCase):
 
     @parameterized.expand(
         [
-            ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIE\\E\\20210408\\20220408", 0),
-            ("2\\licences\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIE\\E\\20210408\\20220408", 1),
-            ("2\\licences\\20210000006TA\\add\\GBSIEL/2021/0000006/T/A\\SIE\\E\\20210408\\20220408", 2),
+            ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIL\\E\\20210408\\20220408", 0),
+            ("2\\licences\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\OIL\\E\\20210408\\20220408", 1),
+            ("2\\licences\\20210000006TA\\add\\GBSIEL/2021/0000006/T/A\\SAN\\E\\20210408\\20220408", 2),
             ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIEL\\E\\20210408\\20220408", 1),
             ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIEL\\T\\20210408\\20220408", 1),
         ]

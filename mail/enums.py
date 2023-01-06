@@ -1,7 +1,7 @@
 import enum
 from types import DynamicClassAttribute
 
-from django.utils.functional import Promise, classproperty
+from django.utils.functional import Promise
 
 
 # Backported from Django 4.x
@@ -95,57 +95,19 @@ class LicenceActionEnum(TextChoices):
     REPLACE = "replace"
 
 
-# Django's choices don't support groups, so we are using @classproperty.
 class LicenceTypeEnum(TextChoices):
-    SIEL = "siel", "Standard Individual Export Licence"
-    SICL = "sicl", "Standard Individual Trade Control Licence"
-    SITL = "sitl", "Standard Individual Transhipment Licence"
-    OIEL = "oiel", "Open Individual Export Licence"
-    OICL = "oicl", "Open Individual Trade Control Licence"
-    OGEL = "ogel", "Open General Export Licence"
-    OGCL = "ogcl", "Open General Trade Control Licence"
-    OGTL = "ogtl", "Open General Transhipment Licence"
-
-    # ICMS Licence types
     IMPORT_DFL = "DFL", "Deactivated Firearms Licence"
     IMPORT_OIL = "OIL", "Open Individual Import Licence"
     IMPORT_SIL = "SIL", "Specific Individual Import Licence"
     IMPORT_SAN = "SAN", "Sanctions and Adhoc Import Licence"
 
-    @classproperty
-    def STANDARD_LICENCES(cls):
-        return [cls.SIEL, cls.SICL, cls.SITL]
 
-    @classproperty
-    def OPEN_LICENCES(cls):
-        return [cls.OIEL, cls.OICL]
-
-    @classproperty
-    def OPEN_GENERAL_LICENCES(cls):
-        return [cls.OGEL, cls.OGCL, cls.OGTL]
-
-
-LITE_HMRC_LICENCE_TYPE_MAPPING = {
-    LicenceTypeEnum.SIEL.value: "SIE",
-    LicenceTypeEnum.SICL.value: "SIE",
-    LicenceTypeEnum.SITL.value: "SIE",
-    LicenceTypeEnum.OIEL.value: "OIE",
-    # No OICL?
-    LicenceTypeEnum.OGEL.value: "OGE",
-    LicenceTypeEnum.OGCL.value: "OGE",
-    LicenceTypeEnum.OGTL.value: "OGE",
-    # ICMS Licence types
+ICMS_HMRC_LICENCE_TYPE_MAPPING = {
     LicenceTypeEnum.IMPORT_DFL.value: "SIL",
     LicenceTypeEnum.IMPORT_OIL.value: "OIL",
     LicenceTypeEnum.IMPORT_SIL.value: "SIL",
     LicenceTypeEnum.IMPORT_SAN.value: "SAN",
 }
-
-
-class ReplyStatusEnum(TextChoices):
-    ACCEPTED = "accepted"
-    REJECTED = "rejected"
-    PENDING = "pending"
 
 
 class ReceptionStatusEnum(TextChoices):
@@ -161,19 +123,8 @@ class ExtractTypeEnum(TextChoices):
     LICENCE_REPLY = "licence_reply"
     LICENCE_DATA = "licence_data"
 
-    @classproperty
-    def email_keys(cls):
-        return [
-            ("usageData", cls.USAGE_DATA.value),
-            ("usageReply", cls.USAGE_REPLY.value),
-            ("licenceReply", cls.LICENCE_REPLY.value),
-            ("licenceData", cls.LICENCE_DATA.value),
-        ]
-
 
 class SourceEnum(TextChoices):
-    SPIRE = "SPIRE", "SPIRE"
-    LITE = "LITE", "LITE"
     HMRC = "HMRC", "HMRC"
     ICMS = "ICMS", "ICMS"
 
@@ -181,7 +132,6 @@ class SourceEnum(TextChoices):
 # System names recognised by CHIEF
 class ChiefSystemEnum(TextChoices):
     ICMS = "ILBDOTI"
-    SPIRE = "SPIRE"
 
 
 # We want a duplicate entry for ITG, so cannot use Django's enum.
@@ -201,22 +151,11 @@ class UnitMapping(enum.Enum):
         return list(cls.__members__.keys())
 
 
+# TODO: Delete when removing models
 class MailReadStatuses(TextChoices):
     READ = "READ"
     UNREAD = "UNREAD"
     UNPROCESSABLE = "UNPROCESSABLE"
-
-
-# Used to select from multiple SMTP outgoing server settings.
-SMTPConnection = enum.Enum("SMTPConnection", ["SPIRE", "INCOMING", "MOCK", "HMRC"])
-
-
-class LicenceStatusEnum(TextChoices):
-    OPEN = "open"
-    EXHAUST = "exhaust"
-    SURRENDER = "surrender"
-    EXPIRE = "expire"
-    CANCEL = "cancel"
 
 
 # Chief "controlledBy" field

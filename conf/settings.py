@@ -1,7 +1,6 @@
 import os
 import ssl
 import sys
-import uuid
 
 import sentry_sdk
 from django_log_formatter_ecs import ECSFormatter

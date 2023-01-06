@@ -1,6 +1,6 @@
 import re
 
-from mail.enums import LITE_HMRC_LICENCE_TYPE_MAPPING, LicenceActionEnum
+from mail.enums import ICMS_HMRC_LICENCE_TYPE_MAPPING, LicenceActionEnum
 
 from . import chieftypes
 
@@ -20,7 +20,7 @@ LICENCE_LINE_FIELDS_LEN = 19
 FILE_TRAILER_FIELDS_LEN = 3
 
 VALID_ACTIONS_TO_HMRC = [choice[0] for choice in LicenceActionEnum.choices]
-VALID_LICENCE_TYPES = LITE_HMRC_LICENCE_TYPE_MAPPING.values()
+VALID_LICENCE_TYPES = ICMS_HMRC_LICENCE_TYPE_MAPPING.values()
 ALLOWED_COUNTRY_USE_VALUES = ["D", "E", "O", "P", "R", "S"]
 CONTROLLED_BY_VALUES = ["B", "O", "Q", "V"]
 

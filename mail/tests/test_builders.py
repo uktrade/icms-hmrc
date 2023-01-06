@@ -61,9 +61,9 @@ class BuildLicenceDataFileTests(testcases.TestCase):
     def test_filename_datetime(self):
         # Use single digits in some values to check the output is zero-padded.
         data = [
-            (datetime.datetime(1999, 12, 31), "CHIEF_LIVE_SPIRE_licenceData_1_199912310000"),
-            (datetime.datetime(2022, 1, 1), "CHIEF_LIVE_SPIRE_licenceData_1_202201010000"),
-            (datetime.datetime(2022, 1, 1, 9, 8, 7), "CHIEF_LIVE_SPIRE_licenceData_1_202201010908"),
+            (datetime.datetime(1999, 12, 31), "CHIEF_LIVE_ILBDOTI_licenceData_1_199912310000"),
+            (datetime.datetime(2022, 1, 1), "CHIEF_LIVE_ILBDOTI_licenceData_1_202201010000"),
+            (datetime.datetime(2022, 1, 1, 9, 8, 7), "CHIEF_LIVE_ILBDOTI_licenceData_1_202201010908"),
         ]
 
         for when, expected in data:

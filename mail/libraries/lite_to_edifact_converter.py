@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Dict, Iterable, Optional
 
 from django.utils import timezone
 
-from mail.enums import LITE_HMRC_LICENCE_TYPE_MAPPING, ControlledByEnum, LicenceActionEnum, LicenceTypeEnum
+from mail.enums import ICMS_HMRC_LICENCE_TYPE_MAPPING, ControlledByEnum, LicenceActionEnum, LicenceTypeEnum
 from mail.libraries import chiefprotocol, chieftypes
 from mail.libraries.edifact_validator import validate_edifact_file
 from mail.models import LicencePayload
@@ -74,7 +74,7 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
     payload = licence.data
     usage_code = "I"
     icms_licence_type = payload["type"]
-    chief_licence_type = LITE_HMRC_LICENCE_TYPE_MAPPING[icms_licence_type]
+    chief_licence_type = ICMS_HMRC_LICENCE_TYPE_MAPPING[icms_licence_type]
 
     # ICMS only sends "insert", "replace" or "cancel" payloads.
     # If there are errors with a "replace" the licence is normally revoked within ICMS and a

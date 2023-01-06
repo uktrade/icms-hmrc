@@ -2,7 +2,7 @@ import logging
 
 from django.utils import timezone
 
-from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
+from mail.enums import ReceptionStatusEnum
 from mail.libraries.builders import build_email_message
 from mail.libraries.email_message_dto import EmailMessageDto
 from mail.models import Mail
@@ -21,8 +21,6 @@ def update_mail(mail: Mail, mail_dto: EmailMessageDto):
 
     if mail.status == ReceptionStatusEnum.PENDING:
         mail.status = ReceptionStatusEnum.REPLY_PENDING
-        if mail.extract_type == ExtractTypeEnum.USAGE_DATA:
-            mail.status = ReceptionStatusEnum.REPLY_SENT
 
         # Update the mail object to record what we sent to destination
         mail.sent_filename = mail_dto.attachment[0]
