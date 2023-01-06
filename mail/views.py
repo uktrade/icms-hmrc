@@ -8,8 +8,7 @@ from rest_framework.views import APIView
 from conf.authentication import HawkOnlyAuthentication
 from mail import icms_serializers
 from mail.enums import LicenceTypeEnum
-from mail.models import LicenceData, LicencePayload
-from mail.serializers import MailSerializer
+from mail.models import LicencePayload
 
 if TYPE_CHECKING:
     from rest_framework.serializers import Serializer  # noqa
@@ -73,29 +72,3 @@ class LicenceDataIngestView(APIView):
         }
 
         return serializers[app_type]
-
-
-# TODO: remove (replace call in test with db lookup)
-class Licence(APIView):
-    authentication_classes = (HawkOnlyAuthentication,)
-
-    def get(self, request):
-        """Fetch existing licence"""
-        license_ref = request.GET.get("id", "")
-
-        matching_licences = LicenceData.objects.filter(licence_ids__contains=license_ref)
-        matching_licences_count = matching_licences.count()
-
-        if matching_licences_count > 1:
-            logger.warning("Too many matches for licence '%s'", license_ref)
-            return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
-
-        elif matching_licences_count == 0:
-            logger.warning("No matches for licence '%s'", license_ref)
-            return JsonResponse({}, status=status.HTTP_404_NOT_FOUND)
-
-        # Return single matching licence
-        mail = matching_licences.first().mail
-        serializer = MailSerializer(mail)
-
-        return JsonResponse(serializer.data)

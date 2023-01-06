@@ -1,5 +1,4 @@
 from pathlib import Path
-from urllib.parse import quote
 
 import requests
 from django.conf import settings
@@ -77,9 +76,7 @@ class ICMSEndToEndTests(testcases.TestCase):
         expected_content = test_file.read_text().replace("202201011011", ymdhm_timestamp).strip()
         self.assertEqual(expected_content, body)
 
-        encoded_reference_code = quote("IMA/2022/00001", safe="")
-        response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
-        self.assertEqual(response.json()["status"], "reply_pending")
+        self._assert_reply_pending("IMA/2022/00001")
 
         # Check licence_payload records have been created
         ld = LicenceData.objects.get(hmrc_run_number=1)
@@ -148,9 +145,7 @@ class ICMSEndToEndTests(testcases.TestCase):
         self.assertEqual(expected_content, body)
 
         for ref in ["IMA/2022/00002", "IMA/2022/00003"]:
-            encoded_reference_code = quote(ref, safe="")
-            response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
-            self.assertEqual(response.json()["status"], "reply_pending", f"{ref} has incorrect status")
+            self._assert_reply_pending(ref)
 
     def test_icms_send_email_to_hmrc_fa_sil_e2e(self):
         clear_stmp_mailbox()
@@ -169,9 +164,7 @@ class ICMSEndToEndTests(testcases.TestCase):
         expected_content = test_file.read_text().replace("202201011011", ymdhm_timestamp).strip()
         self.assertEqual(expected_content, body)
 
-        encoded_reference_code = quote("IMA/2022/00003", safe="")
-        response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
-        self.assertEqual(response.json()["status"], "reply_pending")
+        self._assert_reply_pending("IMA/2022/00003")
 
     def test_icms_send_email_to_hmrc_sanctions_e2e(self):
         clear_stmp_mailbox()
@@ -190,6 +183,17 @@ class ICMSEndToEndTests(testcases.TestCase):
         expected_content = test_file.read_text().replace("202201011011", ymdhm_timestamp).strip()
         self.assertEqual(expected_content, body)
 
-        encoded_reference_code = quote("IMA/2022/00004", safe="")
-        response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
-        self.assertEqual(response.json()["status"], "reply_pending")
+        self._assert_reply_pending("IMA/2022/00004")
+
+    def _assert_reply_pending(self, case_reference):
+        matching_licences = LicenceData.objects.filter(licence_ids__contains=case_reference)
+        matching_licences_count = matching_licences.count()
+
+        if matching_licences_count > 1:
+            raise AssertionError("Too many matches for licence '%s'", case_reference)
+
+        elif matching_licences_count == 0:
+            raise AssertionError("No matches for licence '%s'", case_reference)
+
+        mail = matching_licences.first().mail
+        self.assertEqual(mail.status, "reply_pending", f"{case_reference} has incorrect status")
