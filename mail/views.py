@@ -7,8 +7,8 @@ from rest_framework.views import APIView
 
 from conf.authentication import HawkOnlyAuthentication
 from mail import icms_serializers
-from mail.enums import LicenceActionEnum, LicenceTypeEnum
-from mail.models import LicenceData, LicenceIdMapping, LicencePayload
+from mail.enums import LicenceTypeEnum
+from mail.models import LicenceData, LicencePayload
 from mail.serializers import MailSerializer
 
 if TYPE_CHECKING:
@@ -45,24 +45,15 @@ class LicenceDataIngestView(APIView):
             )
             return JsonResponse(status=status.HTTP_400_BAD_REQUEST, data={"errors": errors})
 
-        if data["action"] == LicenceActionEnum.UPDATE:
-            data["old_reference"] = LicenceIdMapping.objects.get(lite_id=data["old_id"]).reference
-        else:
-            data.pop("old_id", None)
-
         licence, created = LicencePayload.objects.get_or_create(
             lite_id=data["id"],
             reference=data["reference"],
             action=data["action"],
-            old_lite_id=data.get("old_id"),
-            old_reference=data.get("old_reference"),
             skip_process=False,
             defaults=dict(
                 lite_id=data["id"],
                 reference=data["reference"],
                 data=data,
-                old_lite_id=data.get("old_id"),
-                old_reference=data.get("old_reference"),
             ),
         )
 

@@ -10,6 +10,9 @@ migrate:
 migrations:
 	docker exec -it lite-hmrc-intg pipenv run ./manage.py makemigrations
 
+squashmigrations:
+	docker exec -it lite-hmrc-intg pipenv run ./manage.py squashmigrations ${args}
+
 createsuperuser:
 	docker exec -it lite-hmrc-intg pipenv run ./manage.py createsuperuser
 

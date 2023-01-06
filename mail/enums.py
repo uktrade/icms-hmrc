@@ -91,8 +91,9 @@ class TextChoices(str, Choices):
 class LicenceActionEnum(TextChoices):
     INSERT = "insert"
     CANCEL = "cancel"
-    UPDATE = "update"
     REPLACE = "replace"
+    # Not supported by ICMS
+    # UPDATE = "update"
 
 
 class LicenceTypeEnum(TextChoices):
@@ -149,13 +150,6 @@ class UnitMapping(enum.Enum):
     def serializer_choices(cls):
         # Used by the API serializer for validation.
         return list(cls.__members__.keys())
-
-
-# TODO: Delete when removing models
-class MailReadStatuses(TextChoices):
-    READ = "READ"
-    UNREAD = "UNREAD"
-    UNPROCESSABLE = "UNPROCESSABLE"
 
 
 # Chief "controlledBy" field

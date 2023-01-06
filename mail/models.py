@@ -1,19 +1,52 @@
-import json
 import logging
 import uuid
-from datetime import timedelta
-from typing import List
 
 from django.db import IntegrityError, models
 from django.utils import timezone
-from model_utils.models import TimeStampedModel
 
-from mail.enums import ExtractTypeEnum, LicenceActionEnum, MailReadStatuses, ReceptionStatusEnum, SourceEnum
+from mail.enums import ExtractTypeEnum, LicenceActionEnum, ReceptionStatusEnum, SourceEnum
 
 logger = logging.getLogger(__name__)
 
 
+class LicencePayload(models.Model):
+    # TODO: Replace with BigAutoField primary keys (requires migrations to be squashed)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    lite_id = models.UUIDField(null=False, blank=False, unique=False)
+    reference = models.CharField(null=False, blank=False, max_length=35)
+    action = models.CharField(choices=LicenceActionEnum.choices, null=False, blank=False, max_length=7)
+    data = models.JSONField(default=dict)
+    received_at = models.DateTimeField(default=timezone.now)
+    is_processed = models.BooleanField(default=False)
+
+    # This allows us to skip License requests to be skipped
+    skip_process = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = [["lite_id", "action"]]
+        ordering = ["received_at"]
+
+    def __str__(self):
+        return f"LicencePayload(lite_id={self.lite_id}, reference={self.reference}, action={self.action})"
+
+
+class LicenceData(models.Model):
+    licence_ids = models.TextField()
+    hmrc_run_number = models.IntegerField()
+    source_run_number = models.IntegerField(null=True)
+    source = models.CharField(choices=SourceEnum.choices, max_length=10)
+    mail = models.ForeignKey("Mail", on_delete=models.DO_NOTHING)
+    licence_payloads = models.ManyToManyField(
+        "LicencePayload", help_text="LicencePayload records linked to this LicenceData instance", related_name="+"
+    )
+
+    class Meta:
+        ordering = ["mail__created_at"]
+
+
 class Mail(models.Model):
+    # TODO: Replace with BigAutoField primary keys (requires migrations to be squashed)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     # For licence_data / licence_reply emails they are saved on a single db record.
@@ -66,128 +99,3 @@ class Mail(models.Model):
             raise IntegrityError("The field edi_filename or edi_data is empty which is not valid")
 
         super(Mail, self).save(*args, **kwargs)
-
-    def set_locking_time(self, offset: int = 0):
-        self.currently_processing_at = timezone.now() + timedelta(seconds=offset)
-        self.save()
-
-    def set_last_submitted_time(self, offset: int = 0):
-        self.last_submitted_on = timezone.now() + timedelta(seconds=offset)
-        self.save()
-
-    def set_response_date_time(self, offset: int = 0):
-        self.response_date = timezone.now() + timedelta(seconds=offset)
-        self.save()
-
-
-class LicenceData(models.Model):
-    licence_ids = models.TextField()
-    hmrc_run_number = models.IntegerField()
-    source_run_number = models.IntegerField(null=True)
-    source = models.CharField(choices=SourceEnum.choices, max_length=10)
-    mail = models.ForeignKey(Mail, on_delete=models.DO_NOTHING)
-    licence_payloads = models.ManyToManyField(
-        "LicencePayload", help_text="LicencePayload records linked to this LicenceData instance", related_name="+"
-    )
-
-    class Meta:
-        ordering = ["mail__created_at"]
-
-    def set_licence_ids(self, data: List):
-        self.licence_ids = json.dumps(data)
-
-    def get_licence_ids(self):
-        return json.loads(self.licence_ids)
-
-
-class UsageData(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    licence_ids = models.JSONField(default=list)
-    mail = models.ForeignKey(Mail, on_delete=models.DO_NOTHING, null=False)
-    spire_run_number = models.IntegerField()
-    hmrc_run_number = models.IntegerField()
-    has_lite_data = models.NullBooleanField(default=None)
-    has_spire_data = models.NullBooleanField(default=None)
-    lite_payload = models.JSONField(default=dict)
-    lite_sent_at = models.DateTimeField(blank=True, null=True)  # When update was sent to LITE API
-    lite_accepted_licences = models.JSONField(default=list)
-    lite_rejected_licences = models.JSONField(default=list)
-    spire_accepted_licences = models.JSONField(default=dict)
-    spire_rejected_licences = models.JSONField(default=dict)
-    lite_licences = models.JSONField(default=dict)
-    spire_licences = models.JSONField(default=dict)
-    lite_response = models.JSONField(default=dict)
-
-    class Meta:
-        ordering = ["mail__created_at"]
-
-    def get_licence_ids(self):
-        return json.loads(self.licence_ids)
-
-
-class LicencePayload(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    lite_id = models.UUIDField(null=False, blank=False, unique=False)
-    reference = models.CharField(null=False, blank=False, max_length=35)
-    action = models.CharField(choices=LicenceActionEnum.choices, null=False, blank=False, max_length=7)
-    data = models.JSONField(default=dict)
-    received_at = models.DateTimeField(default=timezone.now)
-    is_processed = models.BooleanField(default=False)
-    # This allows us to skip License requests to be skipped
-    skip_process = models.BooleanField(default=False)
-
-    # For LITE updates only
-    old_lite_id = models.UUIDField(null=True, blank=False, unique=False)
-    old_reference = models.CharField(null=True, blank=False, max_length=35)
-
-    class Meta:
-        unique_together = [["lite_id", "action"]]
-        ordering = ["received_at"]
-
-    def __str__(self):
-        return f"LicencePayload(lite_id={self.lite_id}, reference={self.reference}, action={self.action})"
-
-
-class LicenceIdMapping(models.Model):
-    lite_id = models.UUIDField(primary_key=True, null=False, blank=False)
-    reference = models.CharField(null=False, blank=False, max_length=35, unique=True)
-
-
-class OrganisationIdMapping(models.Model):
-    lite_id = models.UUIDField(null=False, blank=False)
-    rpa_trader_id = models.AutoField(primary_key=True)
-
-
-class GoodIdMapping(models.Model):
-    lite_id = models.UUIDField(primary_key=False, null=False, blank=False, unique=False)
-    licence_reference = models.CharField(null=False, blank=False, max_length=35, unique=False)
-    line_number = models.PositiveIntegerField()
-
-
-class TransactionMapping(models.Model):
-    licence_reference = models.CharField(null=False, blank=False, max_length=35, unique=False)
-    line_number = models.PositiveIntegerField(null=True, blank=True)
-    usage_transaction = models.CharField(null=False, blank=False, max_length=35)
-    usage_data = models.ForeignKey(UsageData, on_delete=models.DO_NOTHING)
-
-
-class MailboxConfig(TimeStampedModel):
-    username = models.TextField(null=False, blank=False, primary_key=True, help_text="Username of the POP3 mailbox")
-
-
-class MailReadStatus(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    message_num = models.TextField(
-        default="",
-        help_text="Sequence number of the message as assigned by pop3 when the messages list is requested from the mailbox",
-    )
-    message_id = models.TextField(
-        default=uuid.uuid4,
-        unique=True,
-        help_text="Unique Message-ID of the message that is retrieved from the message header",
-    )
-    status = models.TextField(choices=MailReadStatuses.choices, default=MailReadStatuses.UNREAD, db_index=True)
-    mailbox = models.ForeignKey(MailboxConfig, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"{self.__class__.__name__}(message_id={self.message_id}, status={self.status})"
