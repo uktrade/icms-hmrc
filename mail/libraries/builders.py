@@ -71,12 +71,6 @@ def _build_request_mail_message_dto_internal(mail: Mail) -> EmailMessageDto:
         sender = settings.EMAIL_USER
         receiver = settings.OUTGOING_EMAIL_USER
         attachment = [mail.sent_filename, mail.sent_data]
-    elif mail.extract_type == ExtractTypeEnum.LICENCE_REPLY:
-        # This is the case where we sent the licence_reply email to SPIRE but they haven't
-        # received it and so we are resending it
-        sender = settings.EMAIL_USER
-        receiver = settings.SPIRE_ADDRESS
-        attachment = [mail.sent_response_filename, mail.sent_response_data]
     else:
         return None
 

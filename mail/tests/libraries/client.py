@@ -1,20 +1,14 @@
 import json
 
 from django.test import testcases
-from django.utils import timezone
 
-from conf import settings
 from mail.enums import LicenceActionEnum
 from mail.libraries.helpers import read_file
 from mail.models import LicencePayload
-from mail.tests.libraries import colours
 
 
 class LiteHMRCTestClient(testcases.TestCase):
     def setUp(self):
-        if settings.TIME_TESTS:
-            self.tick = timezone.now()
-
         self.licence_usage_file_name = "ILBDOTI_live_CHIEF_usageData_49543_201901130300"
         self.licence_usage_file_body = read_file("mail/tests/files/license_usage_file", mode="rb")
         self.licence_data_reply_body = (
@@ -42,23 +36,3 @@ class LiteHMRCTestClient(testcases.TestCase):
             data=self.licence_payload_json["licence"],
             action=LicenceActionEnum.INSERT,
         )
-
-    def tearDown(self):
-        """
-        Print output time for tests if settings.TIME_TESTS is set to True
-        """
-        if settings.TIME_TESTS:
-            self.tock = timezone.now()
-
-            diff = self.tock - self.tick
-            time = round(diff.microseconds / 1000, 2)
-            colour = colours.green
-            emoji = ""
-
-            if time > 100:
-                colour = colours.orange
-            if time > 300:
-                colour = colours.red
-                emoji = " 🔥"
-
-            print(self._testMethodName + emoji + " " + colour(str(time) + "ms") + emoji)

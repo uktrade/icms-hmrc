@@ -19,12 +19,13 @@ env = Env()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("DJANGO_SECRET_KEY")
-DJANGO_SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=False)
 
 APP_ENV = env.str("APP_ENV", default="notset")
+
+# TODO: Change this to use env setting from vault
 ALLOWED_HOSTS = "*"
 
 VCAP_SERVICES = env.json("VCAP_SERVICES", default={})
@@ -49,6 +50,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # TODO: Check what this is doing - HTTP_X_CORRELATION_ID
     "conf.middleware.LoggingMiddleware",
     "conf.middleware.HawkSigningMiddleware",
 ]
@@ -79,61 +81,33 @@ WSGI_APPLICATION = "conf.wsgi.application"
 
 DATABASES = {"default": env.db()}
 
-# Which system identifier to use in licence requests to HMRC's CHIEF system.
-# LITE (and SPIRE) uses "SPIRE". ICMS uses "ILBDOTI".
-# TODO: Change to ICMS
-CHIEF_SOURCE_SYSTEM = env("CHIEF_SOURCE_SYSTEM", default="SPIRE")
+CHIEF_SOURCE_SYSTEM = env("CHIEF_SOURCE_SYSTEM", default="ILBDOTI")
 
+# TODO: Rename these email settings
 INCOMING_EMAIL_PASSWORD = env("INCOMING_EMAIL_PASSWORD", default="")
 INCOMING_EMAIL_HOSTNAME = env("INCOMING_EMAIL_HOSTNAME", default="")
 INCOMING_EMAIL_USER = env("INCOMING_EMAIL_USER", default="")
 INCOMING_EMAIL_POP3_PORT = env("INCOMING_EMAIL_POP3_PORT", default=None)
 
-HMRC_TO_DIT_EMAIL_PASSWORD = env("HMRC_TO_DIT_EMAIL_PASSWORD", default="")
+# Used to validate sender details
 HMRC_TO_DIT_EMAIL_HOSTNAME = env("HMRC_TO_DIT_EMAIL_HOSTNAME", default="")
 HMRC_TO_DIT_EMAIL_USER = env("HMRC_TO_DIT_EMAIL_USER", default="")
-HMRC_TO_DIT_EMAIL_POP3_PORT = env("HMRC_TO_DIT_EMAIL_POP3_PORT", default="")
 
 OUTGOING_EMAIL_USER = env("OUTGOING_EMAIL_USER")
 
-MOCK_HMRC_EMAIL_PASSWORD = env("MOCK_HMRC_EMAIL_PASSWORD", default="")
-MOCK_HMRC_EMAIL_HOSTNAME = env("MOCK_HMRC_EMAIL_HOSTNAME", default="")
-MOCK_HMRC_EMAIL_USER = env("MOCK_HMRC_EMAIL_USER", default="")
-MOCK_HMRC_EMAIL_POP3_PORT = env("MOCK_HMRC_EMAIL_POP3_PORT", default=None)
-
-SPIRE_STANDIN_EMAIL_PASSWORD = env("SPIRE_STANDIN_EMAIL_PASSWORD", default="")
-SPIRE_STANDIN_EMAIL_HOSTNAME = env("SPIRE_STANDIN_EMAIL_HOSTNAME", default="")
-SPIRE_STANDIN_EMAIL_USER = env("SPIRE_STANDIN_EMAIL_USER", default="")
-SPIRE_STANDIN_EMAIL_POP3_PORT = env("SPIRE_STANDIN_EMAIL_POP3_PORT", default=None)
-
-SPIRE_INCOMING_EMAIL_ADDRESS = env("SPIRE_INCOMING_EMAIL_ADDRESS", default="spire-incoming@example.com")  # /PS-IGNORE
-SPIRE_FROM_ADDRESS = env("SPIRE_FROM_ADDRESS", default="spire@example.com")  # /PS-IGNORE
-HMRC_TO_DIT_REPLY_ADDRESS = env("HMRC_TO_DIT_REPLY_ADDRESS", default="hmrctodit@example.com")  # /PS-IGNORE
-
-# This sets EMAIL_FILE_PATH, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_HOST,
-# EMAIL_PORT, EMAIL_BACKEND and optionally sets EMAIL_USE_TLS.
-_email_url = env.email_url("EMAIL_URL", default="smtp://localhost")
-vars().update(_email_url)
-
+# TODO: Revisit when implementing ICMSLST-1837
+# These 6 EMAIL_* settings are NOT Django default email backend settings.
 EMAIL_PASSWORD = env("EMAIL_PASSWORD")
 EMAIL_HOSTNAME = env("EMAIL_HOSTNAME")
 EMAIL_USER = env("EMAIL_USER")
 EMAIL_POP3_PORT = env("EMAIL_POP3_PORT")
 EMAIL_SMTP_PORT = env("EMAIL_SMTP_PORT")
-SPIRE_ADDRESS = env("SPIRE_ADDRESS", default="test-spire-address@example.com")  # /PS-IGNORE
-HMRC_ADDRESS = env("HMRC_ADDRESS", default="test-hmrc-address@example.com")  # /PS-IGNORE
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+
 MAILHOG_URL = env.str("MAILHOG_URL", default="http://localhost:8025")
 
-TIME_TESTS = env.bool("TIME_TESTS", default=False)
-
-LOCK_INTERVAL = env.float("LOCK_INTERVAL", default=120.0)
-
-INBOX_POLL_INTERVAL = env.int("INBOX_POLL_INTERVAL", default=300)
-LITE_LICENCE_DATA_POLL_INTERVAL = env.int("LITE_LICENCE_DATA_POLL_INTERVAL", default=1200)
 EMAIL_AWAITING_REPLY_TIME = env.int("EMAIL_AWAITING_REPLY_TIME", default=3600)
-EMAIL_AWAITING_CORRECTIONS_TIME = env.int("EMAIL_AWAITING_CORRECTIONS_TIME", default=3600)
-NOTIFY_USERS = env.json("NOTIFY_USERS", default=[])
+
 LICENSE_POLL_INTERVAL = env.int("LICENSE_POLL_INTERVAL", default=300)
 
 # Password validation
@@ -154,19 +128,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-SYSTEM_INSTANCE_UUID = uuid.uuid4()
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
-
+LANGUAGE_CODE = "en-gb"
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = env.bool("USE_TZ", default=True)
 
 _log_level = env.str("LOG_LEVEL", default="INFO")
@@ -196,29 +164,19 @@ STATIC_URL = "/static/"
 HAWK_AUTHENTICATION_ENABLED = env.bool("HAWK_AUTHENTICATION_ENABLED", default=True)
 HAWK_RECEIVER_NONCE_EXPIRY_SECONDS = 60
 HAWK_ALGORITHM = "sha256"
-HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS = "hmrc-integration"
+
+# TODO: Change to icms (will require change in ICMS codebase)
 LITE_API_ID = "lite-api"
+ICMS_API_URL = env("ICMS_API_URL", default="http://web:8080/")
+LITE_API_REQUEST_TIMEOUT = 60  # Maximum time, in seconds, to wait between bytes of a response
 
 HAWK_CREDENTIALS = {
-    HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS: {
-        "id": HAWK_LITE_HMRC_INTEGRATION_CREDENTIALS,
-        "key": env("LITE_HMRC_INTEGRATION_HAWK_KEY"),
-        "algorithm": HAWK_ALGORITHM,
-    },
     LITE_API_ID: {
         "id": LITE_API_ID,
         "key": env("LITE_API_HAWK_KEY"),
         "algorithm": HAWK_ALGORITHM,
     },
 }
-
-# The URL for licence usage callbacks. If there is no path component, defaults
-# to `/licences/hmrc-integration/`.
-LITE_API_URL = env("LITE_API_URL")
-LITE_API_REQUEST_TIMEOUT = 60  # Maximum time, in seconds, to wait between bytes of a response
-
-# The URL used to send licence reply data to ICMS
-ICMS_API_URL = env("ICMS_API_URL", default="http://web:8080/")
 
 # Sentry
 if env.str("SENTRY_DSN", ""):
@@ -243,14 +201,10 @@ if env.str("ELASTIC_APM_SERVER_URL", ""):
     }
     INSTALLED_APPS.append("elasticapm.contrib.django")
 
-DEFAULT_ENCODING = "iso-8859-1"
-
+# Azure email connection settings.
 AZURE_AUTH_CLIENT_ID = env.str("AZURE_AUTH_CLIENT_ID")
 AZURE_AUTH_CLIENT_SECRET = env.str("AZURE_AUTH_CLIENT_SECRET")
 AZURE_AUTH_TENANT_ID = env.str("AZURE_AUTH_TENANT_ID")
-
-SEND_REJECTED_EMAIL = env.bool("SEND_REJECTED_EMAIL", default=True)
-
 
 # Celery / Redis config
 if "redis" in VCAP_SERVICES:

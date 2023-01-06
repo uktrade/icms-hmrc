@@ -18,8 +18,8 @@ class BuildEmailMessageTest(testcases.TestCase):
         attachment = "30 \U0001d5c4\U0001d5c6/\U0001d5c1 \u5317\u4EB0"
         email_message_dto = EmailMessageDto(
             run_number=1,
-            sender=settings.HMRC_ADDRESS,
-            receiver=settings.SPIRE_ADDRESS,
+            sender="This...gets....ignored ¯\\_(ツ)_//¯",
+            receiver="receiver@email_domain.com",
             date="Mon, 17 May 2021 14:20:18 +0100",
             body=None,
             subject="Some subject",
@@ -36,7 +36,7 @@ class BuildEmailMessageTest(testcases.TestCase):
                 'Content-Type: multipart/mixed; boundary="===============8537751789001939036=="\n'
                 "MIME-Version: 1.0\n"
                 f"From: {settings.EMAIL_USER}\n"
-                f"To: {settings.SPIRE_ADDRESS}\n"
+                f"To: receiver@email_domain.com\n"
                 "Subject: Some subject\n"
                 "name: Some subject\n\n"
                 "--===============8537751789001939036==\n"

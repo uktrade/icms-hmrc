@@ -22,7 +22,6 @@ Copy the template local_settings.sample if required: `cp local_settings.sample l
 
 if using local_settings.py remember to add this to your .env `DJANGO_SETTINGS_MODULE=local_settings`
 
-
 ### Running in Docker
 To run in docker do the following
 - Set up a `.env` file using `docker.env` as starting point (all the config given in `docker.env` should be sufficient to run containers and run tests)
@@ -101,17 +100,6 @@ The tool 'bandit' is used. To run it `pipenv run bandit -r .`
 - `pre-commit install`
 * run following to scan all files for issues
   - `pre-commit run --all-files`
-
-# Deploying to production
-
-Important settings:
-
-- SPIRE_ADDRESS: email address used by SPIRE system (legacy).
-- SPIRE_INCOMING_EMAIL_ADDRESS: same as SPIRE_ADDRESS?
-- HMRC_ADDRESS: email address used by HMRC / CHIEF to process licenses.
-- LITE_HMRC_INTEGRATION_HAWK_KEY: part of Hawk authentication protocol.
-- LITE_API_HAWK_KEY: part of Hawk authentication protocol.
-- LITE_API_URL: full URL for API to send usage response data.
 
 # Mailbox authentication
 

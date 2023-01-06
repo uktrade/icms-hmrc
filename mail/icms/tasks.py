@@ -205,7 +205,7 @@ def _get_hmrc_mailbox_auth() -> Authenticator:
 #     return MailServer(
 #         auth,
 #         hostname=settings.HMRC_TO_DIT_EMAIL_HOSTNAME,
-#         pop3_port=settings.HMRC_TO_DIT_EMAIL_POP3_PORT,
+#         pop3_port=995,
 #     )
 
 
