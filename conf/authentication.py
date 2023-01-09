@@ -1,13 +1,12 @@
 import logging
 
+from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
 from mohawk import Receiver
 from mohawk.exc import AlreadyProcessed, HawkFail
 from rest_framework import authentication, exceptions
 from sentry_sdk import capture_exception
-
-from conf import settings
 
 logger = logging.getLogger(__name__)
 
