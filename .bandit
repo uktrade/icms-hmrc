@@ -1,2 +1,2 @@
 [bandit]
-exclude: /mail/tests,/.venv,/static/management
+exclude: /mail/tests,/.venv,/static/management,conf/settings_test.py

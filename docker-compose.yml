@@ -20,10 +20,19 @@ services:
     ports:
       - "6379"
 
+  mailhog:
+    ports:
+      - 8025:8025  # HTTP
+      - 587:1025  # SMTP
+    image: mailhog/mailhog
+    platform: linux/amd64
+
   lite-hmrc-intg:
     container_name: "lite-hmrc-intg"
     env_file:
       - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE
     build:
       context: .
       dockerfile: "Dockerfile"
@@ -35,15 +44,10 @@ services:
     depends_on:
       - lite-hmrc-postgres
       - redis
+      - mailhog
     expose:
       - 8000
     command: pipenv run ./manage.py runserver 0.0.0.0:8000
-
-  mailhog:
-    ports:
-      - 8025:8025  # HTTP
-      - 587:1025  # SMTP
-    image: mailhog/mailhog
 
   celery-worker:
     build:
@@ -51,6 +55,8 @@ services:
       dockerfile: "Dockerfile"
     env_file:
       - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE
     command: pipenv run celery -A conf worker -l INFO --events
     platform: linux/amd64
     volumes:
@@ -63,6 +69,8 @@ services:
     build:
       context: .
       dockerfile: "Dockerfile"
+    environment:
+      - DJANGO_SETTINGS_MODULE
     command: pipenv run celery -A conf beat -l INFO
     platform: linux/amd64
     depends_on:

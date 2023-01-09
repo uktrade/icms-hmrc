@@ -1,48 +1,51 @@
-test:
-	pipenv run pytest ${args} # --disable-warnings
 
-test-in:
-	docker exec -it lite-hmrc-intg make test args="${args}"
+#
+# Aliases
+#
+run = docker-compose run --rm
+pipenv = $(run) -e DJANGO_SETTINGS_MODULE=conf.settings lite-hmrc-intg pipenv run
 
-migrate:
-	docker exec -it lite-hmrc-intg pipenv run ./manage.py migrate
-
-migrations:
-	docker exec -it lite-hmrc-intg pipenv run ./manage.py makemigrations
-
-squashmigrations:
-	docker exec -it lite-hmrc-intg pipenv run ./manage.py squashmigrations ${args}
-
-createsuperuser:
-	docker exec -it lite-hmrc-intg pipenv run ./manage.py createsuperuser
-
-shell:
-	docker exec -it lite-hmrc-intg pipenv run ./manage.py shell -i python
-
-run:
-	pipenv run ./manage.py runserver
-
-check-format:
-	black --check ./mail
-
-check-prospector:
-	docker exec -it lite-hmrc-intg pipenv run prospector -W pylint -W pep257
-
-cov:
-	docker exec -it lite-hmrc-intg pipenv run coverage run --source='.' manage.py test mail
-
-cov-report:
-	docker exec -it lite-hmrc-intg pipenv run coverage report
-
+#
+# Commands
+#
 run-icms:
 	docker-compose -f docker-compose.yml -f docker-compose-icms.yml up --build -d
 
 stop-icms:
 	docker-compose stop
 
-process-tasks:
-	docker exec -it lite-hmrc-intg pipenv run ./manage.py process_tasks --log-std
+test:
+	$(run) -e DJANGO_SETTINGS_MODULE=conf.settings_test lite-hmrc-intg pipenv run pytest ${args} # --disable-warnings
 
-# e.g. make pipenv COMMAND="install --dev requests-mock"
-pipenv:
-	docker exec -it lite-hmrc-intg pipenv ${COMMAND}
+migrate:
+	$(pipenv) ./manage.py migrate
+
+migrations:
+	$(pipenv) ./manage.py makemigrations
+
+squashmigrations:
+	$(pipenv) ./manage.py squashmigrations ${args}
+
+diffsettings:
+	$(pipenv) ./manage.py diffsettings
+
+createsuperuser:
+	$(pipenv) ./manage.py createsuperuser
+
+shell:
+	$(pipenv) ./manage.py shell -i python
+
+check-format:
+	$(pipenv) black .
+
+check-prospector:
+	$(pipenv) prospector -W pylint -W pep257
+
+cov:
+	$(pipenv) coverage run --source='.' manage.py test mail
+
+cov-report:
+	$(pipenv) coverage report
+
+process-tasks:
+	$(pipenv) ./manage.py process_tasks --log-std
