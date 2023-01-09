@@ -13,7 +13,7 @@ class TestHawkAuthentication(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         # test endpoint that retrieves licence details
-        cls.test_url = reverse("mail:licence")
+        cls.test_url = reverse("mail:update_licence")
 
     def test_hawk_authentication_returns_401(self):
         resp = self.client.get(self.test_url)

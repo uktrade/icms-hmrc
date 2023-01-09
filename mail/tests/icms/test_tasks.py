@@ -87,7 +87,7 @@ def mock_pop3_usage(mock_pop3):
 @pytest.fixture()
 def correct_email_settings():
     """Correct test email settings"""
-    with override_settings(HMRC_TO_DIT_EMAIL_USER="chief", HMRC_TO_DIT_EMAIL_HOSTNAME="hmrc_test_email.com"):
+    with override_settings(HMRC_TO_DIT_EMAIL_USER="chief"):
         yield None
 
 

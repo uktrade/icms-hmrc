@@ -20,7 +20,6 @@ flower = "==1.2"
 
 [packages]
 djangorestframework = "~=3.9"
-django-background-tasks = "~=1.2"
 django-environ = "~=0.4"
 django-model-utils = "~=4.0"
 sentry-sdk = "~=0.16"

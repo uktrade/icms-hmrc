@@ -23,11 +23,11 @@ class LicenceToEdifactValidationTests(unittest.TestCase):
 
     @parameterized.expand(
         [
-            ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIE\\E\\20210408\\20220408", 0),
-            ("2\\licences\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIE\\E\\20210408\\20220408", 1),
-            ("2\\licences\\20210000006TA\\add\\GBSIEL/2021/0000006/T/A\\SIE\\E\\20210408\\20220408", 2),
+            ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIL\\E\\20210408\\20220408", 0),
+            ("2\\licences\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\OIL\\E\\20210408\\20220408", 1),
+            ("2\\licences\\20210000006TA\\add\\GBSIEL/2021/0000006/T/A\\SAN\\E\\20210408\\20220408", 2),
             ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIEL\\E\\20210408\\20220408", 1),
-            ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIEL\\T\\20210408\\20220408", 2),
+            ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIEL\\T\\20210408\\20220408", 1),
         ]
     )
     def test_licence_transaction_header_validation(self, licence_tx_line, num_errors):
@@ -46,11 +46,11 @@ class LicenceToEdifactValidationTests(unittest.TestCase):
             ),
             (
                 "3\\trader\\\\\\20210408\\20220408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
-                2,
+                1,
             ),
             (
                 "3\\trader\\\\\\20210408\\20200408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
-                3,
+                2,
             ),
             (
                 "3\\trader\\\\GB123456789000\\20210408\\20200408\\ABC Test\\Test Location\\windsor house\\\\Windsor\\Surrey\\Islington",
@@ -62,7 +62,7 @@ class LicenceToEdifactValidationTests(unittest.TestCase):
             ),
             (
                 "3\\trader\\\\6\\20210408\\20220408\\Very long organisation name to trigger validation error, max length is 80 characters\\This is a very long address line to trigger error\\windsor house\\\\Windsor\\Surrey\\AB1 2BD",
-                3,
+                2,
             ),
             (
                 "3\\trader\\\\GB123456789000\\20210408\\20220408\\Very long organisation name to trigger validation error, max length is 80 characters\\This is a very long address line to trigger error\\windsor house\\\\Windsor\\Surrey\\INVALID POSTCODE",
@@ -128,7 +128,7 @@ class LicenceToEdifactValidationTests(unittest.TestCase):
             ("7\\line\\1\\\\\\Q\\\\\\\\030\\\\4\\\\\\\\\\\\", 1),
             ("7\\line\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\\\\\\\\\\\", 1),
             ("7\\lines\\1\\\\\\\\\\Rifle\\Q\\\\030\\\\4\\\\\\\\\\\\", 1),
-            ("7\\line\\1\\\\\\\\\\Rifle\\T\\\\30\\\\4\\\\\\\\\\\\", 2),
+            ("7\\line\\1\\\\\\\\\\Rifle\\T\\\\30\\\\4\\\\\\\\\\\\", 1),
             ("7\\lines\\1\\\\\\\\\\\\Q\\\\030\\\\4\\\\\\\\\\\\", 2),
         ]
     )

@@ -2,10 +2,8 @@ import os
 
 from celery import Celery
 from celery.schedules import crontab
-from django.conf import settings
 
 from mail import utils
-from mail.enums import ChiefSystemEnum
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "conf.settings")
 
@@ -15,13 +13,12 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    if settings.CHIEF_SOURCE_SYSTEM == ChiefSystemEnum.ICMS:
-        if utils.get_app_env() == "PRODUCTION":
-            schedule = get_icms_prod_beat_schedule()
-        else:
-            schedule = get_imcs_dev_beat_schedule()
+    if utils.get_app_env() == "PRODUCTION":
+        schedule = get_icms_prod_beat_schedule()
+    else:
+        schedule = get_imcs_dev_beat_schedule()
 
-        app.conf.beat_schedule = schedule
+    app.conf.beat_schedule = schedule
 
 
 def get_icms_prod_beat_schedule():

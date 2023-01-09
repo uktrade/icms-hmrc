@@ -5,31 +5,17 @@ from django.core.management.base import BaseCommand
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.libraries.builders import _build_request_mail_message_dto_internal
 from mail.libraries.routing_controller import send
-from mail.models import LicenceData, UsageData
+from mail.models import LicenceData
 
 logger = logging.getLogger(__name__)
 
 
 def get_mail_extract(hmrc_run_number):
-    licence_data = None
-    usage_data = None
-
-    """
-    Given run number could be of licence data or usage data so check both types.
-    Mostly it will be of licence data as they are more frequent compared to
-    usage data so check this first.
-    """
     try:
         licence_data = LicenceData.objects.get(hmrc_run_number=hmrc_run_number)
         return licence_data.mail
     except LicenceData.DoesNotExist:
         logger.info("No licence data instance found for given run number %s", hmrc_run_number)
-
-    try:
-        usage_data = UsageData.objects.get(hmrc_run_number=hmrc_run_number)
-        return usage_data.mail
-    except UsageData.DoesNotExist:
-        logger.info("No usage data instance found for given run number %s", hmrc_run_number)
 
     return None
 
@@ -93,17 +79,6 @@ class Command(BaseCommand):
             destination = SourceEnum.HMRC
             if mail.status != ReceptionStatusEnum.REPLY_PENDING:
                 logger.error("Mail is expected to be in 'reply_pending' status but current status is %s", mail.status)
-                return
-        # this does happen occassionally
-        elif mail.extract_type == ExtractTypeEnum.LICENCE_REPLY:
-            destination = SourceEnum.SPIRE
-            if mail.status != ReceptionStatusEnum.REPLY_SENT:
-                logger.error("Mail is expected to be in 'reply_sent' status but current status is %s", mail.status)
-                return
-        elif mail.extract_type == ExtractTypeEnum.USAGE_DATA:
-            destination = SourceEnum.SPIRE
-            if mail.status != ReceptionStatusEnum.REPLY_SENT:
-                logger.error("Mail is expected to be in 'reply_sent' status but current status is %s", mail.status)
                 return
         else:
             logger.error("Unexpected extract_type for the mail %s", mail.edi_filename)

@@ -4,9 +4,9 @@
 This project is meant for sending licence updates to HMRC and receiving usage reporting. Information like licence updates
 and usage are exchanged as mail attachment between Lite and HMRC
 
-Tasks are managed using this project: [Django Background Tasks](https://github.com/arteria/django-background-tasks/blob/master/docs/index.rst)
+Tasks are managed using this project: [Celery](https://github.com/celery/celery)
 
-The entry point for configuring the tasks is defined here: `lite-hmrc/mail/apps.py`
+The entry point for configuring the tasks is defined here: `icms-hmrc/conf/celery.py`
 
 
 # Build and Run
@@ -21,7 +21,6 @@ Or alternatively on Docker: `cp docker.env .env`
 Copy the template local_settings.sample if required: `cp local_settings.sample local_settings.py`
 
 if using local_settings.py remember to add this to your .env `DJANGO_SETTINGS_MODULE=local_settings`
-
 
 ### Running in Docker
 To run in docker do the following
@@ -101,17 +100,6 @@ The tool 'bandit' is used. To run it `pipenv run bandit -r .`
 - `pre-commit install`
 * run following to scan all files for issues
   - `pre-commit run --all-files`
-
-# Deploying to production
-
-Important settings:
-
-- SPIRE_ADDRESS: email address used by SPIRE system (legacy).
-- SPIRE_INCOMING_EMAIL_ADDRESS: same as SPIRE_ADDRESS?
-- HMRC_ADDRESS: email address used by HMRC / CHIEF to process licenses.
-- LITE_HMRC_INTEGRATION_HAWK_KEY: part of Hawk authentication protocol.
-- LITE_API_HAWK_KEY: part of Hawk authentication protocol.
-- LITE_API_URL: full URL for API to send usage response data.
 
 # Mailbox authentication
 

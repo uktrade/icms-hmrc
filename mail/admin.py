@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from mail.models import LicenceData, LicenceIdMapping, LicencePayload, Mail, MailboxConfig, MailReadStatus, UsageData
+from mail.models import LicenceData, LicencePayload, Mail
 
 
 class LicencePayloadInline(admin.TabularInline):
@@ -30,10 +30,6 @@ class MailAdmin(admin.ModelAdmin):
     list_display = ["pk", "edi_filename", "status", "extract_type", "sent_at", "response_date"]
 
 
-admin.site.register(MailboxConfig)
-admin.site.register(MailReadStatus)
-admin.site.register(UsageData)
 admin.site.register(LicenceData, LicenceDataAdmin)
 admin.site.register(Mail, MailAdmin)
 admin.site.register(LicencePayload)
-admin.site.register(LicenceIdMapping)

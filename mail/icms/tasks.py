@@ -176,12 +176,37 @@ def _get_licence_reply_data(processor: LicenceReplyProcessor) -> Dict[str, Any]:
 
 
 def _get_hmrc_mailbox_auth() -> Authenticator:
-    # TODO: ICMSLST-1759 Replace with ModernAuthentication
+    # TODO: ICMSLST-1759 Replace with ModernAuthentication - See example below
 
     return BasicAuthentication(
         user=settings.INCOMING_EMAIL_USER,
         password=settings.INCOMING_EMAIL_PASSWORD,
     )
+
+
+# Example of a modern auth routing controller copied from the routing_controller.py lite code
+# from mail.servers import MailServer
+# from mail.auth import ModernAuthentication
+#
+#
+# def get_hmrc_to_dit_mailserver() -> MailServer:
+#     """
+#     Mailbox that receives reply emails from HMRC
+#
+#     These are licenceReply and usageData emails
+#     """
+#     auth = ModernAuthentication(
+#         user=settings.HMRC_TO_DIT_EMAIL_USER,
+#         client_id=settings.AZURE_AUTH_CLIENT_ID,
+#         client_secret=settings.AZURE_AUTH_CLIENT_SECRET,
+#         tenant_id=settings.AZURE_AUTH_TENANT_ID,
+#     )
+#
+#     return MailServer(
+#         auth,
+#         hostname=settings.HMRC_TO_DIT_EMAIL_HOSTNAME,
+#         pop3_port=995,
+#     )
 
 
 def _check_sender_valid(mail: email.message.EmailMessage, *, expected_sender_domain: str, expected_sender_user) -> None:

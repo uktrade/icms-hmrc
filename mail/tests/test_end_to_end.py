@@ -1,14 +1,13 @@
 from pathlib import Path
-from urllib.parse import quote
 
 import requests
 from django.conf import settings
 from django.test import override_settings, testcases
 from django.urls import reverse
 
-from mail.enums import ChiefSystemEnum
-from mail.models import LicenceData, LicencePayload
-from mail.tests.libraries.client import LiteHMRCTestClient
+from mail.enums import ChiefSystemEnum, ReceptionStatusEnum
+from mail.icms import tasks
+from mail.models import LicenceData, LicencePayload, Mail
 from mail.tests.test_serializers import get_valid_fa_sil_payload, get_valid_sanctions_payload
 
 
@@ -24,37 +23,11 @@ def get_smtp_body():
     return response.json()["items"][0]["MIME"]["Parts"][1]["Body"]
 
 
-class EndToEndTests(LiteHMRCTestClient):
-    def test_send_email_to_hmrc_e2e(self):
-        clear_stmp_mailbox()
-        self.client.get(reverse("mail:set_all_to_reply_sent"))
-        self.client.post(
-            reverse("mail:update_licence"), data=self.licence_payload_json, content_type="application/json"
-        )
-        self.client.get(reverse("mail:send_updates_to_hmrc"))
-        body = get_smtp_body().replace("\r", "")
-        ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
-        run_number = body.split("\n")[0].split("\\")[6]
-        expected_mail_body = rf"""1\fileHeader\SPIRE\CHIEF\licenceData\{ymdhm_timestamp}\{run_number}\N
-2\licence\20200000001P\insert\GBSIEL/2020/0000001/P\SIE\E\20200602\20220602
-3\trader\\GB123456789000\20200602\20220602\Organisation\might 248 James Key Apt. 515 Apt.\942 West Ashleyton Farnborough\Apt. 942\West Ashleyton\Farnborough\GU40 2LX
-4\country\GB\\D
-5\foreignTrader\End User\42 Road, London, Buckinghamshire\\\\\\GB
-6\restrictions\Provisos may apply please see licence
-7\line\1\\\\\Sporting shotgun\Q\\030\\10\\\\\\
-8\end\licence\7
-9\fileTrailer\1"""
-        assert body == expected_mail_body  # nosec
-        encoded_reference_code = quote("GBSIEL/2020/0000001/P", safe="")
-        response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
-        assert response.json()["status"] == "reply_pending"  # nosec
-
-
 @override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
 class ICMSEndToEndTests(testcases.TestCase):
     def test_icms_send_email_to_hmrc_fa_oil_e2e(self):
         clear_stmp_mailbox()
-        self.client.get(reverse("mail:set_all_to_reply_sent"))
+        Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
 
         data = {
             "type": "OIL",
@@ -93,7 +66,8 @@ class ICMSEndToEndTests(testcases.TestCase):
         resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
         self.assertEqual(resp.status_code, 201)
 
-        self.client.get(reverse("mail:send_updates_to_hmrc"))
+        tasks.send_licence_data_to_hmrc.apply()
+
         body = get_smtp_body().replace("\r", "")
         ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
 
@@ -102,9 +76,7 @@ class ICMSEndToEndTests(testcases.TestCase):
         expected_content = test_file.read_text().replace("202201011011", ymdhm_timestamp).strip()
         self.assertEqual(expected_content, body)
 
-        encoded_reference_code = quote("IMA/2022/00001", safe="")
-        response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
-        self.assertEqual(response.json()["status"], "reply_pending")
+        self._assert_reply_pending("IMA/2022/00001")
 
         # Check licence_payload records have been created
         ld = LicenceData.objects.get(hmrc_run_number=1)
@@ -115,7 +87,7 @@ class ICMSEndToEndTests(testcases.TestCase):
 
     def test_icms_send_email_to_hmrc_fa_dfl_e2e(self):
         clear_stmp_mailbox()
-        self.client.get(reverse("mail:set_all_to_reply_sent"))
+        Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
 
         org_data = {
             "eori_number": "GB665544332211000",
@@ -163,7 +135,7 @@ class ICMSEndToEndTests(testcases.TestCase):
         resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
         self.assertEqual(resp.status_code, 201)
 
-        self.client.get(reverse("mail:send_updates_to_hmrc"))
+        tasks.send_licence_data_to_hmrc.apply()
         body = get_smtp_body().replace("\r", "")
         ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
 
@@ -173,19 +145,17 @@ class ICMSEndToEndTests(testcases.TestCase):
         self.assertEqual(expected_content, body)
 
         for ref in ["IMA/2022/00002", "IMA/2022/00003"]:
-            encoded_reference_code = quote(ref, safe="")
-            response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
-            self.assertEqual(response.json()["status"], "reply_pending", f"{ref} has incorrect status")
+            self._assert_reply_pending(ref)
 
     def test_icms_send_email_to_hmrc_fa_sil_e2e(self):
         clear_stmp_mailbox()
-        self.client.get(reverse("mail:set_all_to_reply_sent"))
+        Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
 
         data = get_valid_fa_sil_payload()
         resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
         self.assertEqual(resp.status_code, 201)
 
-        self.client.get(reverse("mail:send_updates_to_hmrc"))
+        tasks.send_licence_data_to_hmrc.apply()
         body = get_smtp_body().replace("\r", "")
         ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
 
@@ -194,19 +164,17 @@ class ICMSEndToEndTests(testcases.TestCase):
         expected_content = test_file.read_text().replace("202201011011", ymdhm_timestamp).strip()
         self.assertEqual(expected_content, body)
 
-        encoded_reference_code = quote("IMA/2022/00003", safe="")
-        response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
-        self.assertEqual(response.json()["status"], "reply_pending")
+        self._assert_reply_pending("IMA/2022/00003")
 
     def test_icms_send_email_to_hmrc_sanctions_e2e(self):
         clear_stmp_mailbox()
-        self.client.get(reverse("mail:set_all_to_reply_sent"))
+        Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
 
         data = get_valid_sanctions_payload()
         resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
         self.assertEqual(resp.status_code, 201)
 
-        self.client.get(reverse("mail:send_updates_to_hmrc"))
+        tasks.send_licence_data_to_hmrc.apply()
         body = get_smtp_body().replace("\r", "")
         ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
 
@@ -215,6 +183,17 @@ class ICMSEndToEndTests(testcases.TestCase):
         expected_content = test_file.read_text().replace("202201011011", ymdhm_timestamp).strip()
         self.assertEqual(expected_content, body)
 
-        encoded_reference_code = quote("IMA/2022/00004", safe="")
-        response = self.client.get(f"{reverse('mail:licence')}?id={encoded_reference_code}")
-        self.assertEqual(response.json()["status"], "reply_pending")
+        self._assert_reply_pending("IMA/2022/00004")
+
+    def _assert_reply_pending(self, case_reference):
+        matching_licences = LicenceData.objects.filter(licence_ids__contains=case_reference)
+        matching_licences_count = matching_licences.count()
+
+        if matching_licences_count > 1:
+            raise AssertionError("Too many matches for licence '%s'", case_reference)
+
+        elif matching_licences_count == 0:
+            raise AssertionError("No matches for licence '%s'", case_reference)
+
+        mail = matching_licences.first().mail
+        self.assertEqual(mail.status, "reply_pending", f"{case_reference} has incorrect status")

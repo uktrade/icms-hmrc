@@ -6,6 +6,9 @@ from typing import List
 from mail.auth import Authenticator
 from mail.servers import MailServer
 
+# TODO: CHECK correct encoding before going live
+#   lite-hmrc used this setting for its pop code: DEFAULT_ENCODING = "iso-8859-1"
+
 
 @contextlib.contextmanager
 def get_connection(auth: Authenticator, hostname: str, port: int) -> poplib.POP3:

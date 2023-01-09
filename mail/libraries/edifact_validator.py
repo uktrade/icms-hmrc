@@ -1,8 +1,6 @@
 import re
 
-from django.conf import settings
-
-from mail.enums import LITE_HMRC_LICENCE_TYPE_MAPPING, LicenceActionEnum
+from mail.enums import ICMS_HMRC_LICENCE_TYPE_MAPPING, LicenceActionEnum
 
 from . import chieftypes
 
@@ -22,7 +20,7 @@ LICENCE_LINE_FIELDS_LEN = 19
 FILE_TRAILER_FIELDS_LEN = 3
 
 VALID_ACTIONS_TO_HMRC = [choice[0] for choice in LicenceActionEnum.choices]
-VALID_LICENCE_TYPES = LITE_HMRC_LICENCE_TYPE_MAPPING.values()
+VALID_LICENCE_TYPES = ICMS_HMRC_LICENCE_TYPE_MAPPING.values()
 ALLOWED_COUNTRY_USE_VALUES = ["D", "E", "O", "P", "R", "S"]
 CONTROLLED_BY_VALUES = ["B", "O", "Q", "V"]
 
@@ -73,11 +71,6 @@ def validate_licence_transaction_header(data_identifier, record):
     if tokens[5] not in VALID_LICENCE_TYPES:
         errors.append({record_type: f"Invalid licence type {tokens[5]} in the record"})
 
-    # Export check
-    if settings.CHIEF_SOURCE_SYSTEM == "SPIRE":
-        if tokens[6] != "E":
-            errors.append({record_type: "licence transaction header is not of Export type"})
-
     return errors
 
 
@@ -118,11 +111,6 @@ def validate_permitted_trader(record):
 
     if tr.turn == "" and tr.rpa_trader_id == "":
         errors.append({record_type: "RPA Trader Id must not be empty when TURN is empty"})
-
-    # Export check - ICMS sets turn
-    if settings.CHIEF_SOURCE_SYSTEM == "SPIRE":
-        if len(tr.rpa_trader_id) < 12 or len(tr.rpa_trader_id) > 15:
-            errors.append({record_type: "RPA Trader Id must be of atleast 12 chars and max 15 chars wide"})
 
     if tr.start_date and tr.end_date:
         if int(tr.end_date) < int(tr.start_date):
@@ -230,20 +218,11 @@ def validate_licence_product_line(record):
     # Use chief type rather than indexing into tokens
     ld = chieftypes.LicenceDataLine(*tokens)
 
-    if settings.CHIEF_SOURCE_SYSTEM == "SPIRE":
-        if not ld.goods_description:
-            errors.append({record_type: "Product description cannot be empty"})
-    else:
-        if not ld.goods_description and not ld.commodity:
-            errors.append({record_type: "Product description or commodity code must be set"})
+    if not ld.goods_description and not ld.commodity:
+        errors.append({record_type: "Product description or commodity code must be set"})
 
     if ld.controlled_by not in CONTROLLED_BY_VALUES:
         errors.append({record_type: "Invalid controlled by value"})
-
-    # Export check
-    if settings.CHIEF_SOURCE_SYSTEM == "SPIRE":
-        if len(ld.quantity_unit) != 3:
-            errors.append({record_type: "Quantity unit field should be of 3 characters wide"})
 
     return errors
 
