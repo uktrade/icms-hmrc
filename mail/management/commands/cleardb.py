@@ -2,6 +2,7 @@ from django.core.management import BaseCommand
 from django.db import connection
 
 
+# TODO: Remove once happy with drop_all_tables.py
 class Command(BaseCommand):
     """
     pipenv run ./manage.py cleardb
