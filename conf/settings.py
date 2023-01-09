@@ -212,3 +212,9 @@ CELERY_BROKER_URL = REDIS_URL
 CELERY_IMPORTS = [
     "mail.icms.tasks",
 ]
+
+
+# used in drop_all_tables command
+ALLOW_DISASTROUS_DATA_DROPS_NEVER_ENABLE_IN_PROD = env.bool(
+    "ALLOW_DISASTROUS_DATA_DROPS_NEVER_ENABLE_IN_PROD", default=False
+)
