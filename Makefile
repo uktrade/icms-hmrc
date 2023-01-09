@@ -35,7 +35,11 @@ createsuperuser:
 shell:
 	$(pipenv) ./manage.py shell -i python
 
-check-format:
+#
+# linting / formatting commands (NOTE: Currently stops lite-hmrc-intg container)
+#
+format-all:
+	$(pipenv) isort . && \
 	$(pipenv) black .
 
 check-prospector:
@@ -46,6 +50,3 @@ cov:
 
 cov-report:
 	$(pipenv) coverage report
-
-process-tasks:
-	$(pipenv) ./manage.py process_tasks --log-std
