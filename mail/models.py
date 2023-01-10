@@ -1,5 +1,4 @@
 import logging
-import uuid
 
 from django.db import IntegrityError, models
 from django.utils import timezone
@@ -10,9 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 class LicencePayload(models.Model):
-    # TODO: Replace with BigAutoField primary keys (requires migrations to be squashed)
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     lite_id = models.UUIDField(null=False, blank=False, unique=False)
     reference = models.CharField(null=False, blank=False, max_length=35)
     action = models.CharField(choices=LicenceActionEnum.choices, null=False, blank=False, max_length=7)
@@ -46,9 +42,6 @@ class LicenceData(models.Model):
 
 
 class Mail(models.Model):
-    # TODO: Replace with BigAutoField primary keys (requires migrations to be squashed)
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     # For licence_data / licence_reply emails they are saved on a single db record.
     # e.g. the licence_reply email is saved on the licence_data record
     extract_type = models.CharField(choices=ExtractTypeEnum.choices, max_length=20, null=True)

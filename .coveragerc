@@ -4,6 +4,7 @@ omit =
     ./conf/celery.py
     ./conf/settings.py
     ./conf/wsgi.py
+    ./mail/management/commands/drop_all_tables.py
     ./static/management/*
     *test*
     .venv/*
