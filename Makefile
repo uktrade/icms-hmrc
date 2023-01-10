@@ -3,19 +3,19 @@
 # Aliases
 #
 run = docker-compose run --rm
-pipenv = $(run) -e DJANGO_SETTINGS_MODULE=conf.settings lite-hmrc-intg pipenv run
+pipenv = $(run) -e DJANGO_SETTINGS_MODULE=conf.settings web-api pipenv run
 
 #
 # Commands
 #
 run-icms:
-	docker-compose -f docker-compose.yml -f docker-compose-icms.yml up --build -d
+	docker-compose -f docker-compose.yml up --build -d
 
 stop-icms:
 	docker-compose stop
 
 test:
-	$(run) -e DJANGO_SETTINGS_MODULE=conf.settings_test lite-hmrc-intg pipenv run pytest ${args} # --disable-warnings
+	$(run) -e DJANGO_SETTINGS_MODULE=conf.settings_test web-api pipenv run pytest ${args} # --disable-warnings
 
 migrate:
 	$(pipenv) ./manage.py migrate
@@ -36,7 +36,7 @@ shell:
 	$(pipenv) ./manage.py shell -i python
 
 #
-# linting / formatting commands (NOTE: Currently stops lite-hmrc-intg container)
+# linting / formatting commands
 #
 format-all:
 	$(pipenv) isort . && \
