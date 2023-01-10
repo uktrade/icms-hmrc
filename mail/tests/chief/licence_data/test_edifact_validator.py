@@ -3,8 +3,8 @@ import unittest
 from django.test import override_settings
 from parameterized import parameterized
 
+from mail.chief.licence_data import edifact_validator
 from mail.enums import ChiefSystemEnum
-from mail.libraries import edifact_validator
 
 
 class LicenceToEdifactValidationTests(unittest.TestCase):

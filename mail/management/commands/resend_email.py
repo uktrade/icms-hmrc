@@ -1,11 +1,13 @@
 import logging
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
+from mail.chief.email import EmailMessageDto, build_email_message
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
-from mail.libraries.builders import _build_request_mail_message_dto_internal
-from mail.libraries.routing_controller import send
-from mail.models import LicenceData
+from mail.models import LicenceData, Mail
+from mail.servers import smtp_send
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +29,7 @@ class Command(BaseCommand):
     Arguments:
     hmrc_run_number: The input run number *must* be the run number used by HMRC to identify this mail.
     If the mail has come from SPIRE then their current run number is different from the hmrc run number
-    because lite-hmrc translates it when sending it to HMRC. For this reason it is important to use
+    because icms-hmrc translates it when sending it to HMRC. For this reason it is important to use
     HMRC run number as the starting point when resending it.
 
     Based on hmrc run number the command identifies the relevant LicenceData, Mail instances and
@@ -90,6 +92,42 @@ class Command(BaseCommand):
             return
 
         if not dry_run:
-            send(message_to_send_dto)
+            message = build_email_message(message_to_send_dto)
+            smtp_send(message)
 
         logger.info("Mail %s resent to %s successfully", message_to_send_dto.subject, destination)
+
+
+def _build_request_mail_message_dto_internal(mail: Mail) -> EmailMessageDto:
+    sender = None
+    receiver = None
+    attachment = [None, None]
+    run_number = 0
+
+    if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
+        # This is the case where we sent a licence_data email earlier which hasn't reached HMRC
+        # and so we are resending it
+        sender = settings.EMAIL_USER
+        receiver = settings.OUTGOING_EMAIL_USER
+        attachment = [mail.sent_filename, mail.sent_data]
+    else:
+        raise Exception(f"Extract type not supported: {mail.extract_type}")
+
+    logger.info(
+        "Preparing request Mail dto of extract type %s, sender %s, receiver %s with filename %s",
+        mail.extract_type,
+        sender,
+        receiver,
+        attachment[0],
+    )
+
+    return EmailMessageDto(
+        run_number=run_number,
+        sender=sender,
+        receiver=receiver,
+        date=timezone.now(),
+        subject=attachment[0],
+        body=None,
+        attachment=attachment,
+        raw_data=None,
+    )

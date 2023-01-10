@@ -12,13 +12,11 @@
 import dataclasses
 import typing
 
-from . import chieftypes
-
-FIELD_SEP = "\\"  # A single back-slash character.
-LINE_SEP = "\n"
+from mail.chief import FIELD_SEP, LINE_SEP
+from mail.chief.licence_data import types
 
 
-def resolve_line_numbers(lines: typing.Sequence[chieftypes._Record]) -> list:
+def resolve_line_numbers(lines: typing.Sequence[types._Record]) -> list:
     """Add line numbers for a CHIEF message.
 
     For "end" lines, we keep track of the number of lines since the matching
@@ -32,7 +30,7 @@ def resolve_line_numbers(lines: typing.Sequence[chieftypes._Record]) -> list:
         starts[line.type_] = lineno
         line.lineno = lineno
 
-        if line.type_ == chieftypes.End.type_:
+        if line.type_ == types.End.type_:
             # End lines are like ("end", <start-type>). Find the number of
             # lines since the <start-type> line, add that to the end line
             # like ("end", <start-type>, <distance>).
@@ -43,13 +41,13 @@ def resolve_line_numbers(lines: typing.Sequence[chieftypes._Record]) -> list:
     return result
 
 
-def format_line(line: chieftypes._Record) -> str:
+def format_line(line: types._Record) -> str:
     """Format a line, with `None` values as the empty string."""
     values = dataclasses.astuple(line)
     return FIELD_SEP.join("" if v is None else str(v) for v in values)
 
 
-def format_lines(lines: typing.Sequence[chieftypes._Record]) -> str:
+def format_lines(lines: typing.Sequence[types._Record]) -> str:
     """Format the sequence of line tuples as 1 complete string."""
     lines = resolve_line_numbers(lines)
     formatted_lines = [format_line(line) for line in lines]
@@ -57,8 +55,8 @@ def format_lines(lines: typing.Sequence[chieftypes._Record]) -> str:
     return LINE_SEP.join(formatted_lines) + LINE_SEP
 
 
-def count_transactions(lines: typing.Sequence[chieftypes._Record]) -> int:
+def count_transactions(lines: typing.Sequence[types._Record]) -> int:
     """Count of licence transactions, for use on the `fileTrailer` line."""
     # A transaction is any line  with "licence" as the first field (ignoring
     # line numbers).
-    return sum(line.type_ == chieftypes.Licence.type_ for line in lines)
+    return sum(line.type_ == types.Licence.type_ for line in lines)

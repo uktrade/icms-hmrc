@@ -4,7 +4,7 @@ from django.test import TestCase, override_settings
 from parameterized import parameterized
 from rest_framework.exceptions import ErrorDetail
 
-from mail import icms_serializers
+from mail import serializers
 from mail.enums import ChiefSystemEnum
 
 
@@ -13,7 +13,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
     def test_invalid_case_reference(self):
         data = {"reference": "asdf/"}
 
-        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
+        serializer = serializers.FirearmOilLicenceDataSerializer(data=data)
 
         self.assertFalse(serializer.is_valid())
 
@@ -22,19 +22,19 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
     def test_valid_case_reference(self):
         data = {"case_reference": "IMA/2022/00001"}
-        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
+        serializer = serializers.FirearmOilLicenceDataSerializer(data=data)
         serializer.is_valid()
         self.assertNotIn("case_reference", serializer.errors)
 
         data = {"case_reference": "IMA/2022/00001/99"}
-        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
+        serializer = serializers.FirearmOilLicenceDataSerializer(data=data)
         serializer.is_valid()
         self.assertNotIn("case_reference", serializer.errors)
 
     def test_invalid_goods_quantity(self):
         # test max decimal digits exceeded
         data = {"quantity": 123456789012}
-        serializer = icms_serializers.SanctionGoodsSerializer(data=data)
+        serializer = serializers.SanctionGoodsSerializer(data=data)
         self.assertFalse(serializer.is_valid())
 
         expected_error = "Ensure that there are no more than 11 digits before the decimal point."
@@ -42,7 +42,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
         # test max decimal points exceeded
         data = {"quantity": 1234567890.1234}
-        serializer = icms_serializers.SanctionGoodsSerializer(data=data)
+        serializer = serializers.SanctionGoodsSerializer(data=data)
         self.assertFalse(serializer.is_valid())
 
         expected_error = "Ensure that there are no more than 3 decimal places."
@@ -50,7 +50,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
         # Test max digits exceeded
         data = {"quantity": 123456789012.123}
-        serializer = icms_serializers.SanctionGoodsSerializer(data=data)
+        serializer = serializers.SanctionGoodsSerializer(data=data)
         self.assertFalse(serializer.is_valid())
 
         expected_error = "Ensure that there are no more than 14 digits in total."
@@ -58,7 +58,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
     def test_valid_goods_quantity(self):
         data = {"quantity": 12345678901.123}
-        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
+        serializer = serializers.FirearmOilLicenceDataSerializer(data=data)
         serializer.is_valid()
         self.assertNotIn("quantity", serializer.errors)
 
@@ -97,7 +97,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             ],
         }
 
-        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
+        serializer = serializers.FirearmOilLicenceDataSerializer(data=data)
 
         is_valid = serializer.is_valid()
 
@@ -141,7 +141,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             ],
         }
 
-        serializer = icms_serializers.FirearmOilLicenceDataSerializer(data=data)
+        serializer = serializers.FirearmOilLicenceDataSerializer(data=data)
 
         self.assertFalse(serializer.is_valid())
 
@@ -185,7 +185,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
             ],
         }
 
-        serializer = icms_serializers.FirearmDflLicenceDataSerializer(data=data)
+        serializer = serializers.FirearmDflLicenceDataSerializer(data=data)
 
         is_valid = serializer.is_valid()
 
@@ -197,7 +197,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
     def test_valid_fa_sil_payload(self):
         data = get_valid_fa_sil_payload()
-        serializer = icms_serializers.FirearmSilLicenceDataSerializer(data=data)
+        serializer = serializers.FirearmSilLicenceDataSerializer(data=data)
         is_valid = serializer.is_valid()
 
         self.assertTrue(is_valid)
@@ -211,7 +211,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
         data["goods"] = [
             {"controlled_by": "Q", "description": "goods description", "unit": 30},
         ]
-        serializer = icms_serializers.FirearmSilLicenceDataSerializer(data=data)
+        serializer = serializers.FirearmSilLicenceDataSerializer(data=data)
 
         self.assertFalse(serializer.is_valid())
 
@@ -224,7 +224,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
         data["goods"] = [
             {"controlled_by": "Q", "description": "goods description", "quantity": 30},
         ]
-        serializer = icms_serializers.FirearmSilLicenceDataSerializer(data=data)
+        serializer = serializers.FirearmSilLicenceDataSerializer(data=data)
 
         self.assertFalse(serializer.is_valid())
 
@@ -234,7 +234,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
     def test_valid_sanction_payload(self):
         data = get_valid_sanctions_payload()
-        serializer = icms_serializers.SanctionLicenceDataSerializer(data=data)
+        serializer = serializers.SanctionLicenceDataSerializer(data=data)
         is_valid = serializer.is_valid()
 
         self.assertTrue(is_valid)
@@ -258,7 +258,7 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
     def test_eori_number_errors(self, name, eori, expected_error):
         data = {"eori_number": eori}
 
-        serializer = icms_serializers.OrganisationSerializer(data=data)
+        serializer = serializers.OrganisationSerializer(data=data)
         self.assertFalse(serializer.is_valid())
 
         self.assertEqual(str(serializer.errors["eori_number"][0]), expected_error, f"{name} test failed")

@@ -46,7 +46,7 @@ class Mail(models.Model):
     # e.g. the licence_reply email is saved on the licence_data record
     extract_type = models.CharField(choices=ExtractTypeEnum.choices, max_length=20, null=True)
 
-    # Status of mail through the lite-hmrc workflow
+    # Status of mail through the icms-hmrc workflow
     status = models.CharField(choices=ReceptionStatusEnum.choices, default=ReceptionStatusEnum.PENDING, max_length=20)
 
     # licenceData fields

@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Any, List, Optional
 
+from mail.chief import FIELD_SEP, LINE_SEP
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
-from mail.libraries import chiefprotocol
 from mail.models import Mail
 
 from .types import (
@@ -80,7 +80,7 @@ class LicenceReplyProcessor:
     def _load_licence_reply_data(self, reply_data: str) -> None:
         """Load the licence reply data."""
 
-        for line in filter(None, reply_data.split(chiefprotocol.LINE_SEP)):
+        for line in filter(None, reply_data.split(LINE_SEP)):
             self._process_line(line)
 
     def _process_line(self, line: str) -> None:
@@ -89,7 +89,7 @@ class LicenceReplyProcessor:
         line_no: int
         field_type: str
         record_args: List[Any]
-        line_no, field_type, *record_args = line.split(chiefprotocol.FIELD_SEP)
+        line_no, field_type, *record_args = line.split(FIELD_SEP)
 
         try:
             record = self.LINE_MAP[field_type](*record_args)

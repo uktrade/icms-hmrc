@@ -10,9 +10,8 @@ import pytest
 from django.conf import settings
 from django.test import override_settings
 
-from mail import servers
+from mail import servers, tasks
 from mail.enums import ChiefSystemEnum, ExtractTypeEnum, LicenceActionEnum, ReceptionStatusEnum
-from mail.icms import tasks
 from mail.models import LicenceData, LicencePayload, Mail, SourceEnum
 from mail.utils import pop3
 

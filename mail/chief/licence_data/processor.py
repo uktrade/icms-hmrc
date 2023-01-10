@@ -1,20 +1,65 @@
 import datetime
+import json
 import logging
-from typing import TYPE_CHECKING, Dict, Iterable, Optional
+from typing import TYPE_CHECKING, Dict, Iterable, Optional, Tuple
 
+from django.conf import settings
 from django.utils import timezone
 
-from mail.enums import ICMS_HMRC_LICENCE_TYPE_MAPPING, ControlledByEnum, LicenceActionEnum, LicenceTypeEnum
-from mail.libraries import chiefprotocol, chieftypes
-from mail.libraries.edifact_validator import validate_edifact_file
-from mail.models import LicencePayload
+from mail.chief.licence_data import chiefprotocol, types
+from mail.chief.licence_data.edifact_validator import validate_edifact_file
+from mail.enums import (
+    ICMS_HMRC_LICENCE_TYPE_MAPPING,
+    ControlledByEnum,
+    ExtractTypeEnum,
+    LicenceActionEnum,
+    LicenceTypeEnum,
+    SourceEnum,
+)
+from mail.models import LicenceData, LicencePayload, Mail
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet  # noqa
 
 
-class EdifactValidationError(Exception):
-    pass
+logger = logging.getLogger(__name__)
+
+
+def create_licence_data_mail(licences: "QuerySet[LicencePayload]", source: SourceEnum) -> Mail:
+    last_lite_update = LicenceData.objects.last()
+    run_number = last_lite_update.hmrc_run_number + 1 if last_lite_update else 1
+    when = timezone.now()
+
+    file_name, file_content = build_licence_data_file(licences, run_number, when)
+
+    mail = Mail.objects.create(
+        edi_filename=file_name,
+        edi_data=file_content,
+        extract_type=ExtractTypeEnum.LICENCE_DATA,
+        raw_data="See Licence Payload",
+    )
+    logger.info("New Mail instance (%s) created for filename %s", mail.id, file_name)
+    licence_ids = json.dumps([licence.reference for licence in licences])
+    licence_data = LicenceData.objects.create(
+        hmrc_run_number=run_number, source=source, mail=mail, licence_ids=licence_ids
+    )
+
+    # Keep a reference of all licence_payloads linked to this LicenceData instance
+    licence_data.licence_payloads.set(licences)
+
+    return mail
+
+
+def build_licence_data_file(
+    licences: "QuerySet[LicencePayload]", run_number: int, when: datetime.datetime
+) -> Tuple[str, str]:
+    system = settings.CHIEF_SOURCE_SYSTEM
+    file_name = f"CHIEF_LIVE_{system}_licenceData_{run_number}_{when:%Y%m%d%H%M}"
+    logger.info("Building licenceData file %s for %s licences", file_name, licences.count())
+
+    file_content = licences_to_edifact(licences, run_number, system, when)
+
+    return file_name, file_content
 
 
 def licences_to_edifact(
@@ -35,7 +80,7 @@ def licences_to_edifact(
     # This is usually set to N in almost all cases
     reset_run_number_indicator = "N"
     dest_system = "CHIEF"
-    file_header = chieftypes.FileHeader(
+    file_header = types.FileHeader(
         source_system=source,  # "ILBDOTI".
         destination_system=dest_system,
         data_id="licenceData",
@@ -53,7 +98,7 @@ def licences_to_edifact(
     # File trailer includes the number of licences, but +1 for each "update"
     # because this code represents those as "cancel" followed by "insert".
     num_transactions = chiefprotocol.count_transactions(lines)
-    file_trailer = chieftypes.FileTrailer(transaction_count=num_transactions)
+    file_trailer = types.FileTrailer(transaction_count=num_transactions)
     lines.append(file_trailer)
 
     # Convert line tuples to the final string with line numbers, etc.
@@ -63,12 +108,12 @@ def licences_to_edifact(
     errors = validate_edifact_file(edifact_file)
     if errors:
         logging.error("File content not as per specification, %r", errors)
-        raise EdifactValidationError(repr(errors))
+        raise ValueError(repr(errors))
 
     return edifact_file
 
 
-def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chieftypes._Record]:
+def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[types._Record]:
     """Yield lines for a single ICMS licence, to use in a CHIEF message."""
 
     payload = licence.data
@@ -84,7 +129,7 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
     if licence.action not in supported_actions:
         raise NotImplementedError(f"Action {licence.action} not supported yet")
 
-    yield chieftypes.Licence(
+    yield types.Licence(
         action=licence.action,
         # reference = ICMS case reference
         transaction_ref=payload["reference"],
@@ -98,7 +143,7 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
     trader = payload.get("organisation")
     trader_address = trader.get("address")
 
-    yield chieftypes.Trader(
+    yield types.Trader(
         rpa_trader_id=trader.get("eori_number"),
         start_date=get_date_field(trader, "start_date"),
         end_date=get_date_field(trader, "end_date"),
@@ -113,17 +158,17 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[chiefty
 
     kwargs = {"use": "O"}
     if payload.get("country_group"):
-        yield chieftypes.Country(group=payload.get("country_group"), **kwargs)
+        yield types.Country(group=payload.get("country_group"), **kwargs)
 
     elif payload.get("country_code"):
-        yield chieftypes.Country(code=payload.get("country_code"), **kwargs)
+        yield types.Country(code=payload.get("country_code"), **kwargs)
 
     yield get_restrictions(licence)
 
     for g in get_goods(icms_licence_type, payload.get("goods")):
         yield g
 
-    yield chieftypes.End(start_record_type=chieftypes.Licence.type_)
+    yield types.End(start_record_type=types.Licence.type_)
 
 
 def get_date_field(obj, key, default="") -> str:
@@ -135,14 +180,14 @@ def get_date_field(obj, key, default="") -> str:
     return val.replace("-", "")
 
 
-def get_restrictions(licence: LicencePayload) -> chieftypes.Restrictions:
+def get_restrictions(licence: LicencePayload) -> types.Restrictions:
     restrictions: str = licence.data.get("restrictions", "")
     text = restrictions.replace("\n", "|").strip()
 
-    return chieftypes.Restrictions(text=text)
+    return types.Restrictions(text=text)
 
 
-def get_goods(licence_type: str, goods: Optional[list]) -> Iterable[chieftypes.Restrictions]:
+def get_goods(licence_type: str, goods: Optional[list]) -> Iterable[types.Restrictions]:
     if not goods:
         return []
 
@@ -153,19 +198,19 @@ def get_goods(licence_type: str, goods: Optional[list]) -> Iterable[chieftypes.R
         for idx, good in goods_iter:
             kwargs = _get_controlled_by_kwargs(good)
 
-            yield chieftypes.LicenceDataLine(line_num=idx, commodity=good["commodity"], **kwargs)
+            yield types.LicenceDataLine(line_num=idx, commodity=good["commodity"], **kwargs)
 
     # FA-SIL
     elif licence_type == LicenceTypeEnum.IMPORT_SIL:
         for idx, good in goods_iter:
             kwargs = _get_controlled_by_kwargs(good)
 
-            yield chieftypes.LicenceDataLine(line_num=idx, goods_description=good["description"], **kwargs)
+            yield types.LicenceDataLine(line_num=idx, goods_description=good["description"], **kwargs)
 
     # FA-DFL and FA-OIL
     else:
         for idx, good in goods_iter:
-            yield chieftypes.LicenceDataLine(
+            yield types.LicenceDataLine(
                 line_num=idx, goods_description=good["description"], controlled_by=ControlledByEnum.OPEN
             )
 

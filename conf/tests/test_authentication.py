@@ -22,6 +22,6 @@ class TestHawkAuthentication(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
 
         # This will trigger a HawkException as HTTP_HAWK_AUTHENTICATION is invalid
-        hawk_header = 'Hawk mac="", hash="", id="lite-api", ts="", nonce=""'
+        hawk_header = 'Hawk mac="", hash="", id="icms-api", ts="", nonce=""'
         resp = self.client.get(self.test_url, HTTP_HAWK_AUTHENTICATION=hawk_header)
         self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)

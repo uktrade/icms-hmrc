@@ -16,7 +16,7 @@ jobs:
       PIPENV_VENV_IN_PROJECT: 'enabled'
       DJANGO_SETTINGS_MODULE: 'conf.settings_test'
 
-    working_directory: ~/lite-hmrc
+    working_directory: ~/icms-hmrc
 
     steps:
       - checkout
