@@ -21,7 +21,7 @@ DEBUG = env.bool("DEBUG", default=False)
 APP_ENV = env.str("APP_ENV", default="notset")
 
 # TODO: Change this to use env setting from vault
-ALLOWED_HOSTS = "*"
+ALLOWED_HOSTS = ["*"]
 
 VCAP_SERVICES = env.json("VCAP_SERVICES", default={})
 
