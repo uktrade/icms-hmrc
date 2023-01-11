@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 
 from conf.authentication import HawkOnlyAuthentication
-from mail import icms_serializers
+from mail import serializers
 from mail.enums import LicenceTypeEnum
 from mail.models import LicencePayload
 
@@ -68,11 +68,11 @@ class LicenceDataIngestView(APIView):
         )
 
     def get_serializer_cls(self, app_type: str) -> Type["Serializer"]:
-        serializers = {
-            LicenceTypeEnum.IMPORT_OIL: icms_serializers.FirearmOilLicenceDataSerializer,
-            LicenceTypeEnum.IMPORT_DFL: icms_serializers.FirearmDflLicenceDataSerializer,
-            LicenceTypeEnum.IMPORT_SIL: icms_serializers.FirearmSilLicenceDataSerializer,
-            LicenceTypeEnum.IMPORT_SAN: icms_serializers.SanctionLicenceDataSerializer,
+        icms_serializers = {
+            LicenceTypeEnum.IMPORT_OIL: serializers.FirearmOilLicenceDataSerializer,
+            LicenceTypeEnum.IMPORT_DFL: serializers.FirearmDflLicenceDataSerializer,
+            LicenceTypeEnum.IMPORT_SIL: serializers.FirearmSilLicenceDataSerializer,
+            LicenceTypeEnum.IMPORT_SAN: serializers.SanctionLicenceDataSerializer,
         }
 
-        return serializers[app_type]
+        return icms_serializers[app_type]

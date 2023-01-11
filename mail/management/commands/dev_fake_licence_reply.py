@@ -6,9 +6,9 @@ from django.db import transaction
 from django.utils import timezone
 
 from mail import utils
+from mail.chief.licence_data.chiefprotocol import FIELD_SEP, LINE_SEP
 from mail.chief.licence_reply import types
 from mail.enums import ReceptionStatusEnum
-from mail.libraries.chiefprotocol import FIELD_SEP, LINE_SEP
 from mail.models import LicenceData, LicencePayload, Mail
 
 
@@ -16,7 +16,7 @@ class Command(BaseCommand):
     """Development command to fake a LicenceReply file.
 
     It is simulating the work that this task does:
-    lite-hmrc/mail/icms/tasks.py -> process_licence_reply_and_usage_emails
+    icms-hmrc/mail/tasks.py -> process_licence_reply_and_usage_emails
 
     Checks for mail that have been sent to CHIEF
     Processes each line and creates a test reply file.

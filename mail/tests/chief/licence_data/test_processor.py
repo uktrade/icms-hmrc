@@ -2,59 +2,11 @@ import datetime
 import uuid
 from pathlib import Path
 
-from django.conf import settings
 from django.test import override_settings, testcases
 
+from mail.chief.licence_data.processor import build_licence_data_file
 from mail.enums import ChiefSystemEnum, LicenceActionEnum, LicenceTypeEnum
-from mail.libraries import builders
-from mail.libraries.email_message_dto import EmailMessageDto
 from mail.models import LicencePayload
-
-
-class BuildEmailMessageTest(testcases.TestCase):
-    maxDiff = None
-
-    def test_build_email_message(self):
-        attachment = "30 \U0001d5c4\U0001d5c6/\U0001d5c1 \u5317\u4EB0"
-        email_message_dto = EmailMessageDto(
-            run_number=1,
-            sender="This...gets....ignored ¯\\_(ツ)_//¯",
-            receiver="receiver@email_domain.com",
-            date="Mon, 17 May 2021 14:20:18 +0100",
-            body=None,
-            subject="Some subject",
-            attachment=["some filename", attachment],
-            raw_data="",
-        )
-
-        mime_multipart = builders.build_email_message(email_message_dto)
-        mime_multipart.set_boundary("===============8537751789001939036==")
-
-        self.assertEqual(
-            mime_multipart.as_string(),
-            (
-                'Content-Type: multipart/mixed; boundary="===============8537751789001939036=="\n'
-                "MIME-Version: 1.0\n"
-                f"From: {settings.EMAIL_USER}\n"
-                f"To: receiver@email_domain.com\n"
-                "Subject: Some subject\n"
-                "name: Some subject\n\n"
-                "--===============8537751789001939036==\n"
-                'Content-Type: text/plain; charset="iso-8859-1"\n'
-                "MIME-Version: 1.0\n"
-                "Content-Transfer-Encoding: quoted-printable\n\n"
-                "\n\n\n"
-                "--===============8537751789001939036==\n"
-                "Content-Type: application/octet-stream\n"
-                "MIME-Version: 1.0\n"
-                "Content-Transfer-Encoding: base64\n"
-                'Content-Disposition: attachment; filename="some filename"\n'
-                "Content-Transfer-Encoding: 7bit\n"
-                "name: Some subject\n\n"
-                "30 km/h Bei Jing \n"
-                "--===============8537751789001939036==--\n"
-            ),
-        )
 
 
 class BuildLicenceDataFileTests(testcases.TestCase):
@@ -68,7 +20,7 @@ class BuildLicenceDataFileTests(testcases.TestCase):
 
         for when, expected in data:
             with self.subTest(when=when, expected=expected):
-                filename, _ = builders.build_licence_data_file(LicencePayload.objects.none(), 1, when)
+                filename, _ = build_licence_data_file(LicencePayload.objects.none(), 1, when)
 
                 self.assertEqual(filename, expected)
 
@@ -77,7 +29,7 @@ class BuildLicenceDataFileTests(testcases.TestCase):
         when = datetime.datetime(1999, 12, 31)
 
         with self.settings(CHIEF_SOURCE_SYSTEM="FOO"):
-            filename, _ = builders.build_licence_data_file(LicencePayload.objects.none(), 1, when)
+            filename, _ = build_licence_data_file(LicencePayload.objects.none(), 1, when)
 
         self.assertEqual(filename, "CHIEF_LIVE_FOO_licenceData_1_199912310000")
 
@@ -129,7 +81,7 @@ class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
         run_number = 1
         when = datetime.datetime(2022, 1, 1, 10, 11, 00)
 
-        filename, file_content = builders.build_licence_data_file(licences, run_number, when)
+        filename, file_content = build_licence_data_file(licences, run_number, when)
 
         self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
 
@@ -151,7 +103,7 @@ class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
         run_number = 2
         when = datetime.datetime(2022, 1, 2, 10, 11, 00)
 
-        filename, file_content = builders.build_licence_data_file(licences, run_number, when)
+        filename, file_content = build_licence_data_file(licences, run_number, when)
 
         self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_2_202201021011")
         test_file = Path("mail/tests/files/icms/licence_data_files/fa_oil_replace")
@@ -222,7 +174,7 @@ class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
         run_number = 1
         when = datetime.datetime(2022, 1, 1, 10, 11, 00)
 
-        filename, file_content = builders.build_licence_data_file(licences, run_number, when)
+        filename, file_content = build_licence_data_file(licences, run_number, when)
 
         self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
 
@@ -284,7 +236,7 @@ class TestBuildICMSLicenceDataFASIL(testcases.TestCase):
         run_number = 1
         when = datetime.datetime(2022, 1, 1, 10, 11, 00)
 
-        filename, file_content = builders.build_licence_data_file(licences, run_number, when)
+        filename, file_content = build_licence_data_file(licences, run_number, when)
 
         self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
 
@@ -343,7 +295,7 @@ class TestBuildICMSLicenceDataSanction(testcases.TestCase):
         run_number = 1
         when = datetime.datetime(2022, 1, 1, 10, 11, 00)
 
-        filename, file_content = builders.build_licence_data_file(licences, run_number, when)
+        filename, file_content = build_licence_data_file(licences, run_number, when)
 
         self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
 

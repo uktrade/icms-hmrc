@@ -1,8 +1,7 @@
 import re
 
+from mail.chief.licence_data import types
 from mail.enums import ICMS_HMRC_LICENCE_TYPE_MAPPING, LicenceActionEnum
-
-from . import chieftypes
 
 FILE_HEADER_FIELDS_LEN = 8
 LICENCE_TRANSACTION_HEADER_FIELDS_LEN = 9
@@ -107,7 +106,7 @@ def validate_permitted_trader(record):
         errors.append({record_type: f"Invalid file header tag {tokens[1]}"})
 
     # Use chief type rather than indexing into tokens
-    tr = chieftypes.Trader(*tokens)
+    tr = types.Trader(*tokens)
 
     if tr.turn == "" and tr.rpa_trader_id == "":
         errors.append({record_type: "RPA Trader Id must not be empty when TURN is empty"})
@@ -216,7 +215,7 @@ def validate_licence_product_line(record):
         errors.append({record_type: f"Invalid file header tag {record_type}"})
 
     # Use chief type rather than indexing into tokens
-    ld = chieftypes.LicenceDataLine(*tokens)
+    ld = types.LicenceDataLine(*tokens)
 
     if not ld.goods_description and not ld.commodity:
         errors.append({record_type: "Product description or commodity code must be set"})

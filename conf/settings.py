@@ -186,7 +186,7 @@ else:
 # Application Performance Monitoring
 if env.str("ELASTIC_APM_SERVER_URL", ""):
     ELASTIC_APM = {
-        "SERVICE_NAME": env.str("ELASTIC_APM_SERVICE_NAME", default="lite-hmrc"),
+        "SERVICE_NAME": env.str("ELASTIC_APM_SERVICE_NAME", default="icms-hmrc"),
         "SECRET_TOKEN": env.str("ELASTIC_APM_SECRET_TOKEN"),
         "SERVER_URL": env.str("ELASTIC_APM_SERVER_URL"),
         "ENVIRONMENT": env.str("SENTRY_ENVIRONMENT"),
@@ -210,7 +210,7 @@ CELERY_BROKER_URL = REDIS_URL
 
 # Explicit paths to celery tasks.
 CELERY_IMPORTS = [
-    "mail.icms.tasks",
+    "mail.tasks",
 ]
 
 

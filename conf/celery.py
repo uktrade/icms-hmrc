@@ -26,19 +26,19 @@ def get_icms_prod_beat_schedule():
 
     return {
         #
-        # Task to send email (lite-hmrc -> HMRC)
+        # Task to send email (icms-hmrc -> HMRC)
         "send-licence-data-to-hmrc": {
             "task": "icms:send_licence_data_to_hmrc",
             "schedule": crontab(minute="*/10"),
         },
         #
-        # Task to process reply emails (HMRC -> lite-hmrc)
+        # Task to process reply emails (HMRC -> icms-hmrc)
         "process-hmrc-emails": {
             "task": "icms:process_licence_reply_and_usage_emails",
             "schedule": crontab(minute="*/5"),
         },
         #
-        # Task to forward licence reply data (lite-hmrc -> ICMS)
+        # Task to forward licence reply data (icms-hmrc -> ICMS)
         "send-licence-data": {
             "task": "icms:send_licence_data_to_icms",
             "schedule": crontab(minute="*/5"),
@@ -54,19 +54,19 @@ def get_imcs_dev_beat_schedule():
 
     return {
         #
-        # Task to send email (lite-hmrc -> HMRC)
+        # Task to send email (icms-hmrc -> HMRC)
         "send-licence-data-to-hmrc": {
             "task": "icms:send_licence_data_to_hmrc",
             "schedule": crontab(minute="*/1"),
         },
         #
-        # Task to process reply emails (HMRC -> lite-hmrc) ** FAKE RESPONSE **
+        # Task to process reply emails (HMRC -> icms-hmrc) ** FAKE RESPONSE **
         "process-hmrc-emails": {
             "task": "icms:fake_licence_reply",
             "schedule": crontab(minute="*/1"),
         },
         #
-        # Task to forward licence reply data (lite-hmrc -> ICMS)
+        # Task to forward licence reply data (icms-hmrc -> ICMS)
         "send-licence-data": {
             "task": "icms:send_licence_data_to_icms",
             "schedule": crontab(minute="*/1"),

@@ -1,9 +1,7 @@
 version: "3.8"
 
 services:
-  lite-hmrc-postgres:
-    restart: unless-stopped
-    container_name: "lite-hmrc-postgres"
+  postgres-db:
     environment:
       - LITEHMRC_DB_USER=postgres
       - LITEHMRC_DB_PASSWORD=password
@@ -14,11 +12,19 @@ services:
       - 5432
     ports:
       - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
 
   redis:
     image: redis:5.0.6
     ports:
       - "6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
 
   mailhog:
     ports:
@@ -26,9 +32,10 @@ services:
       - 587:1025  # SMTP
     image: mailhog/mailhog
     platform: linux/amd64
+    networks:
+      - backend
 
-  lite-hmrc-intg:
-    container_name: "lite-hmrc-intg"
+  web-api:
     env_file:
       - .env
     environment:
@@ -42,11 +49,14 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      - lite-hmrc-postgres
+      - postgres-db
       - redis
       - mailhog
     expose:
       - 8000
+    networks:
+      - backend
+      - icms_public
     command: pipenv run ./manage.py runserver 0.0.0.0:8000
 
   celery-worker:
@@ -62,8 +72,11 @@ services:
     volumes:
         - .:/code
     depends_on:
-      - lite-hmrc-postgres
+      - postgres-db
       - redis
+    networks:
+      - backend
+      - icms_public
 
   celery-beat:
     build:
@@ -75,6 +88,8 @@ services:
     platform: linux/amd64
     depends_on:
       - redis
+    networks:
+      - backend
 
   celery-flower:
     build: .
@@ -84,5 +99,16 @@ services:
       - "9090:9090"
     depends_on:
       - redis
+    networks:
+      - backend
+
+networks:
+  backend:
+  icms_public:
+    name: "icms_public"
+
+
 volumes:
+  pgdata:
   maildata:
+  redis_data:

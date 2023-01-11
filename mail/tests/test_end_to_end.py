@@ -5,8 +5,8 @@ from django.conf import settings
 from django.test import override_settings, testcases
 from django.urls import reverse
 
+from mail import tasks
 from mail.enums import ChiefSystemEnum, ReceptionStatusEnum
-from mail.icms import tasks
 from mail.models import LicenceData, LicencePayload, Mail
 from mail.tests.test_serializers import get_valid_fa_sil_payload, get_valid_sanctions_payload
 
