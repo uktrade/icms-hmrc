@@ -1,7 +1,11 @@
 [![CircleCI](https://circleci.com/gh/uktrade/icms-hmrc.svg?style=svg)](https://circleci.com/gh/uktrade/icms-hmrc)
 
 # Introduction
-This project is meant for sending licence updates to HMRC and updating ICMS with the response from HMRC for each licence.
+This project sends licence updates to HMRC and updates ICMS with the response from HMRC for each licence.
+
+It was originally called [lite-hmrc](https://github.com/uktrade/lite-hmrc) and was a shared repo that ICMS and LITE used to send updates to HMRC via CHIEF.
+
+ICMS-HMRC has since removed all the lite code to simplify the maintenance burden for ICMS.
 
 Tasks are managed using this project: [Celery](https://github.com/celery/celery)
 
