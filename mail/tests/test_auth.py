@@ -45,7 +45,7 @@ class ModernAuthenticationTests(SimpleTestCase):
         }
 
         with patch("mail.auth.msal") as mock_msal:
-            mock_ConfidentialClientApplication = mock_msal.ConfidentialClientApplication()
+            mock_ConfidentialClientApplication = mock_msal.ConfidentialClientApplication()  # noqa: N806
             mock_acquire_token_silent = mock_ConfidentialClientApplication.acquire_token_silent
             mock_acquire_token_silent.return_value = mock_access_token
 
@@ -90,7 +90,7 @@ class ModernAuthenticationTests(SimpleTestCase):
         }
 
         with patch("mail.auth.msal") as mock_msal:
-            mock_ConfidentialClientApplication = mock_msal.ConfidentialClientApplication()
+            mock_ConfidentialClientApplication = mock_msal.ConfidentialClientApplication()  # noqa: N806
 
             mock_acquire_token_silent = mock_ConfidentialClientApplication.acquire_token_silent
             mock_acquire_token_silent.return_value = None

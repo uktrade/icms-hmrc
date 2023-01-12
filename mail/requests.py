@@ -15,7 +15,7 @@ from mohawk.exc import AlreadyProcessed
 from conf.authentication import hawk_authentication_enabled
 
 
-class RequestException(Exception):
+class RequestExceptionError(Exception):
     """Exceptions to raise when sending requests."""
 
 
@@ -41,7 +41,9 @@ def make_request(method, url, data=None, headers=None, hawk_credentials=None, ti
 
     if hawk_authentication_enabled():
         if not hawk_credentials:
-            raise RequestException("'hawk_credentials' must be specified when 'HAWK_AUTHENTICATION_ENABLED' is 'True'")
+            raise RequestExceptionError(
+                "'hawk_credentials' must be specified when 'HAWK_AUTHENTICATION_ENABLED' is 'True'"
+            )
 
         sender = get_hawk_sender(method, url, data, hawk_credentials)
         headers["hawk-authentication"] = sender.request_header
@@ -58,9 +60,9 @@ def send_request(method, url, data=None, headers=None, timeout=None):
     try:
         response = requests.request(method, url, json=data, headers=headers, timeout=timeout)
     except requests.exceptions.Timeout:
-        raise RequestException(f"Timeout exceeded when sending request to '{url}'")
+        raise RequestExceptionError(f"Timeout exceeded when sending request to '{url}'")
     except requests.exceptions.RequestException as exc:
-        raise RequestException(
+        raise RequestExceptionError(
             f"An unexpected error occurred when sending request to '{url}' -> {type(exc).__name__}: {exc}"
         )
 

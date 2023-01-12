@@ -41,7 +41,7 @@ The tests require a live postgres server. They will create a database called
 
 Apply formatting: `make format-all`
 
-The tool `prospector` is used. To run it `make check-prospector`
+The tool `flake8` is used. To run it `make check-flake8`
 
 - Security and vulnerability linter
 

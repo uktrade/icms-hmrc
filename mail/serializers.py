@@ -168,4 +168,4 @@ def _validate_controlled_by(data):
             raise serializers.ValidationError("'quantity' must be set when controlled_by equals 'Q'")
 
         if not data.get("unit"):
-            raise serializers.ValidationError(f"'unit' must be set when controlled_by equals 'Q'")
+            raise serializers.ValidationError("'unit' must be set when controlled_by equals 'Q'")

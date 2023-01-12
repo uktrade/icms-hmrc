@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   tests:
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.10
       - image: circleci/postgres:12
         environment:
           DJANGO_SETTINGS_MODULE: 'conf.settings_test'
@@ -60,7 +60,7 @@ jobs:
 
   linting:
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.10
     steps:
       - checkout
 
@@ -77,8 +77,8 @@ jobs:
           key: dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
 
       - run:
-          name: Prospector
-          command: pipenv run prospector -W pylint -W pep257
+          name: Flake8
+          command: pipenv run flake8 --ignore=E501,W503
 
       - run:
           name: Black

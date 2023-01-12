@@ -21,7 +21,7 @@ DEBUG = env.bool("DEBUG", default=False)
 APP_ENV = env.str("APP_ENV", default="notset")
 
 # TODO: Change this to use env setting from vault
-ALLOWED_HOSTS = "*"
+ALLOWED_HOSTS = ["*"]
 
 VCAP_SERVICES = env.json("VCAP_SERVICES", default={})
 
@@ -123,11 +123,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
-
 LANGUAGE_CODE = "en-gb"
 TIME_ZONE = "UTC"
 USE_I18N = True
-USE_L10N = True
 USE_TZ = env.bool("USE_TZ", default=True)
 
 _log_level = env.str("LOG_LEVEL", default="INFO")

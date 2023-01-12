@@ -1,8 +1,8 @@
 import base64
 import poplib
+from typing import Protocol
 
 import msal
-from typing_extensions import Protocol
 
 
 class Authenticator(Protocol):

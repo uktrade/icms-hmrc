@@ -42,8 +42,8 @@ format-all:
 	$(pipenv) isort . && \
 	$(pipenv) black .
 
-check-prospector:
-	$(pipenv) prospector -W pylint -W pep257
+check-flake8:
+	$(pipenv) flake8 --ignore=E501,W503
 
 cov:
 	$(pipenv) coverage run --source='.' manage.py test mail
