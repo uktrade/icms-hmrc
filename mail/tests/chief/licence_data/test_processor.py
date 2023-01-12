@@ -83,7 +83,7 @@ class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
 
         filename, file_content = build_licence_data_file(licences, run_number, when)
 
-        self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
+        self.assertEqual(filename, "CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
 
         test_file = Path("mail/tests/files/icms/licence_data_files/fa_oil_insert")
         expected_content = test_file.read_text()
@@ -105,7 +105,7 @@ class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
 
         filename, file_content = build_licence_data_file(licences, run_number, when)
 
-        self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_2_202201021011")
+        self.assertEqual(filename, "CHIEF_LIVE_ILBDOTI_licenceData_2_202201021011")
         test_file = Path("mail/tests/files/icms/licence_data_files/fa_oil_replace")
         expected_content = test_file.read_text()
         self.assertEqual(expected_content, file_content)
@@ -176,7 +176,7 @@ class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
 
         filename, file_content = build_licence_data_file(licences, run_number, when)
 
-        self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
+        self.assertEqual(filename, "CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
 
         expected_content = self.test_file.read_text()
         self.assertEqual(expected_content, file_content)
@@ -238,7 +238,7 @@ class TestBuildICMSLicenceDataFASIL(testcases.TestCase):
 
         filename, file_content = build_licence_data_file(licences, run_number, when)
 
-        self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
+        self.assertEqual(filename, "CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
 
         self.maxDiff = None
         expected_content = self.test_file.read_text()
@@ -297,7 +297,7 @@ class TestBuildICMSLicenceDataSanction(testcases.TestCase):
 
         filename, file_content = build_licence_data_file(licences, run_number, when)
 
-        self.assertEqual(filename, f"CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
+        self.assertEqual(filename, "CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
 
         self.maxDiff = None
         expected_content = self.test_file.read_text()

@@ -77,8 +77,8 @@ jobs:
           key: dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
 
       - run:
-          name: Prospector
-          command: pipenv run prospector -W pylint -W pep257
+          name: Flake8
+          command: pipenv run flake8 --ignore=E501,W503
 
       - run:
           name: Black

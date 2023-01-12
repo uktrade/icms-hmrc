@@ -5,7 +5,6 @@ from collections import namedtuple
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.utils import timezone
@@ -15,11 +14,6 @@ from mail.enums import ExtractTypeEnum
 from mail.models import LicenceData, Mail
 
 logger = logging.getLogger(__name__)
-
-if TYPE_CHECKING:
-    from django.db.models import QuerySet  # noqa
-
-    from mail.models import LicencePayload  # noqa
 
 
 EmailMessageDto = namedtuple(

@@ -24,7 +24,7 @@ class HawkOnlyAuthentication(authentication.BaseAuthentication):
         except HawkFail as e:
             logger.warning("Failed HAWK authentication %s", e)
 
-            raise exceptions.AuthenticationFailed(f"Failed HAWK authentication")
+            raise exceptions.AuthenticationFailed("Failed HAWK authentication")
 
         except Exception as e:
             logger.error("Failed HAWK authentication %s", e)
@@ -32,7 +32,7 @@ class HawkOnlyAuthentication(authentication.BaseAuthentication):
             if settings.SENTRY_ENABLED:
                 capture_exception(e)
 
-            raise exceptions.AuthenticationFailed(f"Failed HAWK authentication")
+            raise exceptions.AuthenticationFailed("Failed HAWK authentication")
 
         return AnonymousUser(), hawk_receiver
 

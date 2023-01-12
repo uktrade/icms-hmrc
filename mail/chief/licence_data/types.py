@@ -4,6 +4,7 @@ from typing import Optional
 # These types represent the structure of records in a CHIEF message. A message
 # is one of licenceData, licenceReply, usageData, or usageReply types.
 
+
 # Every line in a message starts with a line number, and then the record type.
 @dataclass
 class _Record:

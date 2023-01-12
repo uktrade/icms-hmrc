@@ -1,4 +1,4 @@
-from conf.settings import *  # noqa
+from conf.settings import *  # noqa: F401, F403
 
 HAWK_AUTHENTICATION_ENABLED = False
 
