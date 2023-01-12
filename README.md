@@ -1,3 +1,4 @@
+[![codecov](https://codecov.io/github/uktrade/icms-hmrc/branch/main/graph/badge.svg?token=7P57P14IEX)](https://codecov.io/github/uktrade/icms-hmrc)
 [![CircleCI](https://circleci.com/gh/uktrade/icms-hmrc.svg?style=svg)](https://circleci.com/gh/uktrade/icms-hmrc)
 
 # Introduction
