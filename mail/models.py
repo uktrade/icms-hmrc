@@ -24,7 +24,7 @@ class LicencePayload(models.Model):
         ordering = ["received_at"]
 
     def __str__(self):
-        return f"LicencePayload(lite_id={self.lite_id}, reference={self.reference}, action={self.action})"
+        return f"LicencePayload(id={self.pk}, lite_id={self.lite_id}, reference={self.reference}, action={self.action})"
 
 
 class LicenceData(models.Model):

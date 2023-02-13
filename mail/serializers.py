@@ -2,7 +2,7 @@ import re
 
 from rest_framework import serializers
 
-from .enums import ControlledByEnum, LicenceTypeEnum, QuantityCodeEnum
+from .enums import ControlledByEnum, LicenceActionEnum, LicenceTypeEnum, QuantityCodeEnum
 
 ICMS_CASE_REF_PATTERN = re.compile(
     r"""
@@ -36,7 +36,6 @@ class AddressSerializer(serializers.Serializer):
 
 
 class OrganisationSerializer(serializers.Serializer):
-
     # "GB" + 12 or 15 digits.
     eori_number = serializers.CharField(min_length=14, max_length=17)
     name = serializers.CharField(max_length=80)
@@ -67,14 +66,14 @@ class GoodSerializer(serializers.Serializer):
     description = serializers.CharField(max_length=2000)
 
 
-class IcmsLicenceDataBaseSerializer(serializers.Serializer):
-    """Baseclass serializer for all ICMS import applications."""
+class BaseSerializer(serializers.Serializer):
+    """Baseclass serializer for all LicenceData records."""
 
-    type = serializers.ChoiceField(choices=IMPORT_LICENCE_TYPES)
-    action = serializers.CharField()
+    type = serializers.ChoiceField(choices=LicenceTypeEnum.choices)
+    action = serializers.ChoiceField(choices=LicenceActionEnum.choices)
 
     # Unique UUID of this payload (as reference is not unique)
-    id = serializers.CharField()
+    id = serializers.UUIDField(format="hex_verbose")
 
     # The ICMS case reference (Unique per licenceData file - can be resent if updates fail)
     reference = serializers.RegexField(ICMS_CASE_REF_PATTERN, max_length=17)
@@ -83,6 +82,13 @@ class IcmsLicenceDataBaseSerializer(serializers.Serializer):
     licence_reference = serializers.CharField(max_length=35)
     start_date = serializers.DateField()
     end_date = serializers.DateField()
+
+
+class InsertAndReplacePayloadBase(BaseSerializer):
+    """Base class for INSERT & REPLACE records"""
+
+    action = serializers.ChoiceField([LicenceActionEnum.INSERT, LicenceActionEnum.REPLACE])
+
     organisation = OrganisationSerializer()
     restrictions = serializers.CharField(allow_blank=True, max_length=2000)
     goods = GoodSerializer(many=True, required=False, allow_null=True)
@@ -100,13 +106,13 @@ class IcmsLicenceDataBaseSerializer(serializers.Serializer):
         return data
 
 
-class FirearmOilLicenceDataSerializer(IcmsLicenceDataBaseSerializer):
+class FirearmOilLicenceDataSerializer(InsertAndReplacePayloadBase):
     """FA-OIL licence data serializer"""
 
     type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_OIL])
 
 
-class FirearmDflLicenceDataSerializer(IcmsLicenceDataBaseSerializer):
+class FirearmDflLicenceDataSerializer(InsertAndReplacePayloadBase):
     """FA-DFL licence data serializer."""
 
     type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_DFL])
@@ -146,18 +152,24 @@ class SanctionGoodsSerializer(serializers.Serializer):
         return data
 
 
-class FirearmSilLicenceDataSerializer(IcmsLicenceDataBaseSerializer):
+class FirearmSilLicenceDataSerializer(InsertAndReplacePayloadBase):
     """FA-SIL licence data serializer."""
 
     type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_SIL])
     goods = FirearmSilGoods(many=True)
 
 
-class SanctionLicenceDataSerializer(IcmsLicenceDataBaseSerializer):
+class SanctionLicenceDataSerializer(InsertAndReplacePayloadBase):
     """Sanctions licence data serializer."""
 
     type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_SAN])
     goods = SanctionGoodsSerializer(many=True)
+
+
+class RevokeLicenceDataSerializer(BaseSerializer):
+    """Revoke licence class used for CANCEL records."""
+
+    action = serializers.ChoiceField([LicenceActionEnum.CANCEL])
 
 
 def _validate_controlled_by(data):
