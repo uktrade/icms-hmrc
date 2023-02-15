@@ -7,12 +7,11 @@ from rest_framework.views import APIView
 
 from conf.authentication import HawkOnlyAuthentication
 from mail import serializers
-from mail.enums import LicenceTypeEnum
+from mail.enums import LicenceActionEnum, LicenceTypeEnum
 from mail.models import LicencePayload
 
 if TYPE_CHECKING:
     from rest_framework.serializers import Serializer  # noqa
-
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ class LicenceDataIngestView(APIView):
             )
             return JsonResponse(status=status.HTTP_400_BAD_REQUEST, data={"errors": errors})
 
-        serializer_cls = self.get_serializer_cls(data["type"])
+        serializer_cls = get_serializer_cls(data["type"], data["action"])
         serializer = serializer_cls(data=data)
 
         if not serializer.is_valid():
@@ -67,12 +66,20 @@ class LicenceDataIngestView(APIView):
             data={"licence": licence.data},
         )
 
-    def get_serializer_cls(self, app_type: str) -> Type["Serializer"]:
-        icms_serializers = {
-            LicenceTypeEnum.IMPORT_OIL: serializers.FirearmOilLicenceDataSerializer,
-            LicenceTypeEnum.IMPORT_DFL: serializers.FirearmDflLicenceDataSerializer,
-            LicenceTypeEnum.IMPORT_SIL: serializers.FirearmSilLicenceDataSerializer,
-            LicenceTypeEnum.IMPORT_SAN: serializers.SanctionLicenceDataSerializer,
-        }
 
-        return icms_serializers[app_type]
+def get_serializer_cls(app_type: str, action: str) -> Type["Serializer"]:
+    if action == LicenceActionEnum.CANCEL:
+        return serializers.RevokeLicenceDataSerializer
+
+    # "insert" and "replace" serializer
+    match app_type:
+        case LicenceTypeEnum.IMPORT_OIL:
+            return serializers.FirearmOilLicenceDataSerializer
+        case LicenceTypeEnum.IMPORT_DFL:
+            return serializers.FirearmDflLicenceDataSerializer
+        case LicenceTypeEnum.IMPORT_SIL:
+            return serializers.FirearmSilLicenceDataSerializer
+        case LicenceTypeEnum.IMPORT_SAN:
+            return serializers.SanctionLicenceDataSerializer
+        case _:
+            raise ValueError(f"Unsupported app type: ({app_type})")

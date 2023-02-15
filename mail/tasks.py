@@ -1,5 +1,6 @@
 import email
 import logging
+import time
 from email.headerregistry import Address, UniqueAddressHeader
 from typing import Any, Dict
 from urllib import parse
@@ -23,6 +24,28 @@ from mail.servers import smtp_send
 from mail.utils import pop3
 
 logger = logging.getLogger(__name__)
+
+
+@celery_app.task(name="icms:dev_process_hmrc_licence_data")
+def dev_process_hmrc_licence_data() -> None:
+    """Run all tasks in one task for speed when in a development environment."""
+
+    if utils.get_app_env() == "PRODUCTION":
+        logger.warning("This command is only for development environments")
+        return
+
+    logger.info(">>>> STEP 1: Sending licence data to hmrc")
+    send_licence_data_to_hmrc.apply()
+
+    time.sleep(5)
+
+    logger.info(">>>> STEP 2: FAKING LicenceReply email from HMRC CHIEF")
+    fake_licence_reply.apply()
+
+    time.sleep(5)
+
+    logger.info(">>>> STEP 3: Sending licence data to ICMS")
+    send_licence_data_to_icms.apply()
 
 
 @celery_app.task(name="icms:send_licence_data_to_hmrc")
@@ -77,7 +100,7 @@ def send_licence_data_to_hmrc() -> None:
 @celery_app.task(name="icms:fake_licence_reply")
 def fake_licence_reply():
     if utils.get_app_env() == "PRODUCTION":
-        logger.info("This command is only for development environments")
+        logger.warning("This command is only for development environments")
         return
 
     # TODO: Add support for changing this value

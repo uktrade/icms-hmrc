@@ -14,6 +14,9 @@ run-icms:
 stop-icms:
 	docker-compose stop
 
+down: ## Stops and downs containers
+	docker-compose down --remove-orphans
+
 test:
 	$(run) -e DJANGO_SETTINGS_MODULE=conf.settings_test web-api pipenv run pytest ${args} # --disable-warnings
 

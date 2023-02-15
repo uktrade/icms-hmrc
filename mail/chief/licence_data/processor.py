@@ -124,15 +124,16 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[types._
     # ICMS only sends "insert", "replace" or "cancel" payloads.
     # If there are errors with a "replace" the licence is normally revoked within ICMS and a
     # new licence is applied for with the new requirements.
-    supported_actions = [LicenceActionEnum.INSERT, LicenceActionEnum.REPLACE]
+    supported_actions = [LicenceActionEnum.INSERT, LicenceActionEnum.REPLACE, LicenceActionEnum.CANCEL]
 
     if licence.action not in supported_actions:
         raise NotImplementedError(f"Action {licence.action} not supported yet")
 
+    # Section required for all action types
     yield types.Licence(
-        action=licence.action,
         # reference = ICMS case reference
         transaction_ref=payload["reference"],
+        action=licence.action,
         licence_ref=payload["licence_reference"],
         licence_type=chief_licence_type,
         usage=usage_code,
@@ -140,34 +141,37 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[types._
         end_date=get_date_field(payload, "end_date"),
     )
 
-    trader = payload.get("organisation")
-    trader_address = trader.get("address")
+    # Sections required for INSERT & REPLACE
+    if licence.action in [LicenceActionEnum.INSERT, LicenceActionEnum.REPLACE]:
+        trader = payload.get("organisation")
+        trader_address = trader.get("address")
 
-    yield types.Trader(
-        rpa_trader_id=trader.get("eori_number"),
-        start_date=get_date_field(trader, "start_date"),
-        end_date=get_date_field(trader, "end_date"),
-        name=trader.get("name"),
-        address1=trader_address.get("line_1"),
-        address2=trader_address.get("line_2"),
-        address3=trader_address.get("line_3"),
-        address4=trader_address.get("line_4"),
-        address5=trader_address.get("line_5"),
-        postcode=trader_address.get("postcode"),
-    )
+        yield types.Trader(
+            rpa_trader_id=trader.get("eori_number"),
+            start_date=get_date_field(trader, "start_date"),
+            end_date=get_date_field(trader, "end_date"),
+            name=trader.get("name"),
+            address1=trader_address.get("line_1"),
+            address2=trader_address.get("line_2"),
+            address3=trader_address.get("line_3"),
+            address4=trader_address.get("line_4"),
+            address5=trader_address.get("line_5"),
+            postcode=trader_address.get("postcode"),
+        )
 
-    kwargs = {"use": "O"}
-    if payload.get("country_group"):
-        yield types.Country(group=payload.get("country_group"), **kwargs)
+        kwargs = {"use": "O"}
+        if payload.get("country_group"):
+            yield types.Country(group=payload.get("country_group"), **kwargs)
 
-    elif payload.get("country_code"):
-        yield types.Country(code=payload.get("country_code"), **kwargs)
+        elif payload.get("country_code"):
+            yield types.Country(code=payload.get("country_code"), **kwargs)
 
-    yield get_restrictions(licence)
+        yield get_restrictions(licence)
 
-    for g in get_goods(icms_licence_type, payload.get("goods")):
-        yield g
+        for g in get_goods(icms_licence_type, payload.get("goods")):
+            yield g
 
+    # Section required for all action types
     yield types.End(start_record_type=types.Licence.type_)
 
 
