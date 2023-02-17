@@ -41,7 +41,7 @@ class BuildLicenceDataFileTests(testcases.TestCase):
 class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
     def setUp(self) -> None:
         self.licence = LicencePayload.objects.create(
-            lite_id="deaa301d-d978-473b-b76b-da275f28f447",
+            icms_id="deaa301d-d978-473b-b76b-da275f28f447",
             reference="IMA/2022/00001",
             action=LicenceActionEnum.INSERT,
             data={
@@ -99,7 +99,7 @@ class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
         replace_data["organisation"]["name"] = "org new name"
 
         replace_licence = LicencePayload.objects.create(
-            lite_id=uuid.uuid4(),
+            icms_id=uuid.uuid4(),
             reference="IMA/2022/00001/1",
             action=LicenceActionEnum.REPLACE,
             data=replace_data,
@@ -136,7 +136,7 @@ class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
         restrictions = "Sample restrictions"
 
         LicencePayload.objects.create(
-            lite_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
+            icms_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
             reference="IMA/2022/00002",
             action=LicenceActionEnum.INSERT,
             data={
@@ -153,7 +153,7 @@ class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
         )
 
         LicencePayload.objects.create(
-            lite_id="f4142c5a-19f8-40b4-a9a8-46362eaa85c6",
+            icms_id="f4142c5a-19f8-40b4-a9a8-46362eaa85c6",
             reference="IMA/2022/00003",
             action=LicenceActionEnum.INSERT,
             data={
@@ -241,7 +241,7 @@ class TestBuildICMSLicenceDataFASIL(testcases.TestCase):
         ]
 
         LicencePayload.objects.create(
-            lite_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
+            icms_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
             reference="IMA/2022/00003",
             action=LicenceActionEnum.INSERT,
             data={
@@ -284,7 +284,7 @@ class TestBuildICMSLicenceDataFASILCancelPayload(testcases.TestCase):
         data = get_valid_fa_sil_revoke_payload()
 
         LicencePayload.objects.create(
-            lite_id=data["id"], reference=data["reference"], action=data["action"], data=data
+            icms_id=data["id"], reference=data["reference"], action=data["action"], data=data
         )
         self.test_file = Path("mail/tests/files/icms/licence_data_files/fa_sil_cancel")
         self.assertTrue(self.test_file.is_file())
@@ -329,7 +329,7 @@ class TestBuildICMSLicenceDataSanction(testcases.TestCase):
         ]
 
         LicencePayload.objects.create(
-            lite_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
+            icms_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
             reference="IMA/2022/00004",
             action=LicenceActionEnum.INSERT,
             data={

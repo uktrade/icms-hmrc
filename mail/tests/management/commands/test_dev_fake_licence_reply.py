@@ -28,7 +28,7 @@ class TestDevProcessLicenceReply:
         # fake some licence payload references for the test file
         for reference in ["ABC12345", "ABC12346", "ABC12348", "ABC12347"]:
             payload = LicencePayload.objects.create(
-                lite_id=uuid.uuid4(),
+                icms_id=uuid.uuid4(),
                 reference=reference,
                 action=LicenceActionEnum.INSERT,
                 is_processed=True,

@@ -42,7 +42,7 @@ class TestHealthcheck(testcases.TestCase):
     def test_healthcheck_service_unavailable_pending_payload(self):
         received_at = timezone.now() - timedelta(seconds=settings.LICENSE_POLL_INTERVAL)
         LicencePayload.objects.create(
-            lite_id=uuid.uuid4(),
+            icms_id=uuid.uuid4(),
             reference="ABC12345",
             action=LicenceActionEnum.INSERT,
             is_processed=False,

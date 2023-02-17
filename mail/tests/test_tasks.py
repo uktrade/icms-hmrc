@@ -380,7 +380,7 @@ class TestSendLicenceDataToICMSTask:
         # fake some licence payload references for the test file
         for reference in ["ABC12345", "ABC12346", "ABC12348", "ABC12347"]:
             payload = LicencePayload.objects.create(
-                lite_id=uuid.uuid4(),
+                icms_id=uuid.uuid4(),
                 reference=reference,
                 action=LicenceActionEnum.INSERT,
                 is_processed=True,
@@ -388,10 +388,10 @@ class TestSendLicenceDataToICMSTask:
             ld.licence_payloads.add(payload)
 
         # Store the ICMS UUID that was sent from ICMS.
-        self.id_1 = str(LicencePayload.objects.get(reference="ABC12345").lite_id)
-        self.id_2 = str(LicencePayload.objects.get(reference="ABC12346").lite_id)
-        self.id_3 = str(LicencePayload.objects.get(reference="ABC12348").lite_id)
-        self.id_4 = str(LicencePayload.objects.get(reference="ABC12347").lite_id)
+        self.id_1 = str(LicencePayload.objects.get(reference="ABC12345").icms_id)
+        self.id_2 = str(LicencePayload.objects.get(reference="ABC12346").icms_id)
+        self.id_3 = str(LicencePayload.objects.get(reference="ABC12348").icms_id)
+        self.id_4 = str(LicencePayload.objects.get(reference="ABC12347").icms_id)
 
     def test_send_licence_data_to_icms_success(self, caplog):
         # Mock the response that ICMS sends back

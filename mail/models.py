@@ -9,11 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 class LicencePayload(models.Model):
-    lite_id = models.UUIDField(null=False, blank=False, unique=False)
-    reference = models.CharField(null=False, blank=False, max_length=35)
-    action = models.CharField(
-        choices=LicenceActionEnum.choices, null=False, blank=False, max_length=7
-    )
+    action = models.CharField(choices=LicenceActionEnum.choices, max_length=7)
+    icms_id = models.UUIDField()
+    reference = models.CharField(max_length=35)
+
     data = models.JSONField(default=dict)
     received_at = models.DateTimeField(default=timezone.now)
     is_processed = models.BooleanField(default=False)
@@ -22,11 +21,17 @@ class LicencePayload(models.Model):
     skip_process = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = [["lite_id", "action"]]
+        unique_together = [["icms_id", "action"]]
         ordering = ["received_at"]
 
     def __str__(self):
-        return f"LicencePayload(id={self.pk}, lite_id={self.lite_id}, reference={self.reference}, action={self.action})"
+        return (
+            f"LicencePayload(id={self.pk},"
+            f" icms_id={self.icms_id},"
+            f" reference={self.reference},"
+            f" action={self.action}"
+            f")"
+        )
 
 
 class LicenceData(models.Model):
