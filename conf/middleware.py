@@ -16,7 +16,9 @@ class HawkSigningMiddleware:
         # Sign response
         if hasattr(request, "auth") and isinstance(request.auth, Receiver):
             # Get mohawk to produce the header for the response
-            response_header = request.auth.respond(content=response.content, content_type=response["Content-Type"])
+            response_header = request.auth.respond(
+                content=response.content, content_type=response["Content-Type"]
+            )
 
             # These headers are added because of this open bug in mohawk:
             # https://github.com/kumar303/mohawk/issues/50

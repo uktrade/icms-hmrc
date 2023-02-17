@@ -67,7 +67,9 @@ class ICMSEndToEndTests(testcases.TestCase):
             ],
         }
 
-        resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
+        resp = self.client.post(
+            reverse("mail:update_licence"), data={"licence": data}, content_type="application/json"
+        )
         self.assertEqual(resp.status_code, 201)
 
         tasks.send_licence_data_to_hmrc.apply()
@@ -120,7 +122,9 @@ class ICMSEndToEndTests(testcases.TestCase):
             "restrictions": restrictions,
             "goods": [{"description": "Sample goods description"}],
         }
-        resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
+        resp = self.client.post(
+            reverse("mail:update_licence"), data={"licence": data}, content_type="application/json"
+        )
         self.assertEqual(resp.status_code, 201)
 
         data = {
@@ -136,7 +140,9 @@ class ICMSEndToEndTests(testcases.TestCase):
             "restrictions": restrictions,
             "goods": [{"description": "Sample goods description 2"}],
         }
-        resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
+        resp = self.client.post(
+            reverse("mail:update_licence"), data={"licence": data}, content_type="application/json"
+        )
         self.assertEqual(resp.status_code, 201)
 
         tasks.send_licence_data_to_hmrc.apply()
@@ -156,7 +162,9 @@ class ICMSEndToEndTests(testcases.TestCase):
         Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
 
         data = get_valid_fa_sil_payload()
-        resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
+        resp = self.client.post(
+            reverse("mail:update_licence"), data={"licence": data}, content_type="application/json"
+        )
         self.assertEqual(resp.status_code, 201)
 
         tasks.send_licence_data_to_hmrc.apply()
@@ -175,7 +183,9 @@ class ICMSEndToEndTests(testcases.TestCase):
         Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
 
         data = get_valid_sanctions_payload()
-        resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
+        resp = self.client.post(
+            reverse("mail:update_licence"), data={"licence": data}, content_type="application/json"
+        )
         self.assertEqual(resp.status_code, 201)
 
         tasks.send_licence_data_to_hmrc.apply()
@@ -194,7 +204,9 @@ class ICMSEndToEndTests(testcases.TestCase):
         Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
 
         data = get_valid_fa_sil_revoke_payload()
-        resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
+        resp = self.client.post(
+            reverse("mail:update_licence"), data={"licence": data}, content_type="application/json"
+        )
         self.assertEqual(resp.status_code, 201)
 
         tasks.send_licence_data_to_hmrc.apply()

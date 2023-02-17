@@ -66,7 +66,9 @@ def _seen_nonce(access_key_id, nonce, _):
     cache_key = f"hawk:{access_key_id}:{nonce}"
 
     # cache.add only adds key if it isn't present
-    seen_cache_key = not cache.add(cache_key, True, timeout=settings.HAWK_RECEIVER_NONCE_EXPIRY_SECONDS)
+    seen_cache_key = not cache.add(
+        cache_key, True, timeout=settings.HAWK_RECEIVER_NONCE_EXPIRY_SECONDS
+    )
 
     if seen_cache_key:
         raise AlreadyProcessed(f"Already seen nonce {nonce}")

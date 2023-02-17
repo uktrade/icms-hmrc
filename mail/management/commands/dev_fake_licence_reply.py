@@ -47,7 +47,11 @@ class Command(BaseCommand):
             return
 
         # Search for a mail instance that is in REPLY_PENDING
-        mail: Mail = Mail.objects.select_for_update().filter(status=ReceptionStatusEnum.REPLY_PENDING).first()
+        mail: Mail = (
+            Mail.objects.select_for_update()
+            .filter(status=ReceptionStatusEnum.REPLY_PENDING)
+            .first()
+        )
 
         if not mail:
             self.stdout.write(f"No mail records with {ReceptionStatusEnum.REPLY_PENDING} status")
@@ -81,7 +85,11 @@ class Command(BaseCommand):
             counts[outcome] = ld.licence_payloads.count()
 
         if outcome == "file_error":
-            data.append(types.FileError(code="18", text="Record type 'fileHeader' not recognised", position="99"))
+            data.append(
+                types.FileError(
+                    code="18", text="Record type 'fileHeader' not recognised", position="99"
+                )
+            )
             counts["file_error"] = 1
 
         data.append(

@@ -64,7 +64,9 @@ def send_licence_data_to_hmrc() -> None:
 
     try:
         with transaction.atomic():
-            licences = LicencePayload.objects.filter(is_processed=False).select_for_update(nowait=True)
+            licences = LicencePayload.objects.filter(is_processed=False).select_for_update(
+                nowait=True
+            )
 
             if not licences.exists():
                 logger.info("There are currently no licences to send")
@@ -74,7 +76,10 @@ def send_licence_data_to_hmrc() -> None:
             mail_dto = build_request_mail_message_dto(mail)
             licence_references = [licence.reference for licence in licences]
             logger.info(
-                "Created Mail [%s] with subject %s from licences [%s]", mail.id, mail_dto.subject, licence_references
+                "Created Mail [%s] with subject %s from licences [%s]",
+                mail.id,
+                mail_dto.subject,
+                licence_references,
             )
 
             message = build_email_message(mail_dto)
@@ -186,7 +191,9 @@ def send_licence_data_to_icms():
             )
 
         if not processor.file_trailer_valid():
-            logger.warning("File trailer count is different from processor count of accepted and rejected")
+            logger.warning(
+                "File trailer count is different from processor count of accepted and rejected"
+            )
 
         raise ValueError(error_msg)
 
@@ -210,7 +217,9 @@ def send_licence_data_to_icms():
     # Update the status if everything was successful
     mail.status = ReceptionStatusEnum.REPLY_SENT
     mail.save()
-    logger.info(f"Successfully sent mail (id: {mail.id}, filename: {mail.response_filename}) to ICMS for processing")
+    logger.info(
+        f"Successfully sent mail (id: {mail.id}, filename: {mail.response_filename}) to ICMS for processing"
+    )
 
 
 def _update_mail(mail: Mail, mail_dto: EmailMessageDto):
@@ -252,7 +261,9 @@ def _get_licence_reply_data(processor: LicenceReplyProcessor) -> Dict[str, Any]:
         "rejected": [
             {
                 "id": id_map[rt.header.transaction_ref],
-                "errors": [{"error_code": error.code, "error_msg": error.text} for error in rt.errors],
+                "errors": [
+                    {"error_code": error.code, "error_msg": error.text} for error in rt.errors
+                ],
             }
             for rt in processor.rejected_licences
         ],
@@ -302,7 +313,9 @@ def _get_hmrc_mailbox_auth() -> Authenticator:
 #     )
 
 
-def _check_sender_valid(mail: email.message.EmailMessage, *, expected_sender_domain: str, expected_sender_user) -> None:
+def _check_sender_valid(
+    mail: email.message.EmailMessage, *, expected_sender_domain: str, expected_sender_user
+) -> None:
     """Check the sender is valid"""
 
     # TODO: ICMSLST-1760 Revisit this before going live.
@@ -338,7 +351,9 @@ def _save_licence_reply_email(reply_email: email.message.EmailMessage) -> None:
 
     ld = LicenceData.objects.get(hmrc_run_number=run_number)
 
-    mail = Mail.objects.select_for_update().get(id=ld.mail.id, status=ReceptionStatusEnum.REPLY_PENDING)
+    mail = Mail.objects.select_for_update().get(
+        id=ld.mail.id, status=ReceptionStatusEnum.REPLY_PENDING
+    )
 
     mail.status = ReceptionStatusEnum.REPLY_RECEIVED
     mail.response_filename = file_name
@@ -348,7 +363,12 @@ def _save_licence_reply_email(reply_email: email.message.EmailMessage) -> None:
 
     mail.save()
 
-    logger.info("Updated mail instance: %s with licence reply (subject: %s - filename: %s", mail.id, subject, file_name)
+    logger.info(
+        "Updated mail instance: %s with licence reply (subject: %s - filename: %s",
+        mail.id,
+        subject,
+        file_name,
+    )
 
 
 def _get_run_number_from_subject(s: str) -> int:

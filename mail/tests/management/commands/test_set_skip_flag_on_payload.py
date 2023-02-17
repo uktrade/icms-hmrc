@@ -26,7 +26,13 @@ class SetSkipFlagOnPayloadTests(TestCase):
     )
     def test_default_skip_process(self, skip_process, expected):
         payload = self.get_payload()
-        call_command("set_skip_flag_on_payload", "--reference", payload.reference, "--skip_process", skip_process)
+        call_command(
+            "set_skip_flag_on_payload",
+            "--reference",
+            payload.reference,
+            "--skip_process",
+            skip_process,
+        )
         payload.refresh_from_db()
         self.assertEqual(payload.skip_process, expected)
 

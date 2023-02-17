@@ -57,7 +57,9 @@ class OrganisationSerializer(serializers.Serializer):
         eori_number_length = len(value[2:])
 
         if eori_number_length != 12 and eori_number_length != 15:
-            raise serializers.ValidationError("'eori_number' must start with 'GB' followed by 12 or 15 numbers")
+            raise serializers.ValidationError(
+                "'eori_number' must start with 'GB' followed by 12 or 15 numbers"
+            )
 
         return value
 
@@ -101,7 +103,9 @@ class InsertAndReplacePayloadBase(BaseSerializer):
         data = super().validate(data)
 
         if not data.get("country_group") and not data.get("country_code"):
-            raise serializers.ValidationError("Either 'country_code' or 'country_group' should be set.")
+            raise serializers.ValidationError(
+                "Either 'country_code' or 'country_group' should be set."
+            )
 
         return data
 
@@ -125,8 +129,12 @@ class FirearmSilGoods(serializers.Serializer):
 
     # Conditional / Optional fields
     # Format in CHIEF SPEC: 9(11).9(3)
-    quantity = serializers.DecimalField(decimal_places=3, max_digits=14, required=False, allow_null=True)
-    unit = serializers.ChoiceField(choices=QuantityCodeEnum.choices, required=False, allow_null=True)
+    quantity = serializers.DecimalField(
+        decimal_places=3, max_digits=14, required=False, allow_null=True
+    )
+    unit = serializers.ChoiceField(
+        choices=QuantityCodeEnum.choices, required=False, allow_null=True
+    )
 
     def validate(self, data):
         data = super().validate(data)
@@ -142,8 +150,12 @@ class SanctionGoodsSerializer(serializers.Serializer):
 
     # Conditional / Optional fields
     # Format in CHIEF SPEC: 9(11).9(3)
-    quantity = serializers.DecimalField(decimal_places=3, max_digits=14, required=False, allow_null=True)
-    unit = serializers.ChoiceField(choices=QuantityCodeEnum.choices, required=False, allow_null=True)
+    quantity = serializers.DecimalField(
+        decimal_places=3, max_digits=14, required=False, allow_null=True
+    )
+    unit = serializers.ChoiceField(
+        choices=QuantityCodeEnum.choices, required=False, allow_null=True
+    )
 
     def validate(self, data):
         data = super().validate(data)
@@ -177,7 +189,9 @@ def _validate_controlled_by(data):
 
     if data["controlled_by"] == ControlledByEnum.QUANTITY:
         if not data.get("quantity"):
-            raise serializers.ValidationError("'quantity' must be set when controlled_by equals 'Q'")
+            raise serializers.ValidationError(
+                "'quantity' must be set when controlled_by equals 'Q'"
+            )
 
         if not data.get("unit"):
             raise serializers.ValidationError("'unit' must be set when controlled_by equals 'Q'")

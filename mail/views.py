@@ -59,7 +59,12 @@ class LicenceDataIngestView(APIView):
             ),
         )
 
-        logger.info("Created LicencePayload [%s, %s, %s]", licence.lite_id, licence.reference, licence.action)
+        logger.info(
+            "Created LicencePayload [%s, %s, %s]",
+            licence.lite_id,
+            licence.reference,
+            licence.action,
+        )
 
         return JsonResponse(
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,

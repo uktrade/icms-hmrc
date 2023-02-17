@@ -23,7 +23,11 @@ class MailServer(object):
         if not isinstance(other, MailServer):
             return False
 
-        return self.hostname == other.hostname and self.auth == other.auth and self.pop3_port == other.pop3_port
+        return (
+            self.hostname == other.hostname
+            and self.auth == other.auth
+            and self.pop3_port == other.pop3_port
+        )
 
     def connect_to_pop3(self) -> poplib.POP3_SSL:
         logging.info("establishing a pop3 connection...")

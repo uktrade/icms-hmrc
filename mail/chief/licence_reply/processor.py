@@ -61,7 +61,9 @@ class LicenceReplyProcessor:
             )
 
         if mail.status != ReceptionStatusEnum.REPLY_RECEIVED:
-            raise ValueError(f"Error with Mail ({mail.id} - {mail.response_subject}): Invalid status {mail.status}")
+            raise ValueError(
+                f"Error with Mail ({mail.id} - {mail.response_subject}): Invalid status {mail.status}"
+            )
 
         return cls(mail.response_data)
 
@@ -111,12 +113,16 @@ class LicenceReplyProcessor:
 
         elif field_type == RejectedTransactionError.record_type:
             if not self._current_rejected:
-                raise ValueError(f"Unable to process file: rejected record is out of sequence on line {line_no}")
+                raise ValueError(
+                    f"Unable to process file: rejected record is out of sequence on line {line_no}"
+                )
             self._current_rejected.errors.append(record)
 
         elif field_type == RejectedTransactionTrailer.record_type:
             if not self._current_rejected:
-                raise ValueError(f"Unable to process file: rejected record is out of sequence on line {line_no}")
+                raise ValueError(
+                    f"Unable to process file: rejected record is out of sequence on line {line_no}"
+                )
 
             self._current_rejected.end = record
 
@@ -142,4 +148,6 @@ class LicenceReplyProcessor:
 
     def _check_is_valid(self, action) -> None:
         if not self._valid:
-            raise ValueError(f"Unable to get {action} when file hasn't been validated or is invalid")
+            raise ValueError(
+                f"Unable to get {action} when file hasn't been validated or is invalid"
+            )

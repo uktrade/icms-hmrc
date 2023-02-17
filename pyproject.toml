@@ -4,7 +4,7 @@
 # character.
 
 [tool.black]
-line-length = 120
+line-length = 100
 target-version = ['py310']
 include = '\.pyi?$'
 exclude = '''
@@ -25,4 +25,4 @@ exclude = '''
 
 [tool.isort]
 profile = 'black'
-line_length = 120  # To match Black's line-length above.
+line_length = 100  # To match Black's line-length above.

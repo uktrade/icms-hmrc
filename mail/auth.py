@@ -56,14 +56,18 @@ class ModernAuthentication:
     def _get_access_token(self):
         scopes = ["https://outlook.office.com/.default"]
 
-        result = self.app.acquire_token_silent(scopes, account=None)  # This attempts to get the token from the cache
-        if not result:  # If we don't find the token in the cache then we go off and retrieve it from the provider
+        # This attempts to get the token from the cache
+        result = self.app.acquire_token_silent(scopes, account=None)
+        # If we don't find the token in the cache then we go off and retrieve it from the provider
+        if not result:
             result = self.app.acquire_token_for_client(scopes=scopes)
 
         return result["access_token"]
 
     def _encode_access_string(self, username, access_token):
-        return base64.b64encode(f"user={username}\x01auth=Bearer {access_token}\x01\x01".encode()).decode()
+        return base64.b64encode(
+            f"user={username}\x01auth=Bearer {access_token}\x01\x01".encode()
+        ).decode()
 
     def authenticate(self, connection: poplib.POP3_SSL):
         access_token = self._get_access_token()

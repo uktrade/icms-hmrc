@@ -20,19 +20,27 @@ class RequestExceptionError(Exception):
 
 
 def get(url, headers=None, hawk_credentials=None, timeout=None):
-    return make_request("GET", url, headers=headers, hawk_credentials=hawk_credentials, timeout=timeout)
+    return make_request(
+        "GET", url, headers=headers, hawk_credentials=hawk_credentials, timeout=timeout
+    )
 
 
 def post(url, data, headers=None, hawk_credentials=None, timeout=None):
-    return make_request("POST", url, data=data, headers=headers, hawk_credentials=hawk_credentials, timeout=timeout)
+    return make_request(
+        "POST", url, data=data, headers=headers, hawk_credentials=hawk_credentials, timeout=timeout
+    )
 
 
 def put(url, data, headers=None, hawk_credentials=None, timeout=None):
-    return make_request("PUT", url, data=data, headers=headers, hawk_credentials=hawk_credentials, timeout=timeout)
+    return make_request(
+        "PUT", url, data=data, headers=headers, hawk_credentials=hawk_credentials, timeout=timeout
+    )
 
 
 def delete(url, headers=None, hawk_credentials=None, timeout=None):
-    return make_request("DELETE", url, headers=headers, hawk_credentials=hawk_credentials, timeout=timeout)
+    return make_request(
+        "DELETE", url, headers=headers, hawk_credentials=hawk_credentials, timeout=timeout
+    )
 
 
 def make_request(method, url, data=None, headers=None, hawk_credentials=None, timeout=None):
@@ -73,7 +81,14 @@ def get_hawk_sender(method, url, data, credentials):
     content = serialize(data) if data else data
     credentials = settings.HAWK_CREDENTIALS.get(credentials)
 
-    return Sender(credentials, url, method, content=content, content_type="application/json", seen_nonce=_seen_nonce)
+    return Sender(
+        credentials,
+        url,
+        method,
+        content=content,
+        content_type="application/json",
+        seen_nonce=_seen_nonce,
+    )
 
 
 def verify_api_response(sender, response):
@@ -103,7 +118,9 @@ def _seen_nonce(access_key_id, nonce, timestamp):
     cache_key = f"hawk:{access_key_id}:{nonce}"
 
     # cache.add only adds key if it isn't present
-    seen_cache_key = not cache.add(cache_key, True, timeout=settings.HAWK_RECEIVER_NONCE_EXPIRY_SECONDS)
+    seen_cache_key = not cache.add(
+        cache_key, True, timeout=settings.HAWK_RECEIVER_NONCE_EXPIRY_SECONDS
+    )
 
     if seen_cache_key:
         raise AlreadyProcessed(f"Already seen nonce {nonce}")

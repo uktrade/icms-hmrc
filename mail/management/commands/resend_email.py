@@ -58,7 +58,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--hmrc_run_number", type=str, nargs="?", help="Run number used by HMRC to identify the mail to be resent"
+            "--hmrc_run_number",
+            type=str,
+            nargs="?",
+            help="Run number used by HMRC to identify the mail to be resent",
         )
         parser.add_argument("--dry_run", help="Is it a test run?", action="store_true")
 
@@ -69,7 +72,10 @@ class Command(BaseCommand):
         destination = None
         mail = get_mail_extract(hmrc_run_number)
         if not mail:
-            logger.error("Given run number %s does not belong to Licence data or Usage data mail", hmrc_run_number)
+            logger.error(
+                "Given run number %s does not belong to Licence data or Usage data mail",
+                hmrc_run_number,
+            )
             return
 
         # Usually we resend in cases where the mail is initially sent from our system successfully but not received
@@ -80,7 +86,10 @@ class Command(BaseCommand):
         if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
             destination = SourceEnum.HMRC
             if mail.status != ReceptionStatusEnum.REPLY_PENDING:
-                logger.error("Mail is expected to be in 'reply_pending' status but current status is %s", mail.status)
+                logger.error(
+                    "Mail is expected to be in 'reply_pending' status but current status is %s",
+                    mail.status,
+                )
                 return
         else:
             logger.error("Unexpected extract_type for the mail %s", mail.edi_filename)

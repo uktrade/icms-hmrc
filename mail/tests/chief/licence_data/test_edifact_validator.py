@@ -23,15 +23,32 @@ class LicenceToEdifactValidationTests(unittest.TestCase):
 
     @parameterized.expand(
         [
-            ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIL\\E\\20210408\\20220408", 0),
-            ("2\\licences\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\OIL\\E\\20210408\\20220408", 1),
-            ("2\\licences\\20210000006TA\\add\\GBSIEL/2021/0000006/T/A\\SAN\\E\\20210408\\20220408", 2),
-            ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIEL\\E\\20210408\\20220408", 1),
-            ("2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIEL\\T\\20210408\\20220408", 1),
+            (
+                "2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIL\\E\\20210408\\20220408",
+                0,
+            ),
+            (
+                "2\\licences\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\OIL\\E\\20210408\\20220408",
+                1,
+            ),
+            (
+                "2\\licences\\20210000006TA\\add\\GBSIEL/2021/0000006/T/A\\SAN\\E\\20210408\\20220408",
+                2,
+            ),
+            (
+                "2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIEL\\E\\20210408\\20220408",
+                1,
+            ),
+            (
+                "2\\licence\\20210000006TA\\insert\\GBSIEL/2021/0000006/T/A\\SIEL\\T\\20210408\\20220408",
+                1,
+            ),
         ]
     )
     def test_licence_transaction_header_validation(self, licence_tx_line, num_errors):
-        errors = edifact_validator.validate_licence_transaction_header("licenceData", licence_tx_line)
+        errors = edifact_validator.validate_licence_transaction_header(
+            "licenceData", licence_tx_line
+        )
         self.assertEqual(len(errors), num_errors)
 
     @parameterized.expand(

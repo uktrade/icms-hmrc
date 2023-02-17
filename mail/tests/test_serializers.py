@@ -17,7 +17,9 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
         self.assertFalse(serializer.is_valid())
 
-        expected_error = [ErrorDetail(string="This value does not match the required pattern.", code="invalid")]
+        expected_error = [
+            ErrorDetail(string="This value does not match the required pattern.", code="invalid")
+        ]
         self.assertEqual(serializer.errors["reference"], expected_error)
 
     def test_valid_case_reference(self):
@@ -145,7 +147,11 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
         self.assertFalse(serializer.is_valid())
 
-        expected_error = [ErrorDetail(string="Either 'country_code' or 'country_group' should be set.", code="invalid")]
+        expected_error = [
+            ErrorDetail(
+                string="Either 'country_code' or 'country_group' should be set.", code="invalid"
+            )
+        ]
         self.assertEqual(serializer.errors["non_field_errors"], expected_error)
 
     def test_valid_fa_dfl_payload(self):
@@ -215,7 +221,11 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
         self.assertFalse(serializer.is_valid())
 
-        expected_error = [ErrorDetail(string="'quantity' must be set when controlled_by equals 'Q'", code="invalid")]
+        expected_error = [
+            ErrorDetail(
+                string="'quantity' must be set when controlled_by equals 'Q'", code="invalid"
+            )
+        ]
         goods_error = serializer.errors["goods"][0]["non_field_errors"]
         self.assertEqual(goods_error, expected_error)
 
@@ -228,7 +238,9 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
         self.assertFalse(serializer.is_valid())
 
-        expected_error = [ErrorDetail(string="'unit' must be set when controlled_by equals 'Q'", code="invalid")]
+        expected_error = [
+            ErrorDetail(string="'unit' must be set when controlled_by equals 'Q'", code="invalid")
+        ]
         goods_error = serializer.errors["goods"][0]["non_field_errors"]
         self.assertEqual(goods_error, expected_error)
 
@@ -247,7 +259,11 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
         [
             ("Prefix missing", "00000000000000", "'eori_number' must start with 'GB' prefix"),
             ("EORI too short", "GB00000", "Ensure this field has at least 14 characters."),
-            ("EORI too long", "GB00000000000000000", "Ensure this field has no more than 17 characters."),
+            (
+                "EORI too long",
+                "GB00000000000000000",
+                "Ensure this field has no more than 17 characters.",
+            ),
             (
                 "EORI length not 12 or 15",
                 "GB0000000000000",
@@ -261,7 +277,9 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
         serializer = serializers.OrganisationSerializer(data=data)
         self.assertFalse(serializer.is_valid())
 
-        self.assertEqual(str(serializer.errors["eori_number"][0]), expected_error, f"{name} test failed")
+        self.assertEqual(
+            str(serializer.errors["eori_number"][0]), expected_error, f"{name} test failed"
+        )
 
     def test_valid_fa_sil_revoke_payload(self):
         data = get_valid_fa_sil_revoke_payload()
@@ -277,11 +295,36 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
 def get_valid_fa_sil_payload():
     goods = [
-        {"description": "Sample goods description 1", "quantity": 1, "controlled_by": "Q", "unit": 30},
-        {"description": "Sample goods description 2", "quantity": 2, "controlled_by": "Q", "unit": 30},
-        {"description": "Sample goods description 3", "quantity": 3, "controlled_by": "Q", "unit": 30},
-        {"description": "Sample goods description 4", "quantity": 4, "controlled_by": "Q", "unit": 30},
-        {"description": "Sample goods description 5", "quantity": 5, "controlled_by": "Q", "unit": 30},
+        {
+            "description": "Sample goods description 1",
+            "quantity": 1,
+            "controlled_by": "Q",
+            "unit": 30,
+        },
+        {
+            "description": "Sample goods description 2",
+            "quantity": 2,
+            "controlled_by": "Q",
+            "unit": 30,
+        },
+        {
+            "description": "Sample goods description 3",
+            "quantity": 3,
+            "controlled_by": "Q",
+            "unit": 30,
+        },
+        {
+            "description": "Sample goods description 4",
+            "quantity": 4,
+            "controlled_by": "Q",
+            "unit": 30,
+        },
+        {
+            "description": "Sample goods description 5",
+            "quantity": 5,
+            "controlled_by": "Q",
+            "unit": 30,
+        },
         {"description": "Unlimited Description goods line", "controlled_by": "O"},
     ]
 
