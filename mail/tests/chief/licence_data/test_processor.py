@@ -246,6 +246,33 @@ class TestBuildICMSLicenceDataFASIL(testcases.TestCase):
 
 
 @override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
+class TestBuildICMSLicenceDataFASILCancelPayload(testcases.TestCase):
+    def setUp(self) -> None:
+        from mail.tests.test_serializers import get_valid_fa_sil_revoke_payload
+
+        data = get_valid_fa_sil_revoke_payload()
+
+        LicencePayload.objects.create(lite_id=data["id"], reference=data["reference"], action=data["action"], data=data)
+        self.test_file = Path("mail/tests/files/icms/licence_data_files/fa_sil_cancel")
+        self.assertTrue(self.test_file.is_file())
+
+    def test_generate_licence_data_file(self):
+        licences = LicencePayload.objects.all()
+        self.assertEqual(licences.count(), 1)
+
+        run_number = 1
+        when = datetime.datetime(2022, 1, 1, 10, 11, 00)
+
+        filename, file_content = build_licence_data_file(licences, run_number, when)
+
+        self.assertEqual(filename, "CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
+
+        self.maxDiff = None
+        expected_content = self.test_file.read_text()
+        self.assertEqual(expected_content, file_content)
+
+
+@override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
 class TestBuildICMSLicenceDataSanction(testcases.TestCase):
     def setUp(self) -> None:
         org_data = {

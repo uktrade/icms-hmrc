@@ -5,7 +5,7 @@ from parameterized import parameterized
 from rest_framework.exceptions import ErrorDetail
 
 from mail import serializers
-from mail.enums import ChiefSystemEnum
+from mail.enums import ChiefSystemEnum, LicenceActionEnum
 
 
 @override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
@@ -263,6 +263,17 @@ class ICMSLicenceDataSerializerTestCase(TestCase):
 
         self.assertEqual(str(serializer.errors["eori_number"][0]), expected_error, f"{name} test failed")
 
+    def test_valid_fa_sil_revoke_payload(self):
+        data = get_valid_fa_sil_revoke_payload()
+        serializer = serializers.RevokeLicenceDataSerializer(data=data)
+        is_valid = serializer.is_valid()
+
+        self.assertTrue(is_valid)
+
+        # Check all the keys here are in the validated data
+        for key in data.keys():
+            self.assertIn(key, serializer.validated_data)
+
 
 def get_valid_fa_sil_payload():
     goods = [
@@ -330,4 +341,16 @@ def get_valid_sanctions_payload():
         "country_code": "RU",
         "restrictions": "",
         "goods": goods,
+    }
+
+
+def get_valid_fa_sil_revoke_payload():
+    return {
+        "action": LicenceActionEnum.CANCEL,
+        "reference": "IMA/2023/00001",
+        "id": "4f622c3a-88a8-4cb3-8cfc-3090c7daf466",
+        "type": "SIL",
+        "start_date": "2022-06-29",
+        "end_date": "2024-12-29",
+        "licence_reference": "GBSIL3333333H",
     }

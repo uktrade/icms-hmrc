@@ -8,7 +8,11 @@ from django.urls import reverse
 from mail import tasks
 from mail.enums import ChiefSystemEnum, ReceptionStatusEnum
 from mail.models import LicenceData, LicencePayload, Mail
-from mail.tests.test_serializers import get_valid_fa_sil_payload, get_valid_sanctions_payload
+from mail.tests.test_serializers import (
+    get_valid_fa_sil_payload,
+    get_valid_fa_sil_revoke_payload,
+    get_valid_sanctions_payload,
+)
 
 
 def clear_stmp_mailbox():
@@ -184,6 +188,25 @@ class ICMSEndToEndTests(testcases.TestCase):
         self.assertEqual(expected_content, body)
 
         self._assert_reply_pending("IMA/2022/00004")
+
+    def test_icms_send_email_to_hmrc_fa_sil_cancel_e2e(self):
+        clear_stmp_mailbox()
+        Mail.objects.all().update(status=ReceptionStatusEnum.REPLY_SENT)
+
+        data = get_valid_fa_sil_revoke_payload()
+        resp = self.client.post(reverse("mail:update_licence"), data={"licence": data}, content_type="application/json")
+        self.assertEqual(resp.status_code, 201)
+
+        tasks.send_licence_data_to_hmrc.apply()
+        body = get_smtp_body().replace("\r", "")
+        ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
+
+        # Replace the hardcoded date in the test file with the one in the email.
+        test_file = Path("mail/tests/files/icms/licence_data_files/fa_sil_cancel")
+        expected_content = test_file.read_text().replace("202201011011", ymdhm_timestamp).strip()
+        self.assertEqual(expected_content, body)
+
+        self._assert_reply_pending("IMA/2023/00001")
 
     def _assert_reply_pending(self, case_reference):
         matching_licences = LicenceData.objects.filter(licence_ids__contains=case_reference)
