@@ -43,33 +43,21 @@ class LicenceDataIngestView(APIView):
             )
             return JsonResponse(status=status.HTTP_400_BAD_REQUEST, data={"errors": errors})
 
-        # TODO: Rename this key now we have removed the UUID primary key field
-        lite_id = data.pop("id")
-
-        # TODO: get_or_create should be replaced now we have removed the lite code
-        licence, created = LicencePayload.objects.get_or_create(
-            lite_id=lite_id,
-            reference=data["reference"],
+        licence = LicencePayload.objects.create(
             action=data["action"],
-            skip_process=False,
-            defaults=dict(
-                lite_id=lite_id,
-                reference=data["reference"],
-                data=data,
-            ),
+            icms_id=data["id"],
+            reference=data["reference"],
+            data=data,
         )
 
         logger.info(
             "Created LicencePayload [%s, %s, %s]",
-            licence.lite_id,
             licence.reference,
             licence.action,
+            licence.icms_id,
         )
 
-        return JsonResponse(
-            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
-            data={"licence": licence.data},
-        )
+        return JsonResponse(status=status.HTTP_201_CREATED, data={"licence": licence.data})
 
 
 def get_serializer_cls(app_type: str, action: str) -> Type["Serializer"]:

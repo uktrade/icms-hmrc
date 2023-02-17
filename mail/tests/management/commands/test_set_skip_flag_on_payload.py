@@ -11,7 +11,7 @@ from mail.models import LicencePayload
 class SetSkipFlagOnPayloadTests(TestCase):
     def get_payload(self, **values):
         return LicencePayload.objects.create(
-            lite_id=uuid.uuid4(),
+            icms_id=uuid.uuid4(),
             reference="AB/1278479/24568",
             action=LicenceActionEnum.INSERT,
             is_processed=False,

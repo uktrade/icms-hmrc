@@ -108,7 +108,7 @@ def fake_licence_reply():
         logger.warning("This command is only for development environments")
         return
 
-    # TODO: Add support for changing this value
+    # TODO: ICMSLST-1852 Add support for changing this value
     response = "accept"
     call_command("dev_fake_licence_reply", response)
 
@@ -250,10 +250,10 @@ def _update_mail(mail: Mail, mail_dto: EmailMessageDto):
 def _get_licence_reply_data(processor: LicenceReplyProcessor) -> Dict[str, Any]:
     # Load all LicencePayload records linked to the current LicenceData record
     ld: LicenceData = LicenceData.objects.get(hmrc_run_number=processor.file_header.run_num)
-    current_licences = ld.licence_payloads.all().values_list("lite_id", "reference", named=True)
+    current_licences = ld.licence_payloads.all().values_list("icms_id", "reference", named=True)
 
     # Create a mapping of transaction reference to the UUID ICMS sent originally
-    id_map = {lp.reference: str(lp.lite_id) for lp in current_licences}
+    id_map = {lp.reference: str(lp.icms_id) for lp in current_licences}
 
     licence_reply_data = {
         "run_number": processor.file_header.run_num,
