@@ -65,7 +65,9 @@ def validate_licence_transaction_header(data_identifier, record):
         errors.append({record_type: f"Invalid file header tag {tokens[1]}"})
 
     if data_identifier in ["licenceData"] and action not in VALID_ACTIONS_TO_HMRC:
-        errors.append({record_type: f"Invalid action {action} for the data identifier {data_identifier}"})
+        errors.append(
+            {record_type: f"Invalid action {action} for the data identifier {data_identifier}"}
+        )
 
     if tokens[5] not in VALID_LICENCE_TYPES:
         errors.append({record_type: f"Invalid licence type {tokens[5]} in the record"})
@@ -78,7 +80,9 @@ def is_postcode_valid(value):
     Postcode validator for UK based postcodes only
     Reused from lite-api (validate_postcode() in api/addresses/serializers.py)
     """
-    outcode_pattern = "[A-PR-UWYZ]([0-9]{1,2}|([A-HIK-Y][0-9](|[0-9]|[ABEHMNPRVWXY]))|[0-9][A-HJKSTUW])"
+    outcode_pattern = (
+        "[A-PR-UWYZ]([0-9]{1,2}|([A-HIK-Y][0-9](|[0-9]|[ABEHMNPRVWXY]))|[0-9][A-HJKSTUW])"
+    )
     incode_pattern = "[0-9][ABD-HJLNP-UW-Z]{2}"
     postcode_regex = re.compile(r"^(GIR 0AA|%s %s)$" % (outcode_pattern, incode_pattern))
     space_regex = re.compile(r" *(%s)$" % incode_pattern)
@@ -116,12 +120,18 @@ def validate_permitted_trader(record):
             errors.append({record_type: "Invalid start and end dates for the licence"})
 
     if len(tr.name) > PERMITTED_TRADER_NAME_MAX_LEN:
-        errors.append({record_type: f"Organisation name cannot exceed {PERMITTED_TRADER_NAME_MAX_LEN} chars"})
+        errors.append(
+            {record_type: f"Organisation name cannot exceed {PERMITTED_TRADER_NAME_MAX_LEN} chars"}
+        )
 
     address_lines = [tr.address1, tr.address2, tr.address3, tr.address4, tr.address5]
     for line in address_lines:
         if len(line) > PERMITTED_TRADER_ADDR_LINE_MAX_LEN:
-            errors.append({record_type: f"Address line cannot exceed {PERMITTED_TRADER_ADDR_LINE_MAX_LEN} chars"})
+            errors.append(
+                {
+                    record_type: f"Address line cannot exceed {PERMITTED_TRADER_ADDR_LINE_MAX_LEN} chars"
+                }
+            )
 
     if not is_postcode_valid(tr.postcode):
         errors.append({record_type: f"Invalid postcode found {tr.postcode}"})
@@ -142,7 +152,9 @@ def validate_country(record):
         errors.append({record_type: f"Invalid file header tag {tokens[1]}"})
 
     if tokens[2] and tokens[3]:
-        errors.append({record_type: "Both country code and group cannot be valid in the same record"})
+        errors.append(
+            {record_type: "Both country code and group cannot be valid in the same record"}
+        )
 
     if tokens[4] not in ALLOWED_COUNTRY_USE_VALUES:
         errors.append({record_type: f"Invalid country use value {tokens[4]}"})
@@ -164,24 +176,34 @@ def validate_foreign_trader(record):
 
     name = tokens[2]
     if len(name) > FOREIGN_TRADER_NAME_MAX_LEN:
-        errors.append({record_type: f"Foreign trader name ({name}) cannot exceed {FOREIGN_TRADER_NAME_MAX_LEN} chars"})
+        errors.append(
+            {
+                record_type: f"Foreign trader name ({name}) cannot exceed {FOREIGN_TRADER_NAME_MAX_LEN} chars"
+            }
+        )
 
     for index, line in enumerate(tokens[3:8], start=1):
         if len(line) > FOREIGN_TRADER_ADDR_LINE_MAX_LEN:
             errors.append(
-                {record_type: f"Address line_{index} ({line}) trader exceeds {FOREIGN_TRADER_ADDR_LINE_MAX_LEN} chars"}
+                {
+                    record_type: f"Address line_{index} ({line}) trader exceeds {FOREIGN_TRADER_ADDR_LINE_MAX_LEN} chars"
+                }
             )
 
     postcode = tokens[8]
     country = tokens[9]
     if len(postcode) > FOREIGN_TRADER_POSTCODE_MAX_LEN:
         errors.append(
-            {record_type: f"Foreign trader postcode ({postcode}) exceeds {FOREIGN_TRADER_POSTCODE_MAX_LEN} chars"}
+            {
+                record_type: f"Foreign trader postcode ({postcode}) exceeds {FOREIGN_TRADER_POSTCODE_MAX_LEN} chars"
+            }
         )
 
     if len(country) > FOREIGN_TRADER_COUNTRY_MAX_LEN:
         errors.append(
-            {record_type: f"Foreign trader country code ({country}) exceeds {FOREIGN_TRADER_COUNTRY_MAX_LEN} chars"}
+            {
+                record_type: f"Foreign trader country code ({country}) exceeds {FOREIGN_TRADER_COUNTRY_MAX_LEN} chars"
+            }
         )
 
     return errors

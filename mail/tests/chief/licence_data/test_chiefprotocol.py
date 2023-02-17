@@ -1,7 +1,14 @@
 import unittest
 
 from mail.chief.licence_data import chiefprotocol
-from mail.chief.licence_data.types import End, FileHeader, FileTrailer, Licence, LicenceDataLine, _Record
+from mail.chief.licence_data.types import (
+    End,
+    FileHeader,
+    FileTrailer,
+    Licence,
+    LicenceDataLine,
+    _Record,
+)
 
 
 class ResolveLineNumbersTest(unittest.TestCase):

@@ -28,7 +28,10 @@ class TestDevProcessLicenceReply:
         # fake some licence payload references for the test file
         for reference in ["ABC12345", "ABC12346", "ABC12348", "ABC12347"]:
             payload = LicencePayload.objects.create(
-                lite_id=uuid.uuid4(), reference=reference, action=LicenceActionEnum.INSERT, is_processed=True
+                lite_id=uuid.uuid4(),
+                reference=reference,
+                action=LicenceActionEnum.INSERT,
+                is_processed=True,
             )
             ld.licence_payloads.add(payload)
 
@@ -41,21 +44,28 @@ class TestDevProcessLicenceReply:
         self.call_command()
 
         captured = capsys.readouterr()
-        assert captured.out == "Desired outcome: accept\nThis command is only for development environments\n"
+        assert (
+            captured.out
+            == "Desired outcome: accept\nThis command is only for development environments\n"
+        )
 
     @override_settings(DEBUG=True)
     def test_dev_fake_licence_reply_nothing_to_process(self, db, capsys):
         self.call_command()
 
         captured = capsys.readouterr()
-        assert captured.out == "Desired outcome: accept\nNo mail records with reply_pending status\n"
+        assert (
+            captured.out == "Desired outcome: accept\nNo mail records with reply_pending status\n"
+        )
 
     @override_settings(DEBUG=True)
     def test_dev_fake_licence_reply_accepted(self, transactional_db, capsys, monkeypatch):
         self.setup_test_data()
 
         mock_timezone = mock.create_autospec(timezone)
-        mock_timezone.now.return_value = datetime.datetime(2022, 11, 10, 14, 10, 00, tzinfo=datetime.timezone.utc)
+        mock_timezone.now.return_value = datetime.datetime(
+            2022, 11, 10, 14, 10, 00, tzinfo=datetime.timezone.utc
+        )
         monkeypatch.setattr(dev_fake_licence_reply, "timezone", mock_timezone)
 
         # test
@@ -88,7 +98,9 @@ class TestDevProcessLicenceReply:
         self.setup_test_data()
 
         mock_timezone = mock.create_autospec(timezone)
-        mock_timezone.now.return_value = datetime.datetime(2022, 11, 10, 14, 10, 00, tzinfo=datetime.timezone.utc)
+        mock_timezone.now.return_value = datetime.datetime(
+            2022, 11, 10, 14, 10, 00, tzinfo=datetime.timezone.utc
+        )
         monkeypatch.setattr(dev_fake_licence_reply, "timezone", mock_timezone)
 
         # test
@@ -130,7 +142,9 @@ class TestDevProcessLicenceReply:
         self.setup_test_data()
 
         mock_timezone = mock.create_autospec(timezone)
-        mock_timezone.now.return_value = datetime.datetime(2022, 11, 10, 14, 10, 00, tzinfo=datetime.timezone.utc)
+        mock_timezone.now.return_value = datetime.datetime(
+            2022, 11, 10, 14, 10, 00, tzinfo=datetime.timezone.utc
+        )
         monkeypatch.setattr(dev_fake_licence_reply, "timezone", mock_timezone)
 
         # test

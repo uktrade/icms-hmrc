@@ -26,9 +26,18 @@ class Command(BaseCommand):
     """
 
     def add_arguments(self, parser):
-        parser.add_argument("--reference", type=str, nargs="?", help="License reference number of the license payload")
         parser.add_argument(
-            "--skip_process", type=str, nargs="?", help="To skip processing set to true", default="False"
+            "--reference",
+            type=str,
+            nargs="?",
+            help="License reference number of the license payload",
+        )
+        parser.add_argument(
+            "--skip_process",
+            type=str,
+            nargs="?",
+            help="To skip processing set to true",
+            default="False",
         )
         parser.add_argument("--dry_run", help="Is it a test run?", action="store_true")
 
@@ -46,4 +55,6 @@ class Command(BaseCommand):
             payload.save()
             logger.info("Reference %s skip_process set to %s", reference, payload.skip_process)
         else:
-            logger.info("DRY RUN : Reference %s skip_process set to %s", reference, payload.skip_process)
+            logger.info(
+                "DRY RUN : Reference %s skip_process set to %s", reference, payload.skip_process
+            )

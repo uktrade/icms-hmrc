@@ -63,7 +63,10 @@ def build_licence_data_file(
 
 
 def licences_to_edifact(
-    licences: "QuerySet[LicencePayload]", run_number: int, source: str, when: datetime.datetime = None
+    licences: "QuerySet[LicencePayload]",
+    run_number: int,
+    source: str,
+    when: datetime.datetime = None,
 ) -> str:
     # Build a list of lines, with each line a tuple. After we have all the
     # lines, we format them ("\" as field separator) and insert the line
@@ -124,7 +127,11 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[types._
     # ICMS only sends "insert", "replace" or "cancel" payloads.
     # If there are errors with a "replace" the licence is normally revoked within ICMS and a
     # new licence is applied for with the new requirements.
-    supported_actions = [LicenceActionEnum.INSERT, LicenceActionEnum.REPLACE, LicenceActionEnum.CANCEL]
+    supported_actions = [
+        LicenceActionEnum.INSERT,
+        LicenceActionEnum.REPLACE,
+        LicenceActionEnum.CANCEL,
+    ]
 
     if licence.action not in supported_actions:
         raise NotImplementedError(f"Action {licence.action} not supported yet")
@@ -209,13 +216,17 @@ def get_goods(licence_type: str, goods: Optional[list]) -> Iterable[types.Restri
         for idx, good in goods_iter:
             kwargs = _get_controlled_by_kwargs(good)
 
-            yield types.LicenceDataLine(line_num=idx, goods_description=good["description"], **kwargs)
+            yield types.LicenceDataLine(
+                line_num=idx, goods_description=good["description"], **kwargs
+            )
 
     # FA-DFL and FA-OIL
     else:
         for idx, good in goods_iter:
             yield types.LicenceDataLine(
-                line_num=idx, goods_description=good["description"], controlled_by=ControlledByEnum.OPEN
+                line_num=idx,
+                goods_description=good["description"],
+                controlled_by=ControlledByEnum.OPEN,
             )
 
 

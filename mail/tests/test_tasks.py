@@ -133,7 +133,9 @@ class TestProcessLicenceReplyAndUsageEmailTask:
             sent_filename="the_licence_data_file",
             sent_data="lovely data",
         )
-        LicenceData.objects.create(licence_ids="", hmrc_run_number=29236, source=SourceEnum.ICMS, mail=self.mail)
+        LicenceData.objects.create(
+            licence_ids="", hmrc_run_number=29236, source=SourceEnum.ICMS, mail=self.mail
+        )
 
     def _patch_pop3_class(self, mock):
         # Store con reference to check what was called later
@@ -171,7 +173,9 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         self._patch_pop3_class(mock_pop3_multiple_attachments)
 
         # Only one attachment is accepted per licence reply email.
-        with pytest.raises(ValueError, match="Only one attachment is accepted per licence reply email."):
+        with pytest.raises(
+            ValueError, match="Only one attachment is accepted per licence reply email."
+        ):
             tasks.process_licence_reply_and_usage_emails()
 
         # Check the connection was closed automatically
@@ -185,7 +189,9 @@ class TestProcessLicenceReplyAndUsageEmailTask:
     ):
         self._patch_pop3_class(mock_pop3_unknown_subject)
 
-        with pytest.raises(ValueError, match="Unable to process email with subject: All about cakes"):
+        with pytest.raises(
+            ValueError, match="Unable to process email with subject: All about cakes"
+        ):
             tasks.process_licence_reply_and_usage_emails()
 
         # Check the connection was closed automatically
@@ -200,7 +206,8 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         self._patch_pop3_class(mock_pop3_invalid_reply_subject)
 
         with pytest.raises(
-            ValueError, match="Unable to parse run number from 'CHIEF_licenceReply_INVALID_29236_202209231140'"
+            ValueError,
+            match="Unable to parse run number from 'CHIEF_licenceReply_INVALID_29236_202209231140'",
         ):
             tasks.process_licence_reply_and_usage_emails()
 
@@ -210,7 +217,9 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Check any scheduled deletes were reset
         self.con.rset.assert_called_once()
 
-    def test_process_usage_email_errors_until_implemented(self, correct_email_settings, mock_pop3_usage):
+    def test_process_usage_email_errors_until_implemented(
+        self, correct_email_settings, mock_pop3_usage
+    ):
         self._patch_pop3_class(mock_pop3_usage)
 
         with pytest.raises(NotImplementedError):
@@ -235,7 +244,9 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Check the connection was closed automatically
         self.con.quit.assert_called_once()
 
-    def test_rollback_when_we_get_an_error_in_one_of_the_files(self, correct_email_settings, transactional_db):
+    def test_rollback_when_we_get_an_error_in_one_of_the_files(
+        self, correct_email_settings, transactional_db
+    ):
         """Test a scenario where there is a good licence file and a bad usage file.
 
         Everything should roll back if we can't process everything.
@@ -247,17 +258,28 @@ class TestProcessLicenceReplyAndUsageEmailTask:
 
         def mock_retr(msg_id):
             if msg_id == "1":
-                return b"+OK", get_licence_reply_msg_list("CHIEF_licenceReply_29236_202209231140.eml"), 12345
+                return (
+                    b"+OK",
+                    get_licence_reply_msg_list("CHIEF_licenceReply_29236_202209231140.eml"),
+                    12345,
+                )
 
             if msg_id == "2":
-                return b"+OK", get_licence_reply_msg_list("ILBDOTI_live_CHIEF_usageData_7132_202209280300.eml"), 54321
+                return (
+                    b"+OK",
+                    get_licence_reply_msg_list(
+                        "ILBDOTI_live_CHIEF_usageData_7132_202209280300.eml"
+                    ),
+                    54321,
+                )
 
         mock_pop3_cls.return_value.retr = mock_retr
         self._patch_pop3_class(mock_pop3_cls)
 
         # Let's make the _save_usage_data_email fail with a custom error
         mock__save_usage_data_email = mock.create_autospec(
-            spec=tasks._save_usage_data_email, side_effect=RuntimeError("Something unexpected has happened...")
+            spec=tasks._save_usage_data_email,
+            side_effect=RuntimeError("Something unexpected has happened..."),
         )
 
         self.monkeypatch.setattr(tasks, "_save_usage_data_email", mock__save_usage_data_email)
@@ -281,7 +303,9 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         assert not self.mail.response_filename
         assert not self.mail.response_data
 
-    @override_settings(HMRC_TO_DIT_EMAIL_USER="chief", HMRC_TO_DIT_EMAIL_HOSTNAME="fake-valid-domain.com")
+    @override_settings(
+        HMRC_TO_DIT_EMAIL_USER="chief", HMRC_TO_DIT_EMAIL_HOSTNAME="fake-valid-domain.com"
+    )
     def test_unknown_email_sender_domain(self, mock_pop3):
         self._patch_pop3_class(mock_pop3)
 
@@ -300,7 +324,9 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Check any scheduled deletes were reset
         self.con.rset.assert_called_once()
 
-    @override_settings(HMRC_TO_DIT_EMAIL_USER="fake-valid-user", HMRC_TO_DIT_EMAIL_HOSTNAME="hmrc_test_email.com")
+    @override_settings(
+        HMRC_TO_DIT_EMAIL_USER="fake-valid-user", HMRC_TO_DIT_EMAIL_HOSTNAME="hmrc_test_email.com"
+    )
     def test_unknown_email_sender_user(self, mock_pop3):
         self._patch_pop3_class(mock_pop3)
 
@@ -347,12 +373,17 @@ class TestSendLicenceDataToICMSTask:
             response_filename="CHIEF_licenceReply_29236_202209231140",
             response_data=licence_reply_example,
         )
-        ld = LicenceData.objects.create(licence_ids="", hmrc_run_number=29236, source=SourceEnum.ICMS, mail=self.mail)
+        ld = LicenceData.objects.create(
+            licence_ids="", hmrc_run_number=29236, source=SourceEnum.ICMS, mail=self.mail
+        )
 
         # fake some licence payload references for the test file
         for reference in ["ABC12345", "ABC12346", "ABC12348", "ABC12347"]:
             payload = LicencePayload.objects.create(
-                lite_id=uuid.uuid4(), reference=reference, action=LicenceActionEnum.INSERT, is_processed=True
+                lite_id=uuid.uuid4(),
+                reference=reference,
+                action=LicenceActionEnum.INSERT,
+                is_processed=True,
             )
             ld.licence_payloads.add(payload)
 
@@ -389,7 +420,10 @@ class TestSendLicenceDataToICMSTask:
                     "id": self.id_4,
                     "errors": [
                         {"error_code": "1234", "error_msg": "Invalid thingy"},
-                        {"error_code": "76543", "error_msg": "Invalid commodity “1234A6” in line " "23"},
+                        {
+                            "error_code": "76543",
+                            "error_msg": "Invalid commodity “1234A6” in line " "23",
+                        },
                     ],
                 }
             ],
@@ -405,7 +439,9 @@ class TestSendLicenceDataToICMSTask:
     def test_send_licence_data_to_icms_http_error(self, caplog):
         # Mock the response that ICMS sends back - an internal server error
         url = parse.urljoin(settings.ICMS_API_URL, "chief/license-data-callback")
-        self.rq.post(url, status_code=HTTPStatus.INTERNAL_SERVER_ERROR, json={}, reason="test reason")
+        self.rq.post(
+            url, status_code=HTTPStatus.INTERNAL_SERVER_ERROR, json={}, reason="test reason"
+        )
 
         # Send the licence data to ICMS using the data we know should pass
         with mock.patch("mail.requests.verify_api_response", spec=True) as verify_resp:
@@ -429,7 +465,10 @@ class TestSendLicenceDataToICMSTask:
 def test_no_mail_found(db, caplog):
     tasks.send_licence_data_to_icms()
 
-    assert caplog.messages == ["Checking for licence data to send to ICMS", "No licence date found to send to ICMS"]
+    assert caplog.messages == [
+        "Checking for licence data to send to ICMS",
+        "No licence date found to send to ICMS",
+    ]
 
 
 def test_multiple_mail_raises_error(db, licence_reply_example):
@@ -455,7 +494,9 @@ def test_multiple_mail_raises_error(db, licence_reply_example):
         response_data=licence_reply_example,
     )
 
-    with pytest.raises(ValueError, match="Unable to process mail as there are more than 1 records."):
+    with pytest.raises(
+        ValueError, match="Unable to process mail as there are more than 1 records."
+    ):
         tasks.send_licence_data_to_icms()
 
 
@@ -522,7 +563,10 @@ class TestSendLicenceDataToHMRC:
     def test_task_is_called(self, caplog):
         tasks.send_licence_data_to_hmrc()
 
-        assert caplog.messages == ["Sending ICMS licence updates to HMRC", "There are currently no licences to send"]
+        assert caplog.messages == [
+            "Sending ICMS licence updates to HMRC",
+            "There are currently no licences to send",
+        ]
 
 
 class TestFakeLicenceReply:

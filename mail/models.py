@@ -11,7 +11,9 @@ logger = logging.getLogger(__name__)
 class LicencePayload(models.Model):
     lite_id = models.UUIDField(null=False, blank=False, unique=False)
     reference = models.CharField(null=False, blank=False, max_length=35)
-    action = models.CharField(choices=LicenceActionEnum.choices, null=False, blank=False, max_length=7)
+    action = models.CharField(
+        choices=LicenceActionEnum.choices, null=False, blank=False, max_length=7
+    )
     data = models.JSONField(default=dict)
     received_at = models.DateTimeField(default=timezone.now)
     is_processed = models.BooleanField(default=False)
@@ -34,7 +36,9 @@ class LicenceData(models.Model):
     source = models.CharField(choices=SourceEnum.choices, max_length=10)
     mail = models.ForeignKey("Mail", on_delete=models.DO_NOTHING)
     licence_payloads = models.ManyToManyField(
-        "LicencePayload", help_text="LicencePayload records linked to this LicenceData instance", related_name="+"
+        "LicencePayload",
+        help_text="LicencePayload records linked to this LicenceData instance",
+        related_name="+",
     )
 
     class Meta:
@@ -47,7 +51,9 @@ class Mail(models.Model):
     extract_type = models.CharField(choices=ExtractTypeEnum.choices, max_length=20, null=True)
 
     # Status of mail through the icms-hmrc workflow
-    status = models.CharField(choices=ReceptionStatusEnum.choices, default=ReceptionStatusEnum.PENDING, max_length=20)
+    status = models.CharField(
+        choices=ReceptionStatusEnum.choices, default=ReceptionStatusEnum.PENDING, max_length=20
+    )
 
     # licenceData fields
     edi_filename = models.TextField(null=True, blank=True)

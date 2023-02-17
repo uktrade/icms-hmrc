@@ -28,7 +28,9 @@ class HealthCheck(APIView):
                 settings.LICENSE_POLL_INTERVAL,
                 payload_object_pending,
             )
-            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, self.ERROR_PAYLOAD_OBJECTS, start_time)
+            return self._build_response(
+                HTTP_503_SERVICE_UNAVAILABLE, self.ERROR_PAYLOAD_OBJECTS, start_time
+            )
 
         pending_mail = self._get_pending_mail()
         if pending_mail:
@@ -37,7 +39,9 @@ class HealthCheck(APIView):
                 settings.EMAIL_AWAITING_REPLY_TIME,
                 pending_mail,
             )
-            return self._build_response(HTTP_503_SERVICE_UNAVAILABLE, self.ERROR_PENDING_MAIL, start_time)
+            return self._build_response(
+                HTTP_503_SERVICE_UNAVAILABLE, self.ERROR_PENDING_MAIL, start_time
+            )
 
         logging.info("All services are responsive")
         return self._build_response(HTTP_200_OK, "OK", start_time)
@@ -60,4 +64,6 @@ class HealthCheck(APIView):
         response_time = "{:.3f}".format(duration_ms)
         context = {"message": message, "response_time": response_time, "status": status}
 
-        return render(self.request, "healthcheck.xml", context, content_type="application/xml", status=status)
+        return render(
+            self.request, "healthcheck.xml", context, content_type="application/xml", status=status
+        )

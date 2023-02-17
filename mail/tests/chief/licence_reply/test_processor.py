@@ -30,7 +30,8 @@ def test_processor_is_valid_with_mail_instance(licence_reply_example):
     # Test extract type error handling
     mail.extract_type = ExtractTypeEnum.USAGE_REPLY
     with pytest.raises(
-        ValueError, match=r"Error with Mail \(1 - ExampleLicenceReply\): Invalid extract type usage_reply"
+        ValueError,
+        match=r"Error with Mail \(1 - ExampleLicenceReply\): Invalid extract type usage_reply",
     ):
         LicenceReplyProcessor.load_from_mail(mail)
     mail.extract_type = ExtractTypeEnum.LICENCE_DATA
@@ -38,7 +39,9 @@ def test_processor_is_valid_with_mail_instance(licence_reply_example):
     # Test status error handling
     mail.status = ReceptionStatusEnum.REPLY_SENT
 
-    with pytest.raises(ValueError, match=r"Error with Mail \(1 - ExampleLicenceReply\): Invalid status reply_sent"):
+    with pytest.raises(
+        ValueError, match=r"Error with Mail \(1 - ExampleLicenceReply\): Invalid status reply_sent"
+    ):
         LicenceReplyProcessor.load_from_mail(mail)
     mail.status = ReceptionStatusEnum.REPLY_RECEIVED
 
@@ -82,7 +85,9 @@ def test_file_error():
     processor = LicenceReplyProcessor(file_with_file_error)
 
     assert not processor.file_valid()
-    expected_file_errors = [FileError(code="18", text="Record type 'fileHeader' not recognised", position="99")]
+    expected_file_errors = [
+        FileError(code="18", text="Record type 'fileHeader' not recognised", position="99")
+    ]
 
     assert processor.file_errors == expected_file_errors
 
@@ -96,7 +101,9 @@ def test_rejected_error_out_of_order():
         ""
     )
 
-    with pytest.raises(ValueError, match="Unable to process file: rejected record is out of sequence on line 2"):
+    with pytest.raises(
+        ValueError, match="Unable to process file: rejected record is out of sequence on line 2"
+    ):
         LicenceReplyProcessor(bad_file)
 
 
@@ -109,7 +116,9 @@ def test_rejected_end_out_of_order():
         ""
     )
 
-    with pytest.raises(ValueError, match="Unable to process file: rejected record is out of sequence on line 2"):
+    with pytest.raises(
+        ValueError, match="Unable to process file: rejected record is out of sequence on line 2"
+    ):
         LicenceReplyProcessor(bad_file)
 
 
@@ -130,11 +139,13 @@ def test_is_valid_is_called():
     processor = LicenceReplyProcessor("")
 
     with pytest.raises(
-        ValueError, match="Unable to get accepted_licences when file hasn't been validated or is invalid"
+        ValueError,
+        match="Unable to get accepted_licences when file hasn't been validated or is invalid",
     ):
         _ = processor.accepted_licences
 
     with pytest.raises(
-        ValueError, match="Unable to get rejected_licences when file hasn't been validated or is invalid"
+        ValueError,
+        match="Unable to get rejected_licences when file hasn't been validated or is invalid",
     ):
         _ = processor.rejected_licences

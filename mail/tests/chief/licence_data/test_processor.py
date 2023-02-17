@@ -15,7 +15,10 @@ class BuildLicenceDataFileTests(testcases.TestCase):
         data = [
             (datetime.datetime(1999, 12, 31), "CHIEF_LIVE_ILBDOTI_licenceData_1_199912310000"),
             (datetime.datetime(2022, 1, 1), "CHIEF_LIVE_ILBDOTI_licenceData_1_202201010000"),
-            (datetime.datetime(2022, 1, 1, 9, 8, 7), "CHIEF_LIVE_ILBDOTI_licenceData_1_202201010908"),
+            (
+                datetime.datetime(2022, 1, 1, 9, 8, 7),
+                "CHIEF_LIVE_ILBDOTI_licenceData_1_202201010908",
+            ),
         ]
 
         for when, expected in data:
@@ -96,7 +99,10 @@ class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
         replace_data["organisation"]["name"] = "org new name"
 
         replace_licence = LicencePayload.objects.create(
-            lite_id=uuid.uuid4(), reference="IMA/2022/00001/1", action=LicenceActionEnum.REPLACE, data=replace_data
+            lite_id=uuid.uuid4(),
+            reference="IMA/2022/00001/1",
+            action=LicenceActionEnum.REPLACE,
+            data=replace_data,
         )
 
         licences = LicencePayload.objects.filter(pk=replace_licence.pk)
@@ -201,11 +207,36 @@ class TestBuildICMSLicenceDataFASIL(testcases.TestCase):
         restrictions = "Sample restrictions"
 
         goods = [
-            {"description": "Sample goods description 1", "quantity": 1, "controlled_by": "Q", "unit": 30},
-            {"description": "Sample goods description 2", "quantity": 2, "controlled_by": "Q", "unit": 30},
-            {"description": "Sample goods description 3", "quantity": 3, "controlled_by": "Q", "unit": 30},
-            {"description": "Sample goods description 4", "quantity": 4, "controlled_by": "Q", "unit": 30},
-            {"description": "Sample goods description 5", "quantity": 5, "controlled_by": "Q", "unit": 30},
+            {
+                "description": "Sample goods description 1",
+                "quantity": 1,
+                "controlled_by": "Q",
+                "unit": 30,
+            },
+            {
+                "description": "Sample goods description 2",
+                "quantity": 2,
+                "controlled_by": "Q",
+                "unit": 30,
+            },
+            {
+                "description": "Sample goods description 3",
+                "quantity": 3,
+                "controlled_by": "Q",
+                "unit": 30,
+            },
+            {
+                "description": "Sample goods description 4",
+                "quantity": 4,
+                "controlled_by": "Q",
+                "unit": 30,
+            },
+            {
+                "description": "Sample goods description 5",
+                "quantity": 5,
+                "controlled_by": "Q",
+                "unit": 30,
+            },
             {"description": "Unlimited Description goods line", "controlled_by": "O"},
         ]
 
@@ -252,7 +283,9 @@ class TestBuildICMSLicenceDataFASILCancelPayload(testcases.TestCase):
 
         data = get_valid_fa_sil_revoke_payload()
 
-        LicencePayload.objects.create(lite_id=data["id"], reference=data["reference"], action=data["action"], data=data)
+        LicencePayload.objects.create(
+            lite_id=data["id"], reference=data["reference"], action=data["action"], data=data
+        )
         self.test_file = Path("mail/tests/files/icms/licence_data_files/fa_sil_cancel")
         self.assertTrue(self.test_file.is_file())
 
