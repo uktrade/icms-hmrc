@@ -108,7 +108,7 @@ def fake_licence_reply():
         logger.warning("This command is only for development environments")
         return
 
-    # TODO: Add support for changing this value
+    # TODO: ICMSLST-1852 Add support for changing this value
     response = "accept"
     call_command("dev_fake_licence_reply", response)
 
