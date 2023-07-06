@@ -27,7 +27,7 @@ requests = "~=2.31"
 unidecode = "~=1.2"
 django-log-formatter-ecs = "==0.0.5"
 gunicorn = "*"
-django = "==4.1.9"
+django = "==4.1.10"
 # 6.13.2 is the latest version
 elastic-apm = "==6.7.2"
 # 1.20 is the latest version
