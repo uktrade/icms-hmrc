@@ -158,6 +158,11 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         filename = "mail/tests/files/icms/CHIEF_licenceReply_29236_202209231140_attachment"
         return pathlib.Path(filename).read_text()
 
+    @staticmethod
+    def get_expected_usage_file() -> str:
+        filename = "mail/tests/files/icms/ILBDOTI_live_CHIEF_usageData_7132_202209280300_attachment"
+        return pathlib.Path(filename).read_text()
+
     def test_process_licence_reply_email_success(self, correct_email_settings, mock_pop3):
         self._patch_pop3_class(mock_pop3)
 
@@ -226,26 +231,18 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Check any scheduled deletes were reset
         self.con.rset.assert_called_once()
 
-    def test_process_usage_email_errors_until_implemented(
-        self, correct_email_settings, mock_pop3_usage
-    ):
+    def test_process_usage_email_success(self, correct_email_settings, mock_pop3_usage):
         self._patch_pop3_class(mock_pop3_usage)
 
-        with pytest.raises(NotImplementedError):
-            tasks.process_licence_reply_and_usage_emails()
-
-        # Check the connection was closed automatically
-        self.con.quit.assert_called_once()
-
-        # Check any scheduled deletes were reset
-        self.con.rset.assert_called_once()
-
-    def test_process_email_usage_fake_success(self, correct_email_settings, mock_pop3_usage):
-        self._patch_pop3_class(mock_pop3_usage)
-        mock_save_usage = mock.create_autospec(spec=tasks._save_usage_data_email)
-        self.monkeypatch.setattr(tasks, "_save_usage_data_email", mock_save_usage)
-
+        # Check for emails and process them
         tasks.process_licence_reply_and_usage_emails()
+
+        # Test the licence mail has been updated with the response email
+        mail = Mail.objects.get(response_filename="ILBDOTI_live_CHIEF_usageData_7132_202209280300")
+        assert mail.extract_type == ExtractTypeEnum.USAGE_DATA
+        assert mail.status == ReceptionStatusEnum.REPLY_RECEIVED
+        assert mail.response_subject == "ILBDOTI_live_CHIEF_usageData_7132_202209280300"
+        assert mail.response_data == self.get_expected_usage_file()
 
         # Successful processing should delete the message
         self.con.dele.assert_called_with("1")

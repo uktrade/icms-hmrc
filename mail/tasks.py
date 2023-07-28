@@ -344,13 +344,14 @@ def _save_licence_reply_email(reply_email: email.message.EmailMessage) -> None:
     mail.save()
 
     logger.info(
-        "Updated mail instance: %s with licence reply (subject: %s - filename: %s",
+        "Updated mail instance: %s with reply (subject: %s - filename: %s)",
         mail.id,
         subject,
         file_name,
     )
 
 
+# TODO: ICMSLST-2184 Revisit run numbers
 def _get_run_number_from_subject(s: str) -> int:
     try:
         if "licenceReply" in s:
@@ -358,7 +359,7 @@ def _get_run_number_from_subject(s: str) -> int:
             return int(s.split("_")[2])
 
         if "usageData" in s:
-            # e.g. ILBDOTI_live_CHIEF_usageData_7132_202209280300
+            # e.g. ILBDOTI_live_CHIEF_usageData_7132_202209280300 -> 7132
             return int(s.split("_")[4])
 
     except Exception as e:
@@ -369,10 +370,40 @@ def _get_run_number_from_subject(s: str) -> int:
 
 def _save_usage_data_email(usage_email: email.message.EmailMessage) -> None:
     subject = usage_email.get("Subject")
-    run_number = _get_run_number_from_subject(subject)
-    logger.debug(f"{subject} - {run_number}")
-    # Mail extract type when implementing
-    # Mail.objects.create(
-    #     extract_type=ExtractTypeEnum.USAGE_DATA
-    # )
-    raise NotImplementedError
+
+    # TODO: ICMSLST-2184 Revisit run numbers
+    # run_number = _get_run_number_from_subject(subject)
+    logger.debug("usageData email subject: %s", subject)
+
+    attachments = list(usage_email.iter_attachments())
+
+    if not len(attachments) == 1:
+        raise ValueError("Only one attachment is accepted per licence reply email.")
+
+    reply_file = attachments[0]
+    file_name = reply_file.get_filename()
+
+    # e.g. b"1\\fileHeader\\CHIEF\\ILBDOTI\\usageData\\202209280300\\7132\\\r\n..."
+    payload_bytes = reply_file.get_payload(decode=True)
+
+    mail = Mail.objects.create(
+        extract_type=ExtractTypeEnum.USAGE_DATA,
+        status=ReceptionStatusEnum.REPLY_RECEIVED,
+        response_filename=file_name,
+        response_data=payload_bytes.decode(),
+        response_date=timezone.now(),
+        response_subject=subject,
+    )
+
+    mail.response_data = payload_bytes.decode()
+    mail.response_date = timezone.now()
+    mail.response_subject = subject
+
+    mail.save()
+
+    logger.info(
+        "Updated mail instance: %s with reply (subject: %s - filename: %s)",
+        mail.id,
+        subject,
+        file_name,
+    )
