@@ -16,6 +16,11 @@ services:
       - pgdata:/var/lib/postgresql/data
     networks:
       - backend
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 2s
+      timeout: 2s
+      retries: 5
 
   redis:
     image: redis:5.0.6
@@ -49,9 +54,12 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      - postgres-db
-      - redis
-      - mailhog
+      postgres-db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      mailhog:
+        condition: service_started
     expose:
       - 8000
     networks:
@@ -70,7 +78,7 @@ services:
     command: pipenv run celery -A conf worker -l INFO --events
     platform: linux/amd64
     volumes:
-        - .:/code
+      - .:/code
     depends_on:
       - postgres-db
       - redis
