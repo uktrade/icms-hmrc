@@ -55,11 +55,13 @@ class Mail(models.Model):
     # e.g. the licence_reply email is saved on the licence_data record
     extract_type = models.CharField(choices=ExtractTypeEnum.choices, max_length=20, null=True)
 
+    #
     # Status of mail through the icms-hmrc workflow
     status = models.CharField(
         choices=ReceptionStatusEnum.choices, default=ReceptionStatusEnum.PENDING, max_length=20
     )
 
+    #
     # licenceData fields
     edi_filename = models.TextField(null=True, blank=True)
     edi_data = models.TextField(null=True, blank=True)
@@ -67,17 +69,19 @@ class Mail(models.Model):
     sent_data = models.TextField(blank=True, null=True)
     sent_at = models.DateTimeField(blank=True, null=True)
 
+    #
     # licenceReply / Usage fields
     response_filename = models.TextField(blank=True, null=True)
     response_data = models.TextField(blank=True, null=True)
     response_date = models.DateTimeField(blank=True, null=True)
     response_subject = models.TextField(null=True, blank=True)
 
+    #
+    # licenceReply fields
     sent_response_filename = models.TextField(blank=True, null=True)
     sent_response_data = models.TextField(blank=True, null=True)
 
     raw_data = models.TextField()
-
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     currently_processing_at = models.DateTimeField(null=True)
     currently_processed_by = models.CharField(null=True, max_length=100)
@@ -92,14 +96,17 @@ class Mail(models.Model):
         return f"{self.__class__.__name__} object (id={self.id}, status={self.status})"
 
     def save(self, *args, **kwargs):
-        if not self.edi_data or not self.edi_filename:
-            logger.error(
-                "Setting `edi_data` or `edi_filename` to null or blank: self=%s, edi_data=%s edi_filename=%s",
-                self,
-                self.edi_data,
-                self.edi_filename,
-                exc_info=True,
-            )
-            raise IntegrityError("The field edi_filename or edi_data is empty which is not valid")
+        if self.extract_type in [ExtractTypeEnum.LICENCE_DATA, ExtractTypeEnum.LICENCE_REPLY]:
+            if not self.edi_data or not self.edi_filename:
+                logger.error(
+                    "Setting `edi_data` or `edi_filename` to null or blank: self=%s, edi_data=%s edi_filename=%s",
+                    self,
+                    self.edi_data,
+                    self.edi_filename,
+                    exc_info=True,
+                )
+                raise IntegrityError(
+                    "The field edi_filename or edi_data is empty which is not valid"
+                )
 
         super(Mail, self).save(*args, **kwargs)

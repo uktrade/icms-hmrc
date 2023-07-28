@@ -76,3 +76,13 @@ def get_imcs_dev_beat_schedule():
         #     "schedule": crontab(minute="*/1"),
         # },
     }
+
+
+# Not used - change schedule in setup_periodic_tasks to use.
+def get_test_usage_ingest_schedule():
+    return {
+        "process-hmrc-emails": {
+            "task": "icms:process_licence_reply_and_usage_emails",
+            "schedule": crontab(minute="*/1"),
+        },
+    }
