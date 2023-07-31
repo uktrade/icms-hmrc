@@ -2,12 +2,9 @@ version: "3.8"
 
 services:
   postgres-db:
+    image: postgres:15.3
     environment:
-      - LITEHMRC_DB_USER=postgres
-      - LITEHMRC_DB_PASSWORD=password
-      - LITEHMRC_DB_SCHEMA=postgres
       - POSTGRES_PASSWORD=password
-    build: './database'
     expose:
       - 5432
     ports:
@@ -17,7 +14,7 @@ services:
     networks:
       - backend
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready" ]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 2s
       timeout: 2s
       retries: 5
