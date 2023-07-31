@@ -3,7 +3,6 @@ from conf.settings import *  # noqa: F401, F403
 HAWK_AUTHENTICATION_ENABLED = False
 
 # TODO: Rename these email settings
-INCOMING_EMAIL_PASSWORD = "password"
 INCOMING_EMAIL_HOSTNAME = "localhost"
 INCOMING_EMAIL_USER = "test_user"
 INCOMING_EMAIL_POP3_PORT = "995"

@@ -10,29 +10,16 @@ logger = logging.getLogger(__name__)
 
 class Authenticator(Protocol):
     user: str
+    client_id: str
+    client_secret: str
+    tenant_id: str
 
     def authenticate(self, connection: poplib.POP3_SSL):
         ...
 
 
-class BasicAuthentication:
-    """Uses username and password to authenticate a pop3 connection"""
-
-    def __init__(self, user: str, password: str):
-        self.user = user
-        self.password = password
-
-    def authenticate(self, connection: poplib.POP3_SSL):
-        connection.user(self.user)
-        connection.pass_(self.password)
-
-    def __eq__(self, other: Authenticator):
-        return self.user == other.user and self.password == other.password
-
-
 class ModernAuthentication:
-    """Uses MS modern authentication (which is OAuth) to authenticate a pop3
-    connection.
+    """Uses MS modern authentication (which is OAuth) to authenticate a pop3 connection.
 
     https://docs.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth
     """
@@ -83,6 +70,8 @@ class ModernAuthentication:
             self.user,
             access_token,
         )
+
+        # https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth#pop-protocol-exchange
         connection._shortcmd("AUTH XOAUTH2")
         connection._shortcmd(access_string)
 
