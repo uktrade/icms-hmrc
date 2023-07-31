@@ -11,8 +11,8 @@ class MailServer(object):
     def __init__(
         self,
         auth: Authenticator,
-        hostname: str = settings.EMAIL_HOSTNAME,
-        pop3_port: int = settings.EMAIL_POP3_PORT,
+        hostname: str = settings.INCOMING_EMAIL_HOSTNAME,
+        pop3_port: int = settings.INCOMING_EMAIL_POP3_PORT,
     ):
         self.auth = auth
         self.pop3_port = pop3_port

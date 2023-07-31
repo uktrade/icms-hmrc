@@ -6,11 +6,12 @@ from typing import TYPE_CHECKING, List
 from unittest import mock
 from urllib import parse
 
+import msal
 import pytest
 from django.conf import settings
 from django.test import override_settings
 
-from mail import servers, tasks
+from mail import auth, servers, tasks
 from mail.enums import ChiefSystemEnum, ExtractTypeEnum, LicenceActionEnum, ReceptionStatusEnum
 from mail.models import LicenceData, LicencePayload, Mail, SourceEnum
 from mail.utils import pop3
@@ -43,6 +44,13 @@ def mock_pop3():
     mock_pop3.return_value.retr.return_value = (b"+OK", get_licence_reply_msg_list(filename), 1234)
 
     return mock_pop3
+
+
+@pytest.fixture
+def mock_msal_client():
+    client = mock.create_autospec(spec=msal.ConfidentialClientApplication)
+
+    return client
 
 
 @pytest.fixture
@@ -120,7 +128,7 @@ def test_can_mock_email(mock_pop3):
 
 class TestProcessLicenceReplyAndUsageEmailTask:
     @pytest.fixture(autouse=True)
-    def _setup(self, db, monkeypatch):
+    def _setup(self, db, monkeypatch, mock_msal_client):
         self.con = None
         self.monkeypatch = monkeypatch
 
@@ -136,6 +144,7 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         LicenceData.objects.create(
             licence_ids="", hmrc_run_number=29236, source=SourceEnum.ICMS, mail=self.mail
         )
+        self.monkeypatch.setattr(auth.msal, "ConfidentialClientApplication", mock_msal_client)
 
     def _patch_pop3_class(self, mock):
         # Store con reference to check what was called later

@@ -14,7 +14,7 @@ from django.utils import timezone
 from conf import celery_app
 from mail import requests as mail_requests
 from mail import utils
-from mail.auth import Authenticator, BasicAuthentication
+from mail.auth import Authenticator, ModernAuthentication
 from mail.chief.email import EmailMessageDto, build_email_message, build_request_mail_message_dto
 from mail.chief.licence_data import create_licence_data_mail
 from mail.chief.licence_reply import LicenceReplyProcessor
@@ -280,37 +280,17 @@ def _get_licence_reply_data(processor: LicenceReplyProcessor) -> Dict[str, Any]:
 
 
 def _get_hmrc_mailbox_auth() -> Authenticator:
-    # TODO: ICMSLST-1759 Replace with ModernAuthentication - See example below
+    """Mailbox that receives reply emails from HMRC.
 
-    return BasicAuthentication(
+    These are licenceReply and usageData emails.
+    """
+
+    return ModernAuthentication(
         user=settings.INCOMING_EMAIL_USER,
-        password=settings.INCOMING_EMAIL_PASSWORD,
+        client_id=settings.AZURE_AUTH_CLIENT_ID,
+        client_secret=settings.AZURE_AUTH_CLIENT_SECRET,
+        tenant_id=settings.AZURE_AUTH_TENANT_ID,
     )
-
-
-# Example of a modern auth routing controller copied from the routing_controller.py lite code
-# from mail.servers import MailServer
-# from mail.auth import ModernAuthentication
-#
-#
-# def get_hmrc_to_dit_mailserver() -> MailServer:
-#     """
-#     Mailbox that receives reply emails from HMRC
-#
-#     These are licenceReply and usageData emails
-#     """
-#     auth = ModernAuthentication(
-#         user=settings.HMRC_TO_DIT_EMAIL_USER,
-#         client_id=settings.AZURE_AUTH_CLIENT_ID,
-#         client_secret=settings.AZURE_AUTH_CLIENT_SECRET,
-#         tenant_id=settings.AZURE_AUTH_TENANT_ID,
-#     )
-#
-#     return MailServer(
-#         auth,
-#         hostname=settings.HMRC_TO_DIT_EMAIL_HOSTNAME,
-#         pop3_port=995,
-#     )
 
 
 def _check_sender_valid(

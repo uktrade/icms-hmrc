@@ -77,10 +77,15 @@ DATABASES = {"default": env.db()}
 CHIEF_SOURCE_SYSTEM = env("CHIEF_SOURCE_SYSTEM", default="ILBDOTI")
 
 # TODO: Rename these email settings
-INCOMING_EMAIL_PASSWORD = env("INCOMING_EMAIL_PASSWORD", default="")
+# POP3 email settings (to fetch emails from HMRC)
 INCOMING_EMAIL_HOSTNAME = env("INCOMING_EMAIL_HOSTNAME", default="")
-INCOMING_EMAIL_USER = env("INCOMING_EMAIL_USER", default="")
+INCOMING_EMAIL_USER = env("INCOMING_EMAIL_USER", default="")  # Also used to send licenceData
 INCOMING_EMAIL_POP3_PORT = env("INCOMING_EMAIL_POP3_PORT", default=None)
+
+# Azure OAUTH2 email connection settings
+AZURE_AUTH_CLIENT_ID = env.str("AZURE_AUTH_CLIENT_ID")
+AZURE_AUTH_CLIENT_SECRET = env.str("AZURE_AUTH_CLIENT_SECRET")
+AZURE_AUTH_TENANT_ID = env.str("AZURE_AUTH_TENANT_ID")
 
 # Used to validate sender details
 HMRC_TO_DIT_EMAIL_HOSTNAME = env("HMRC_TO_DIT_EMAIL_HOSTNAME", default="")
@@ -88,6 +93,7 @@ HMRC_TO_DIT_EMAIL_USER = env("HMRC_TO_DIT_EMAIL_USER", default="")
 
 OUTGOING_EMAIL_USER = env("OUTGOING_EMAIL_USER")
 
+# SMTP email settings.
 # TODO: Revisit when implementing ICMSLST-1837
 # These 6 EMAIL_* settings are NOT Django default email backend settings.
 EMAIL_PASSWORD = env("EMAIL_PASSWORD")
@@ -191,11 +197,6 @@ if env.str("ELASTIC_APM_SERVER_URL", ""):
         "DEBUG": DEBUG,
     }
     INSTALLED_APPS.append("elasticapm.contrib.django")
-
-# Azure email connection settings.
-AZURE_AUTH_CLIENT_ID = env.str("AZURE_AUTH_CLIENT_ID")
-AZURE_AUTH_CLIENT_SECRET = env.str("AZURE_AUTH_CLIENT_SECRET")
-AZURE_AUTH_TENANT_ID = env.str("AZURE_AUTH_TENANT_ID")
 
 # Celery / Redis config
 if "redis" in VCAP_SERVICES:
