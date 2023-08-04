@@ -64,9 +64,7 @@ def send_licence_data_to_hmrc() -> None:
 
     try:
         with transaction.atomic():
-            licences = LicencePayload.objects.filter(is_processed=False).select_for_update(
-                nowait=True
-            )
+            licences = LicencePayload.objects.filter(is_processed=False).select_for_update()
 
             if not licences.exists():
                 logger.info("There are currently no licences to send")
