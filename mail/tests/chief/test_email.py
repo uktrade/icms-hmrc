@@ -17,7 +17,6 @@ class BuildEmailMessageTest(testcases.TestCase):
             body=None,
             subject="Some subject",
             attachment=["some filename", attachment],
-            raw_data="",
         )
 
         mime_multipart = build_email_message(email_message_dto)

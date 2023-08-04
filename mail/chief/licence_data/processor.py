@@ -36,7 +36,6 @@ def create_licence_data_mail(licences: "QuerySet[LicencePayload]", source: Sourc
         edi_filename=file_name,
         edi_data=file_content,
         extract_type=ExtractTypeEnum.LICENCE_DATA,
-        raw_data="See Licence Payload",
     )
     logger.info("New Mail instance (%s) created for filename %s", mail.id, file_name)
     licence_ids = json.dumps([licence.reference for licence in licences])

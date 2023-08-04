@@ -81,12 +81,7 @@ class Mail(models.Model):
     sent_response_filename = models.TextField(blank=True, null=True)
     sent_response_data = models.TextField(blank=True, null=True)
 
-    raw_data = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
-    currently_processing_at = models.DateTimeField(null=True)
-    currently_processed_by = models.CharField(null=True, max_length=100)
-
-    retry = models.BooleanField(default=False)
 
     class Meta:
         db_table = "mail"
