@@ -87,6 +87,10 @@ def send_licence_data_to_hmrc() -> None:
             licences.update(is_processed=True)
             logger.info("Licence references [%s] marked as processed", licence_references)
 
+            logger.info(
+                "Successfully sent %s licences updates in Mail [%s] to HMRC", source, mail.id
+            )
+
     except ValueError as err:  # noqa
         raise err
     except Exception as exc:  # noqa
@@ -96,8 +100,6 @@ def send_licence_data_to_hmrc() -> None:
             type(exc).__name__,
             exc_info=True,
         )
-
-    logger.info("Successfully sent %s licences updates in Mail [%s] to HMRC", source, mail.id)
 
 
 @celery_app.task(name="icms:fake_licence_reply")
