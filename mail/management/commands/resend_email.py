@@ -138,5 +138,4 @@ def _build_request_mail_message_dto_internal(mail: Mail) -> EmailMessageDto:
         subject=attachment[0],
         body=None,
         attachment=attachment,
-        raw_data=None,
     )

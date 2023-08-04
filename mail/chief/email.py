@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 EmailMessageDto = namedtuple(
-    "EmailMessageDto", "run_number, sender, receiver, date, subject, body, attachment, raw_data"
+    "EmailMessageDto", "run_number, sender, receiver, date, subject, body, attachment"
 )
 
 
@@ -53,7 +53,6 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
         subject=attachment[0],
         body=None,
         attachment=attachment,
-        raw_data=None,
     )
 
 
