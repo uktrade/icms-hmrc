@@ -43,6 +43,12 @@ def get_icms_prod_beat_schedule():
             "task": "icms:send_licence_data_to_icms",
             "schedule": crontab(minute="*/5"),
         },
+        #
+        # Task to forward licence usage data (icms-hmrc -> ICMS)
+        "send-usage-data": {
+            "task": "icms:send_usage_data_to_icms",
+            "schedule": crontab(hour="*/2"),
+        },
     }
 
 
