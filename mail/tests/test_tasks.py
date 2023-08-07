@@ -198,22 +198,6 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Check any scheduled deletes were reset
         self.con.rset.assert_called_once()
 
-    def test_process_licence_reply_errors_with_unknown_email_subject(
-        self, correct_email_settings, mock_pop3_unknown_subject
-    ):
-        self._patch_pop3_class(mock_pop3_unknown_subject)
-
-        with pytest.raises(
-            ValueError, match="Unable to process email with subject: All about cakes"
-        ):
-            tasks.process_licence_reply_and_usage_emails()
-
-        # Check the connection was closed automatically
-        self.con.quit.assert_called_once()
-
-        # Check any scheduled deletes were reset
-        self.con.rset.assert_called_once()
-
     def test_process_licence_reply_errors_with_invalid_reply_subject(
         self, correct_email_settings, mock_pop3_invalid_reply_subject
     ):
