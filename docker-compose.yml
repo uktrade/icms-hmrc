@@ -61,7 +61,7 @@ services:
       - 8000
     networks:
       - backend
-      - icms_public
+      - public
     command: pipenv run ./manage.py runserver 0.0.0.0:8000
 
   celery-worker:
@@ -81,7 +81,7 @@ services:
       - redis
     networks:
       - backend
-      - icms_public
+      - public
 
   celery-beat:
     build:
@@ -109,9 +109,9 @@ services:
 
 networks:
   backend:
-  icms_public:
+  public:
     name: "icms_public"
-
+    external: true
 
 volumes:
   pgdata:
