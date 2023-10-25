@@ -164,7 +164,7 @@ HAWK_ALGORITHM = "sha256"
 
 # TODO: Change to icms (will require change in ICMS codebase)
 LITE_API_ID = "lite-api"
-ICMS_API_URL = env("ICMS_API_URL", default="http://web:8080/")
+ICMS_API_URL = env("ICMS_API_URL", default="http://caseworker:8080/")
 LITE_API_REQUEST_TIMEOUT = 60  # Maximum time, in seconds, to wait between bytes of a response
 
 HAWK_CREDENTIALS = {
