@@ -443,7 +443,7 @@ class TestSendLicenceDataToICMSTask:
         last_log_msg = caplog.messages[-1]
         assert last_log_msg == (
             "Failed to send licence reply data to ICMS (Check ICMS sentry):"
-            " 500 Server Error: test reason for url: http://web:8080/chief/license-data-callback"
+            " 500 Server Error: test reason for url: http://caseworker:8080/chief/license-data-callback"
         )
 
         # Check the mail status hasn't changed
