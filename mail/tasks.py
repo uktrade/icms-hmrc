@@ -220,8 +220,8 @@ def send_licence_data_to_icms():
     response: requests.Response = mail_requests.post(
         url,
         licence_reply_data,
-        hawk_credentials=settings.LITE_API_ID,
-        timeout=settings.LITE_API_REQUEST_TIMEOUT,
+        hawk_credentials=settings.ICMS_API_ID,
+        timeout=settings.ICMS_API_REQUEST_TIMEOUT,
     )
 
     try:
@@ -306,8 +306,8 @@ def send_usage_data_to_icms():
         response: requests.Response = mail_requests.post(
             url,
             {"usage_data": processor.usage_licences},
-            hawk_credentials=settings.LITE_API_ID,
-            timeout=settings.LITE_API_REQUEST_TIMEOUT,
+            hawk_credentials=settings.ICMS_API_ID,
+            timeout=settings.ICMS_API_REQUEST_TIMEOUT,
         )
 
         try:

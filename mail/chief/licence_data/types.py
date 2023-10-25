@@ -32,7 +32,7 @@ class FileHeader(_Record):
     # cycle but if it can for an interface it should roll to zero.
     run_num: Optional[int] = None
 
-    # For LITE / SPIRE this is usually (always?) "N". If "Y" the given runNum
+    # For ICMS this is usually (always?) "N". If "Y" the given runNum
     # overrides the value expected by the processing system. For sequential
     # processing, the next file sent should have the next number. For parallel
     # processing it must be set to "Y".

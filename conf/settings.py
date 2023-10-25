@@ -163,14 +163,14 @@ HAWK_RECEIVER_NONCE_EXPIRY_SECONDS = 60
 HAWK_ALGORITHM = "sha256"
 
 # TODO: Change to icms (will require change in ICMS codebase)
-LITE_API_ID = "lite-api"
+ICMS_API_ID = "icms-api"
 ICMS_API_URL = env("ICMS_API_URL", default="http://caseworker:8080/")
-LITE_API_REQUEST_TIMEOUT = 60  # Maximum time, in seconds, to wait between bytes of a response
+ICMS_API_REQUEST_TIMEOUT = 60  # Maximum time, in seconds, to wait between bytes of a response
 
 HAWK_CREDENTIALS = {
-    LITE_API_ID: {
-        "id": LITE_API_ID,
-        "key": env("LITE_API_HAWK_KEY"),
+    ICMS_API_ID: {
+        "id": ICMS_API_ID,
+        "key": env("ICMS_API_HAWK_KEY"),
         "algorithm": HAWK_ALGORITHM,
     },
 }

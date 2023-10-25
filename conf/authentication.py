@@ -15,7 +15,7 @@ class HawkOnlyAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         """Authenticate the request and return a two-tuple of (user, token).
 
-        Establish that the request has come from an authorised LITE API client
+        Establish that the request has come from an authorised ICMS API client
         by checking that the request is correctly Hawk signed
         """
 
