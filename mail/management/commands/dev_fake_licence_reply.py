@@ -23,9 +23,9 @@ class Command(BaseCommand):
     Supports one of several outcomes:
 
     How to run:
-    make pipenv COMMAND="run ./manage.py dev_fake_licence_reply accept"
-    make pipenv COMMAND="run ./manage.py dev_fake_licence_reply reject"
-    make pipenv COMMAND="run ./manage.py dev_fake_licence_reply file_error"
+    make manage args="dev_fake_licence_reply accept"
+    make manage args="dev_fake_licence_reply reject"
+    make manage args="dev_fake_licence_reply file_error"
     """
 
     def add_arguments(self, parser: CommandParser):
