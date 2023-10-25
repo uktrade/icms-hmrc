@@ -26,8 +26,8 @@ logger = logging.getLogger(__name__)
 
 
 def create_licence_data_mail(licences: "QuerySet[LicencePayload]", source: SourceEnum) -> Mail:
-    last_lite_update = LicenceData.objects.last()
-    run_number = last_lite_update.hmrc_run_number + 1 if last_lite_update else 1
+    last_licence_data = LicenceData.objects.last()
+    run_number = last_licence_data.hmrc_run_number + 1 if last_licence_data else 1
     when = timezone.now()
 
     file_name, file_content = build_licence_data_file(licences, run_number, when)
