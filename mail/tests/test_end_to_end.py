@@ -27,7 +27,7 @@ def get_smtp_body():
     return response.json()["items"][0]["MIME"]["Parts"][1]["Body"]
 
 
-@override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
+@override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS, USE_LEGACY_EMAIL_CODE=True)
 class ICMSEndToEndTests(testcases.TestCase):
     def test_icms_send_email_to_hmrc_fa_oil_e2e(self):
         clear_stmp_mailbox()

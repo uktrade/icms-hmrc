@@ -1,6 +1,7 @@
 import logging
 import poplib
 import smtplib
+from email.mime.multipart import MIMEMultipart
 
 from django.conf import settings
 
@@ -47,11 +48,11 @@ class MailServer(object):
 def get_smtp_connection():
     """Connect to an SMTP server, specified by environment variables."""
     # Note that EMAIL_HOSTNAME is not Django's EMAIL_HOST setting.
-    hostname = settings.EMAIL_HOSTNAME
-    port = str(settings.EMAIL_SMTP_PORT)
+    hostname = settings.EMAIL_HOST
+    port = str(settings.EMAIL_PORT)
     use_tls = settings.EMAIL_USE_TLS
-    username = settings.EMAIL_USER
-    password = settings.EMAIL_PASSWORD
+    username = settings.EMAIL_HOST_USER
+    password = settings.EMAIL_HOST_PASSWORD
     logging.info("SMTP=%r:%r, TLS=%r, USERNAME=%r", hostname, port, use_tls, username)
     conn = smtplib.SMTP(hostname, port, timeout=60)
 
@@ -63,7 +64,7 @@ def get_smtp_connection():
     return conn
 
 
-def smtp_send(message):
+def smtp_send(message: MIMEMultipart) -> dict:
     conn = get_smtp_connection()
     try:
         # Result is an empty dict on success.
