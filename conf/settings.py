@@ -92,17 +92,21 @@ AZURE_AUTH_TENANT_ID = env.str("AZURE_AUTH_TENANT_ID")
 HMRC_TO_DIT_EMAIL_HOSTNAME = env("HMRC_TO_DIT_EMAIL_HOSTNAME", default="")
 HMRC_TO_DIT_EMAIL_USER = env("HMRC_TO_DIT_EMAIL_USER", default="")
 
+# Receiver email address
 OUTGOING_EMAIL_USER = env("OUTGOING_EMAIL_USER")
 
-# SMTP email settings.
-# TODO: Revisit when implementing ICMSLST-1837
-# These 6 EMAIL_* settings are NOT Django default email backend settings.
-EMAIL_PASSWORD = env("EMAIL_PASSWORD")
-EMAIL_HOSTNAME = env("EMAIL_HOSTNAME")
-EMAIL_USER = env("EMAIL_USER")
-EMAIL_POP3_PORT = env("EMAIL_POP3_PORT")
-EMAIL_SMTP_PORT = env("EMAIL_SMTP_PORT")
-EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+# TODO: Support console backend in tests / replace mailhog?
+# DJANGO EMAIL SMTP SETTINGS
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_PORT = env("DJANGO_EMAIL_PORT")
+EMAIL_HOST = env("DJANGO_EMAIL_HOST")
+EMAIL_HOST_USER = env("DJANGO_EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("DJANGO_EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = env.bool("DJANGO_EMAIL_USE_TLS", default=True)
+EMAIL_USE_SSL = False
+EMAIL_TIMEOUT = None
+
+USE_LEGACY_EMAIL_CODE = env.bool("USE_LEGACY_EMAIL_CODE")
 
 MAILHOG_URL = env.str("MAILHOG_URL", default="http://localhost:8025")
 
@@ -164,7 +168,6 @@ HAWK_AUTHENTICATION_ENABLED = env.bool("HAWK_AUTHENTICATION_ENABLED", default=Tr
 HAWK_RECEIVER_NONCE_EXPIRY_SECONDS = 60
 HAWK_ALGORITHM = "sha256"
 
-# TODO: Change to icms (will require change in ICMS codebase)
 ICMS_API_ID = "icms-api"
 ICMS_API_URL = env("ICMS_API_URL", default="http://caseworker:8080/")
 ICMS_API_REQUEST_TIMEOUT = 60  # Maximum time, in seconds, to wait between bytes of a response

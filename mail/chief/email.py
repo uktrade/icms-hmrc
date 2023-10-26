@@ -1,7 +1,6 @@
-# TODO: Replace this with https://uktrade.atlassian.net/browse/ICMSLST-1837
-
+import dataclasses
+import datetime as dt
 import logging
-from collections import namedtuple
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -16,12 +15,18 @@ from mail.models import LicenceData, Mail
 logger = logging.getLogger(__name__)
 
 
-EmailMessageDto = namedtuple(
-    "EmailMessageDto", "run_number, sender, receiver, date, subject, body, attachment"
-)
+@dataclasses.dataclass(frozen=True)
+class EmailMessageData:
+    run_number: int
+    sender: str
+    receiver: str
+    date: dt.datetime
+    subject: str
+    body: None
+    attachment: list[str, str]
 
 
-def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
+def build_request_mail_message_dto(mail: Mail) -> EmailMessageData:
     sender = None
     receiver = None
     attachment = [None, None]
@@ -45,7 +50,7 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageDto:
         attachment[0],
     )
 
-    return EmailMessageDto(
+    return EmailMessageData(
         run_number=run_number,
         sender=sender,
         receiver=receiver,
@@ -73,8 +78,8 @@ def _build_sent_file_data(file_data: str, run_number: int) -> str:
     return file_data_line_1 + "\n" + file_data_lines[1]
 
 
-def build_email_message(email_message_dto: EmailMessageDto) -> MIMEMultipart:
-    """Build mail message from EmailMessageDto.
+def build_email_message(email_message_dto: EmailMessageData) -> MIMEMultipart:
+    """Build mail message from EmailMessageData.
     :param email_message_dto: the DTO object this mail message is built upon
     :return: a multipart message
     """
@@ -91,7 +96,8 @@ def build_email_message(email_message_dto: EmailMessageDto) -> MIMEMultipart:
         )
 
     multipart_msg = MIMEMultipart()
-    multipart_msg["From"] = settings.EMAIL_USER  # the SMTP server only allows sending as itself
+    # the SMTP server only allows sending as itself
+    multipart_msg["From"] = settings.EMAIL_HOST_USER
     multipart_msg["To"] = email_message_dto.receiver
     multipart_msg["Subject"] = email_message_dto.subject
     multipart_msg["name"] = email_message_dto.subject

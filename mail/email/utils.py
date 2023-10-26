@@ -1,0 +1,70 @@
+import logging
+
+from django.conf import settings
+from django.core.mail import EmailMessage
+from unidecode import unidecode_expect_ascii
+
+from mail.chief.email import EmailMessageData, build_email_message
+from mail.servers import smtp_send
+
+logger = logging.getLogger(__name__)
+
+
+class ChiefEmailMessage(EmailMessage):
+    encoding = "ascii"
+
+
+def send_email_wrapper(email_data: EmailMessageData) -> None:
+    """Used to send emails to CHIEF.
+
+    Until after we go live we are preserving the old lite-hmrc email sending code in case the
+    new version is not correct.
+    """
+
+    if settings.USE_LEGACY_EMAIL_CODE:
+        logger.info("Sending email to hmrc using mail.servers.smtp_send")
+        message = build_email_message(email_data)
+        smtp_send(message)
+
+    else:
+        logger.info("Sending email to hmrc using mail.email.send_chief_email")
+        count = send_chief_email(email_data)
+        logger.info("%s emails sent to CHIEF", count)
+
+
+def send_chief_email(email_data: EmailMessageData) -> int:
+    """Send licence data email to CHIEF.
+
+    Returns the number of emails sent.
+    """
+
+    file_content = unidecode_expect_ascii(email_data.attachment[1], errors="replace")
+    if email_data.attachment[1] != file_content:
+        logger.info(
+            "File content different after transliteration\nBefore: %s\nAfter: %s\n",
+            email_data.attachment[1],
+            file_content,
+        )
+
+    licence_data_file = (
+        # filename
+        email_data.attachment[0],
+        # content
+        file_content,
+        # mimetype
+        "text/plain",
+    )
+
+    mail = ChiefEmailMessage(
+        subject=email_data.subject,
+        body=email_data.body,
+        from_email=settings.EMAIL_HOST_USER,  # the SMTP server only allows sending as itself
+        to=[email_data.receiver],
+        attachments=[licence_data_file],
+        headers={
+            # To match V1 (consider deleting)
+            "name": email_data.subject
+        },
+    )
+
+    return mail.send()

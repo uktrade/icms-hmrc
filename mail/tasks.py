@@ -15,13 +15,13 @@ from conf import celery_app
 from mail import requests as mail_requests
 from mail import utils
 from mail.auth import Authenticator, ModernAuthentication
-from mail.chief.email import build_email_message, build_request_mail_message_dto
+from mail.chief.email import build_request_mail_message_dto
 from mail.chief.licence_data import create_licence_data_mail
 from mail.chief.licence_reply import LicenceReplyProcessor
 from mail.chief.usage_data.processor import UsageDataProcessor
+from mail.email.utils import send_email_wrapper
 from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
 from mail.models import LicenceData, LicencePayload, Mail
-from mail.servers import smtp_send
 from mail.utils import pop3
 from mail.utils.sentry import log_to_sentry
 
@@ -89,8 +89,7 @@ def send_licence_data_to_hmrc() -> None:
                 licence_references,
             )
 
-            message = build_email_message(mail_dto)
-            smtp_send(message)
+            send_email_wrapper(mail_dto)
 
             # Update the mail object to record what we sent to destination
             mail.status = ReceptionStatusEnum.REPLY_PENDING
