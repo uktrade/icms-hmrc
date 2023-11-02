@@ -52,19 +52,17 @@ def send_chief_email(email_data: EmailMessageData) -> int:
         # content
         file_content,
         # mimetype
-        "text/plain",
+        "application/octet-stream",
+        # Replace with this if we want to attach a text file.
+        # "text/plain",
     )
 
     mail = ChiefEmailMessage(
         subject=email_data.subject,
         body=email_data.body,
-        from_email=settings.EMAIL_HOST_USER,  # the SMTP server only allows sending as itself
+        from_email=settings.EMAIL_HOST_USER,
         to=[email_data.receiver],
         attachments=[licence_data_file],
-        headers={
-            # To match V1 (consider deleting)
-            "name": email_data.subject
-        },
     )
 
     return mail.send()
