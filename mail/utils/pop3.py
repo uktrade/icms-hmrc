@@ -6,8 +6,9 @@ from typing import List
 from mail.auth import Authenticator
 from mail.servers import MailServer
 
-# TODO: CHECK correct encoding before going live
-#   lite-hmrc used this setting for its pop code: DEFAULT_ENCODING = "iso-8859-1"
+# Unsure what encoding HMRC use when creating emails to send us.
+# The value here was taken from lite-hmrc, which is live, so presumably works.
+DEFAULT_ENCODING = "iso-8859-1"
 
 
 @contextlib.contextmanager
@@ -25,7 +26,7 @@ def list_messages_ids(con: poplib.POP3) -> List[str]:
     resp, messages, octets = con.list()
 
     # m = 'mesg_num octets'
-    return [m.decode().split(" ")[0] for m in messages]
+    return [m.decode(DEFAULT_ENCODING).split(" ")[0] for m in messages]
 
 
 def retrieve_message(con: poplib.POP3, msg_id: str) -> str:
@@ -35,7 +36,7 @@ def retrieve_message(con: poplib.POP3, msg_id: str) -> str:
 
     resp, msg_lines, octets = con.retr(msg_id)
 
-    return "\n".join(line.decode() for line in msg_lines)
+    return "\n".join(line.decode(DEFAULT_ENCODING) for line in msg_lines)
 
 
 def get_email(con: poplib.POP3, msg_id: str) -> email.message.EmailMessage:
