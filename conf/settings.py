@@ -96,7 +96,7 @@ HMRC_TO_DIT_EMAIL_USER = env("HMRC_TO_DIT_EMAIL_USER", default="")
 OUTGOING_EMAIL_USER = env("OUTGOING_EMAIL_USER")
 
 # TODO: Support console backend in tests / replace mailhog?
-# DJANGO EMAIL SMTP SETTINGS
+# DJANGO EMAIL SMTP SETTINGS used to send emails to HMRC from ICMS
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_PORT = env("DJANGO_EMAIL_PORT")
 EMAIL_HOST = env("DJANGO_EMAIL_HOST")
