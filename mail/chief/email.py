@@ -33,7 +33,7 @@ def build_request_mail_message_dto(mail: Mail) -> EmailMessageData:
     run_number = 0
 
     if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
-        sender = settings.INCOMING_EMAIL_USER
+        sender = settings.EMAIL_HOST_USER
         receiver = settings.OUTGOING_EMAIL_USER
         licence_data = LicenceData.objects.get(mail=mail)
         run_number = licence_data.hmrc_run_number

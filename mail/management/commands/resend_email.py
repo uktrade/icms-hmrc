@@ -12,25 +12,12 @@ from mail.models import LicenceData, Mail
 logger = logging.getLogger(__name__)
 
 
-def get_mail_extract(hmrc_run_number):
-    try:
-        licence_data = LicenceData.objects.get(hmrc_run_number=hmrc_run_number)
-        return licence_data.mail
-    except LicenceData.DoesNotExist:
-        logger.info("No licence data instance found for given run number %s", hmrc_run_number)
-
-    return None
-
-
 class Command(BaseCommand):
     help = """
     Command to resend an email corresponding to the given hmrc run number
 
     Arguments:
-    hmrc_run_number: The input run number *must* be the run number used by HMRC to identify this mail.
-    If the mail has come from SPIRE then their current run number is different from the hmrc run number
-    because icms-hmrc translates it when sending it to HMRC. For this reason it is important to use
-    HMRC run number as the starting point when resending it.
+    hmrc_run_number: The run number used by HMRC to identify this mail.
 
     Based on hmrc run number the command identifies the relevant LicenceData, Mail instances and
     prepares the mail to be resent. Some assertions are included to ensure the filenames match the
@@ -39,21 +26,14 @@ class Command(BaseCommand):
     -------------------------
     When to use this command
     -------------------------
-    Below are the only cases where this command should be used,
+    Below is the only case where this command should be used:
 
-    Case1: When a licence_data mail is sent to HMRC successfully from our system but it hasn't reached HMRC
-    In this case we expect status of the mail to be 'reply_pending' and extract_type as 'licence_data'
+    When a licence_data mail is sent to HMRC successfully from our system but it hasn't reached HMRC.
+    In this case we expect status of the mail to be 'reply_pending' and extract_type as 'licence_data'.
     Besides there should be only one instance with this status.
     If the mail sent to HMRC is actually received and accepted by them and if for some reason we need to
     resend again then this command should not be used. That is because once it is accepted by their systems
     sending again with same run number is an error and will be rejected by their systems.
-
-    Case2: When a licence_reply mail is sent to SPIRE successfully from our system but it hasn't reached SPIRE
-    In this case we expect status of the mail to be 'reply_sent' and extract_type as 'licence_reply'
-
-    Case3: When a usage_data mail is sent to SPIRE successfully from our system but it hasn't reached SPIRE
-    In this case we expect status of the mail to be 'reply_sent' and extract_type as 'usage_data'
-
     """
 
     def add_arguments(self, parser):
@@ -69,57 +49,48 @@ class Command(BaseCommand):
         hmrc_run_number = options.pop("hmrc_run_number")
         dry_run = options.pop("dry_run")
 
-        destination = None
+        destination = SourceEnum.HMRC
         mail = get_mail_extract(hmrc_run_number)
+
         if not mail:
+            logger.error("hmrc_run_number %s does not belong to Licence data mail", hmrc_run_number)
+            return
+
+        if mail.extract_type != ExtractTypeEnum.LICENCE_DATA:
+            logger.error("Unexpected extract_type for the mail %s", mail.edi_filename)
+            return
+
+        if mail.status != ReceptionStatusEnum.REPLY_PENDING:
             logger.error(
-                "Given run number %s does not belong to Licence data or Usage data mail",
-                hmrc_run_number,
+                "Mail is expected to be in 'reply_pending' status but current status is %s",
+                mail.status,
             )
             return
 
-        # Usually we resend in cases where the mail is initially sent from our system successfully but not received
-        # by the recipient. This could happen with HMRC in case of licence data mails and with SPIRE in
-        # case of licence reply mails. Below we check for their expected status and set destination.
-
-        # this is the usual case where we had to resend
-        if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
-            destination = SourceEnum.HMRC
-            if mail.status != ReceptionStatusEnum.REPLY_PENDING:
-                logger.error(
-                    "Mail is expected to be in 'reply_pending' status but current status is %s",
-                    mail.status,
-                )
-                return
-        else:
-            logger.error("Unexpected extract_type for the mail %s", mail.edi_filename)
-            return
-
         message_to_send_dto = _build_request_mail_message_dto_internal(mail)
-        if not message_to_send_dto:
-            logger.error("Unexpected extract_type for the mail %s", mail.edi_filename)
-            return
-
         if not dry_run:
             send_email_wrapper(message_to_send_dto)
 
         logger.info("Mail %s resent to %s successfully", message_to_send_dto.subject, destination)
 
 
-def _build_request_mail_message_dto_internal(mail: Mail) -> EmailMessageData:
-    sender = None
-    receiver = None
-    attachment = [None, None]
-    run_number = 0
+def get_mail_extract(hmrc_run_number: int) -> Mail | None:
+    try:
+        licence_data = LicenceData.objects.get(hmrc_run_number=hmrc_run_number)
+        return licence_data.mail
+    except LicenceData.DoesNotExist:
+        logger.info("No licence data instance found for given run number %s", hmrc_run_number)
 
-    if mail.extract_type == ExtractTypeEnum.LICENCE_DATA:
-        # This is the case where we sent a licence_data email earlier which hasn't reached HMRC
-        # and so we are resending it
-        sender = settings.EMAIL_HOST_USER
-        receiver = settings.OUTGOING_EMAIL_USER
-        attachment = [mail.sent_filename, mail.sent_data]
-    else:
+    return None
+
+
+def _build_request_mail_message_dto_internal(mail: Mail) -> EmailMessageData:
+    if mail.extract_type != ExtractTypeEnum.LICENCE_DATA:
         raise Exception(f"Extract type not supported: {mail.extract_type}")
+
+    sender = settings.EMAIL_HOST_USER
+    receiver = settings.OUTGOING_EMAIL_USER
+    attachment = [mail.sent_filename, mail.sent_data]
 
     logger.info(
         "Preparing request Mail dto of extract type %s, sender %s, receiver %s with filename %s",
@@ -130,7 +101,8 @@ def _build_request_mail_message_dto_internal(mail: Mail) -> EmailMessageData:
     )
 
     return EmailMessageData(
-        run_number=run_number,
+        # run_number isn't used when sending the email
+        run_number=0,
         sender=sender,
         receiver=receiver,
         date=timezone.now(),
