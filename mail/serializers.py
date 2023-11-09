@@ -38,7 +38,7 @@ class AddressSerializer(serializers.Serializer):
 class OrganisationSerializer(serializers.Serializer):
     # "GB" + 12 or 15 digits.
     eori_number = serializers.CharField(min_length=14, max_length=17)
-    name = serializers.CharField(max_length=80)
+    name = serializers.CharField(max_length=80, allow_blank=True)
     address = AddressSerializer()
     start_date = serializers.DateField(required=False, allow_null=True)
     end_date = serializers.DateField(required=False, allow_null=True)
