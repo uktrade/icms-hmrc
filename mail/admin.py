@@ -29,6 +29,14 @@ class LicenceDataAdmin(admin.ModelAdmin):
 class MailAdmin(admin.ModelAdmin):
     list_display = ["pk", "edi_filename", "status", "extract_type", "sent_at", "response_date"]
 
+    def has_change_permission(self, request, obj=None):
+        """Prevent modification of Mail records to minimise the risk of introducing data bugs.
+
+        When django saves records an extra \r is being added to the textarea fields on each line.
+        This makes columns like response_data invalid and we are not able to process the chief data.
+        """
+        return False
+
 
 admin.site.register(LicenceData, LicenceDataAdmin)
 admin.site.register(Mail, MailAdmin)
