@@ -1,7 +1,7 @@
 from typing import Any
 
 from mail.chief import FIELD_SEP, LINE_SEP
-from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
+from mail.enums import ExtractTypeEnum, MailStatusEnum
 from mail.models import Mail
 
 from .types import (
@@ -33,7 +33,7 @@ class UsageDataProcessor:
                 f"Error with Mail ({mail.id} - {mail.response_subject}): Invalid extract type {mail.extract_type}"
             )
 
-        if mail.status != ReceptionStatusEnum.REPLY_RECEIVED:
+        if mail.status != MailStatusEnum.REPLY_RECEIVED:
             raise ValueError(
                 f"Error with Mail ({mail.id} - {mail.response_subject}): Invalid status {mail.status}"
             )

@@ -17,9 +17,10 @@ requests-mock = "*"
 flower = "==1.2"
 isort = {extras = ["pipfile_deprecated_finder"], version = "*"}
 flake8 = "*"
+freezegun = "*"
 
 [packages]
-djangorestframework = "~=3.9"
+djangorestframework = "~=3.14.0"
 django-environ = "~=0.4"
 mohawk = ">=1.1"
 requests = "~=2.31"

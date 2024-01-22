@@ -58,6 +58,33 @@ The tool 'bandit' is used. To run it `pipenv run bandit -r .`
 * run following to scan all files for issues
   - `pre-commit run --all-files`
 
+# Licence Data Status Changes
+
+Status changes for Mail model of extract_type ExtractTypeEnum.LICENCE_DATA.
+
+1. MailStatusEnum.PENDING:
+
+    When mail is first created before message is emailed to HMRC. (Only very briefly in this state)
+
+2. MailStatusEnum.PENDING -> MailStatusEnum.REPLY_PENDING:
+
+    When licence data has been emailed to HMRC.
+
+3. MailStatusEnum.REPLY_PENDING -> MailStatusEnum.REPLY_RECEIVED
+
+    When licenceReply data has been stored in the db after being read from the mailserver.
+
+4. MailStatusEnum.REPLY_RECEIVED -> MailStatusEnum.REPLY_PROCESSED
+
+    After the licenceReply data has been parsed and send to ICMS.
+
+5. MailStatusEnum.REPLY_RECEIVED -> MailStatusEnum.REPLY_PARTIALLY_PROCESSED
+
+    When we have tried to process a licenceReply file with file errors.
+
+    This indicates a code change is probably required and the recreate_and_send_licence_data_email
+    command needs running to resend the applications that have not been processed by HMRC.
+
 # Mailbox authentication
 
 To authenticate with the mailboxes we have two separate authentication mechanisms

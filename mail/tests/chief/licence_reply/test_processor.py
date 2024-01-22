@@ -4,27 +4,33 @@ import pytest
 
 from mail.chief.licence_reply import LicenceReplyProcessor
 from mail.chief.licence_reply.types import FileError, RejectedTransactionError
-from mail.enums import ExtractTypeEnum, ReceptionStatusEnum
+from mail.enums import ExtractTypeEnum, MailStatusEnum
 from mail.models import Mail
 
 
 @pytest.fixture
-def licence_reply_example() -> str:
-    filename = "mail/tests/files/icms/CHIEF_licenceReply_accepted_and_rejected_example"
+def valid_licence_reply() -> str:
+    filename = "mail/tests/files/icms/licence_reply/accepted_and_rejected_example"
     return pathlib.Path(filename).read_text()
 
 
-def test_processor_with_valid_file(licence_reply_example):
-    processor = LicenceReplyProcessor(licence_reply_example)
+@pytest.fixture
+def partially_valid_licence_reply() -> str:
+    filename = "mail/tests/files/icms/licence_reply/partially_valid_example"
+    return pathlib.Path(filename).read_text()
+
+
+def test_processor_with_valid_file(valid_licence_reply):
+    processor = LicenceReplyProcessor(valid_licence_reply)
 
     _assert_processor_valid(processor)
 
 
-def test_processor_is_valid_with_mail_instance(licence_reply_example):
+def test_processor_is_valid_with_mail_instance(valid_licence_reply):
     mail = Mail(
         id=1,
         response_subject="ExampleLicenceReply",
-        response_data=licence_reply_example,
+        response_data=valid_licence_reply,
     )
 
     # Test extract type error handling
@@ -37,13 +43,14 @@ def test_processor_is_valid_with_mail_instance(licence_reply_example):
     mail.extract_type = ExtractTypeEnum.LICENCE_DATA
 
     # Test status error handling
-    mail.status = ReceptionStatusEnum.REPLY_SENT
+    mail.status = MailStatusEnum.REPLY_PROCESSED
 
     with pytest.raises(
-        ValueError, match=r"Error with Mail \(1 - ExampleLicenceReply\): Invalid status reply_sent"
+        ValueError,
+        match=r"Error with Mail \(1 - ExampleLicenceReply\): Invalid status reply_processed",
     ):
         LicenceReplyProcessor.load_from_mail(mail)
-    mail.status = ReceptionStatusEnum.REPLY_RECEIVED
+    mail.status = MailStatusEnum.REPLY_RECEIVED
 
     # Finally check the file loaded correctly
     processor = LicenceReplyProcessor.load_from_mail(mail)
@@ -51,7 +58,7 @@ def test_processor_is_valid_with_mail_instance(licence_reply_example):
 
 
 def _assert_processor_valid(processor: LicenceReplyProcessor) -> None:
-    assert processor.file_valid()
+    assert processor.reply_file_is_valid()
 
     # Check accepted
     expected_accepted = ["ABC12345", "ABC12346", "ABC12348"]
@@ -84,12 +91,16 @@ def test_file_error():
 
     processor = LicenceReplyProcessor(file_with_file_error)
 
-    assert not processor.file_valid()
+    assert processor.reply_file_is_invalid()
     expected_file_errors = [
         FileError(code="18", text="Record type 'fileHeader' not recognised", position="99")
     ]
 
     assert processor.file_errors == expected_file_errors
+
+    assert int(processor.file_trailer.accepted_count) == 0
+    assert int(processor.file_trailer.rejected_count) == 0
+    assert int(processor.file_trailer.file_error_count) == 1
 
 
 def test_rejected_error_out_of_order():
@@ -135,17 +146,45 @@ def test_unknown_line_raises_error():
         LicenceReplyProcessor(bad_file)
 
 
-def test_is_valid_is_called():
+def test__check_can_process_is_called():
     processor = LicenceReplyProcessor("")
 
     with pytest.raises(
         ValueError,
-        match="Unable to get accepted_licences when file hasn't been validated or is invalid",
+        match="Unable to get accepted_licences when file isn't valid or partially valid.",
     ):
         _ = processor.accepted_licences
 
     with pytest.raises(
         ValueError,
-        match="Unable to get rejected_licences when file hasn't been validated or is invalid",
+        match="Unable to get rejected_licences when file isn't valid or partially valid.",
     ):
         _ = processor.rejected_licences
+
+
+def test_processor_works_with_partially_valid_file(partially_valid_licence_reply):
+    processor = LicenceReplyProcessor(partially_valid_licence_reply)
+
+    assert not processor.reply_file_is_valid()
+    assert not processor.reply_file_is_invalid()
+    assert processor.reply_file_is_partially_valid()
+    assert not processor.reply_file_contains_no_data()
+
+    expected_accepted = ["ABC12345", "ABC12346"]
+    actual_accepted = [at.transaction_ref for at in processor.accepted_licences]
+    assert expected_accepted == actual_accepted
+    assert not processor.rejected_licences
+
+    expected_file_errors = [
+        FileError(code="9", text="CHIEF server application error", position=None)
+    ]
+    assert processor.file_errors == expected_file_errors
+
+
+def test_processor_works_with_reply_file_contains_no_data():
+    processor = LicenceReplyProcessor("")
+
+    assert not processor.reply_file_is_valid()
+    assert not processor.reply_file_is_invalid()
+    assert not processor.reply_file_is_partially_valid()
+    assert processor.reply_file_contains_no_data()

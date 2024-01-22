@@ -8,7 +8,7 @@ from django.utils import timezone
 from rest_framework.status import HTTP_200_OK, HTTP_503_SERVICE_UNAVAILABLE
 from rest_framework.views import APIView
 
-from mail.enums import ReceptionStatusEnum
+from mail.enums import MailStatusEnum
 from mail.models import LicencePayload, Mail
 
 
@@ -55,7 +55,7 @@ class HealthCheck(APIView):
     @staticmethod
     def _get_pending_mail() -> []:
         dt = timezone.now() - datetime.timedelta(seconds=settings.EMAIL_AWAITING_REPLY_TIME)
-        qs = Mail.objects.exclude(status=ReceptionStatusEnum.REPLY_SENT).filter(sent_at__lte=dt)
+        qs = Mail.objects.exclude(status=MailStatusEnum.REPLY_PROCESSED).filter(sent_at__lte=dt)
 
         return list(qs.values_list("id", flat=True))
 

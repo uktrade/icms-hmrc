@@ -8,7 +8,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from conf.views import HealthCheck
-from mail.enums import LicenceActionEnum, ReceptionStatusEnum
+from mail.enums import LicenceActionEnum, MailStatusEnum
 from mail.models import LicencePayload, Mail
 
 
@@ -32,7 +32,7 @@ class TestHealthcheck(testcases.TestCase):
         Mail.objects.create(
             edi_filename="filename",
             edi_data="1\\fileHeader\\CHIEF\\SPIRE\\",
-            status=ReceptionStatusEnum.PENDING,
+            status=MailStatusEnum.PENDING,
             sent_at=sent_at,
         )
         response = self.client.get(self.url)

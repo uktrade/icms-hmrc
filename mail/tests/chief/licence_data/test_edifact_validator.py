@@ -1,10 +1,8 @@
 import unittest
 
-from django.test import override_settings
 from parameterized import parameterized
 
 from mail.chief.licence_data import edifact_validator
-from mail.enums import ChiefSystemEnum
 
 
 class LicenceToEdifactValidationTests(unittest.TestCase):
@@ -153,7 +151,6 @@ class LicenceToEdifactValidationTests(unittest.TestCase):
         errors = edifact_validator.validate_licence_product_line(line)
         self.assertEqual(len(errors), num_errors, f"Line with error: {line}")
 
-    @override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
     def test_licence_product_line_validation_with_commodity_code(self):
         line, num_errors = ("7\\line\\1\\1122334455\\\\\\\\\\Q\\\\030\\\\4\\\\\\\\\\\\", 0)
         errors = edifact_validator.validate_licence_product_line(line)

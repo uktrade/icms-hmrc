@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core.management import call_command
 from django.db import transaction
 from django.utils import timezone
+from sentry_sdk import capture_message
 
 from conf import celery_app
 from mail import requests as mail_requests
@@ -20,7 +21,7 @@ from mail.chief.licence_data import create_licence_data_mail
 from mail.chief.licence_reply import LicenceReplyProcessor
 from mail.chief.usage_data.processor import UsageDataProcessor
 from mail.email.utils import send_email_wrapper
-from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
+from mail.enums import ExtractTypeEnum, MailStatusEnum, SourceEnum
 from mail.models import LicenceData, LicencePayload, Mail
 from mail.utils import pop3
 from mail.utils.sentry import log_to_sentry
@@ -36,21 +37,18 @@ def dev_process_hmrc_licence_data() -> None:
         logger.warning("This command is only for development environments")
         return
 
-    logger.info(">>>> STEP 1: Sending licence data to hmrc")
-    send_licence_data_to_hmrc.apply()
+    steps = [
+        ("Sending licence data to HMRC", send_licence_data_to_hmrc),
+        ("Faking LicenceReply email from HMRC CHIEF", fake_licence_reply),
+        ("Sending licence data to ICMS", send_licence_data_to_icms),
+        ("Sending usage data to ICMS", send_usage_data_to_icms),
+    ]
 
-    time.sleep(5)
+    for i, (msg, step) in enumerate(steps, start=1):
+        logger.info(f">>>> STEP {i}: {msg}")
+        step.apply()
 
-    logger.info(">>>> STEP 2: FAKING LicenceReply email from HMRC CHIEF")
-    fake_licence_reply.apply()
-
-    time.sleep(5)
-
-    logger.info(">>>> STEP 3: Sending licence data to ICMS")
-    send_licence_data_to_icms.apply()
-
-    logger.info(">>>> STEP 4: Sending usage data to ICMS")
-    send_usage_data_to_icms.apply()
+        time.sleep(5)
 
 
 @celery_app.task(name="icms:send_licence_data_to_hmrc")
@@ -62,13 +60,16 @@ def send_licence_data_to_hmrc() -> None:
 
     if (
         Mail.objects.filter(extract_type=ExtractTypeEnum.LICENCE_DATA)
-        .exclude(status=ReceptionStatusEnum.REPLY_SENT)
-        .count()
+        # Data already sent back to ICMS
+        .exclude(status=MailStatusEnum.REPLY_PROCESSED).count()
     ):
-        logger.info(
-            "Currently we are either waiting for a reply or next one is ready to be processed,\n"
-            "so we cannot send this update now and will be picked up in the next cycle"
-        )
+        # One of the following is happening:
+        # 1. We are in the process of creating a mail record for sending (PENDING)
+        # 2. We have already sent a record to HMRC (REPLY_PENDING)
+        # 3. We have received a reply from HMRC and are going to process it (REPLY_RECEIVED)
+        # 4. We have an error we need to resolve (REPLY_PARTIALLY_PROCESSED)
+        logger.info("Unable to send licence data to HMRC as we are processing another mail record.")
+
         return
 
     try:
@@ -91,10 +92,8 @@ def send_licence_data_to_hmrc() -> None:
 
             send_email_wrapper(mail_dto)
 
-            # Update the mail object to record what we sent to destination
-            mail.status = ReceptionStatusEnum.REPLY_PENDING
-            mail.sent_filename = mail_dto.attachment[0]
-            mail.sent_data = mail_dto.attachment[1]
+            # Update the mail object to indicate we are waiting for a reply from HMRC.
+            mail.status = MailStatusEnum.REPLY_PENDING
             mail.sent_at = timezone.now()
             mail.save()
 
@@ -122,9 +121,7 @@ def fake_licence_reply():
         logger.warning("This command is only for development environments")
         return
 
-    # TODO: ICMSLST-1852 Add support for changing this value
-    response = "accept"
-    call_command("dev_fake_licence_reply", response)
+    call_command("dev_fake_licence_reply", settings.ICMS_FAKE_HMRC_REPLY)
 
 
 @celery_app.task(name="icms:process_licence_reply_and_usage_emails")
@@ -178,7 +175,7 @@ def send_licence_data_to_icms():
     logger.info("Checking for licence data to send to ICMS")
 
     licence_reply_mail_qs = Mail.objects.filter(
-        extract_type=ExtractTypeEnum.LICENCE_DATA, status=ReceptionStatusEnum.REPLY_RECEIVED
+        extract_type=ExtractTypeEnum.LICENCE_DATA, status=MailStatusEnum.REPLY_RECEIVED
     )
 
     mail_to_process = licence_reply_mail_qs.count()
@@ -194,7 +191,35 @@ def send_licence_data_to_icms():
 
     processor = LicenceReplyProcessor.load_from_mail(mail)
 
-    if not processor.file_valid():
+    if processor.reply_file_is_valid():
+        licence_reply_data = _get_licence_reply_data(processor)
+
+        url = parse.urljoin(settings.ICMS_API_URL, "chief/license-data-callback")
+        response: requests.Response = mail_requests.post(
+            url,
+            licence_reply_data,
+            hawk_credentials=settings.ICMS_API_ID,
+            timeout=settings.ICMS_API_REQUEST_TIMEOUT,
+        )
+
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            logger.error(
+                "Failed to send licence reply data to ICMS (Check ICMS sentry): %s", str(e)
+            )
+
+            return
+
+        # Update the status if everything was successful
+        mail.status = MailStatusEnum.REPLY_PROCESSED
+        mail.save()
+        logger.info(
+            "Successfully sent mail (id: %s, filename: %s) to ICMS for processing",
+            mail.id,
+            mail.response_filename,
+        )
+    elif processor.reply_file_is_invalid():
         error_msg = f"Unable to process mail (id: {mail.id}, filename: {mail.response_filename}) as it has file errors."
         logger.warning(error_msg)
 
@@ -213,31 +238,47 @@ def send_licence_data_to_icms():
 
         raise ValueError(error_msg)
 
-    licence_reply_data = _get_licence_reply_data(processor)
+    elif processor.reply_file_is_partially_valid():
+        licence_reply_data = _get_licence_reply_data(processor)
 
-    url = parse.urljoin(settings.ICMS_API_URL, "chief/license-data-callback")
-    response: requests.Response = mail_requests.post(
-        url,
-        licence_reply_data,
-        hawk_credentials=settings.ICMS_API_ID,
-        timeout=settings.ICMS_API_REQUEST_TIMEOUT,
-    )
+        url = parse.urljoin(settings.ICMS_API_URL, "chief/license-data-callback")
+        response: requests.Response = mail_requests.post(
+            url,
+            licence_reply_data,
+            hawk_credentials=settings.ICMS_API_ID,
+            timeout=settings.ICMS_API_REQUEST_TIMEOUT,
+        )
 
-    try:
-        response.raise_for_status()
-    except requests.HTTPError as e:
-        logger.error("Failed to send licence reply data to ICMS (Check ICMS sentry): %s", str(e))
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            logger.error(
+                "Failed to send licence reply data to ICMS (Check ICMS sentry): %s", str(e)
+            )
 
-        return
+            return
 
-    # Update the status if everything was successful
-    mail.status = ReceptionStatusEnum.REPLY_SENT
-    mail.save()
-    logger.info(
-        "Successfully sent mail (id: %s, filename: %s) to ICMS for processing",
-        mail.id,
-        mail.response_filename,
-    )
+        # Update the status indicating we have partially processed some of the records
+        mail.status = MailStatusEnum.REPLY_PARTIALLY_PROCESSED
+        mail.save()
+
+        # Send warning to sentry indicating we need to fix the records not processed by CHIEF
+        # See mail/management/commands/recreate_and_send_licence_data_email.py
+        capture_message(
+            f"Successfully sent mail (id: {mail.id}, filename: {mail.response_filename}) to ICMS for processing but not all records were processed.",
+            level="error",
+        )
+
+    # This should never happen...
+    elif processor.reply_file_contains_no_data():
+        capture_message(
+            f"Check the following mail record: {mail.id}, manually set mail.status to REPLY_PROCESSED if there is no data in the reply file.",
+            level="error",
+        )
+
+    # This should never happen...
+    else:
+        capture_message(f"Licence data in Mail: {mail} is in an unknown state.")
 
 
 def _get_licence_reply_data(processor: LicenceReplyProcessor) -> Dict[str, Any]:
@@ -273,7 +314,7 @@ def send_usage_data_to_icms():
     logger.info("Checking for usage data to send to ICMS")
 
     usage_data_mail_qs = Mail.objects.filter(
-        extract_type=ExtractTypeEnum.USAGE_DATA, status=ReceptionStatusEnum.REPLY_RECEIVED
+        extract_type=ExtractTypeEnum.USAGE_DATA, status=MailStatusEnum.REPLY_RECEIVED
     )
 
     mail_to_process = usage_data_mail_qs.count()
@@ -322,7 +363,7 @@ def send_usage_data_to_icms():
             return
 
     # Update the status if everything was successful
-    mail.status = ReceptionStatusEnum.REPLY_SENT
+    mail.status = MailStatusEnum.REPLY_PROCESSED
     mail.save()
 
 
@@ -378,11 +419,9 @@ def _save_licence_reply_email(reply_email: email.message.EmailMessage) -> None:
 
     ld = LicenceData.objects.get(hmrc_run_number=run_number)
 
-    mail = Mail.objects.select_for_update().get(
-        id=ld.mail.id, status=ReceptionStatusEnum.REPLY_PENDING
-    )
+    mail = Mail.objects.select_for_update().get(id=ld.mail.id, status=MailStatusEnum.REPLY_PENDING)
 
-    mail.status = ReceptionStatusEnum.REPLY_RECEIVED
+    mail.status = MailStatusEnum.REPLY_RECEIVED
     mail.response_filename = file_name
     mail.response_data = payload_bytes.decode()
     mail.response_date = timezone.now()
@@ -435,7 +474,7 @@ def _save_usage_data_email(usage_email: email.message.EmailMessage) -> None:
 
     mail = Mail.objects.create(
         extract_type=ExtractTypeEnum.USAGE_DATA,
-        status=ReceptionStatusEnum.REPLY_RECEIVED,
+        status=MailStatusEnum.REPLY_RECEIVED,
         response_filename=file_name,
         response_data=payload_bytes.decode(),
         response_date=timezone.now(),

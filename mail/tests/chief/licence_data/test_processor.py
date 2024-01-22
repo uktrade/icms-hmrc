@@ -2,10 +2,11 @@ import datetime
 import uuid
 from pathlib import Path
 
-from django.test import override_settings, testcases
+import pytest
+from django.test import testcases
 
 from mail.chief.licence_data.processor import build_licence_data_file
-from mail.enums import ChiefSystemEnum, LicenceActionEnum, LicenceTypeEnum
+from mail.enums import LicenceActionEnum, LicenceTypeEnum
 from mail.models import LicencePayload
 
 
@@ -37,7 +38,6 @@ class BuildLicenceDataFileTests(testcases.TestCase):
         self.assertEqual(filename, "CHIEF_LIVE_FOO_licenceData_1_199912310000")
 
 
-@override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
 class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
     def setUp(self) -> None:
         self.licence = LicencePayload.objects.create(
@@ -117,7 +117,6 @@ class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
         self.assertEqual(expected_content, file_content)
 
 
-@override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
 class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
     def setUp(self) -> None:
         org_data = {
@@ -188,7 +187,6 @@ class TestBuildICMSLicenceDataFADFL(testcases.TestCase):
         self.assertEqual(expected_content, file_content)
 
 
-@override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
 class TestBuildICMSLicenceDataFASIL(testcases.TestCase):
     def setUp(self) -> None:
         org_data = {
@@ -276,36 +274,33 @@ class TestBuildICMSLicenceDataFASIL(testcases.TestCase):
         self.assertEqual(expected_content, file_content)
 
 
-@override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
-class TestBuildICMSLicenceDataFASILCancelPayload(testcases.TestCase):
-    def setUp(self) -> None:
-        from mail.tests.test_serializers import get_valid_fa_sil_revoke_payload
-
-        data = get_valid_fa_sil_revoke_payload()
+class TestBuildICMSLicenceDataFASILCancelPayload:
+    @pytest.fixture(autouse=True)
+    def _setup(self, db, fa_sil_revoke_payload) -> None:
+        data = fa_sil_revoke_payload
 
         LicencePayload.objects.create(
             icms_id=data["id"], reference=data["reference"], action=data["action"], data=data
         )
         self.test_file = Path("mail/tests/files/icms/licence_data_files/fa_sil_cancel")
-        self.assertTrue(self.test_file.is_file())
+        assert self.test_file.is_file()
 
     def test_generate_licence_data_file(self):
         licences = LicencePayload.objects.all()
-        self.assertEqual(licences.count(), 1)
+        assert licences.count() == 1
 
         run_number = 1
         when = datetime.datetime(2022, 1, 1, 10, 11, 00)
 
         filename, file_content = build_licence_data_file(licences, run_number, when)
 
-        self.assertEqual(filename, "CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011")
+        assert filename == "CHIEF_LIVE_ILBDOTI_licenceData_1_202201011011"
 
         self.maxDiff = None
         expected_content = self.test_file.read_text()
-        self.assertEqual(expected_content, file_content)
+        assert expected_content == file_content
 
 
-@override_settings(CHIEF_SOURCE_SYSTEM=ChiefSystemEnum.ICMS)
 class TestBuildICMSLicenceDataSanction(testcases.TestCase):
     def setUp(self) -> None:
         org_data = {

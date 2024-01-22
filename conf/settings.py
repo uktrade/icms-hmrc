@@ -222,3 +222,6 @@ CELERY_IMPORTS = [
 ALLOW_DISASTROUS_DATA_DROPS_NEVER_ENABLE_IN_PROD = env.bool(
     "ALLOW_DISASTROUS_DATA_DROPS_NEVER_ENABLE_IN_PROD", default=False
 )
+
+# Setting for faking licence reply from HMRC
+ICMS_FAKE_HMRC_REPLY: str = env.str("ICMS_FAKE_HMRC_REPLY", "accept")
