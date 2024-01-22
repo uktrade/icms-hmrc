@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.test import testcases
-from django.utils import timezone
 
 from mail.chief.email import EmailMessageData, build_email_message
 
@@ -11,13 +10,10 @@ class BuildEmailMessageTest(testcases.TestCase):
     def test_build_email_message(self):
         attachment = "30 \U0001d5c4\U0001d5c6/\U0001d5c1 \u5317\u4EB0"
         email_message_dto = EmailMessageData(
-            run_number=1,
-            sender="This...gets....ignored ¯\\_(ツ)_//¯",
             receiver="receiver@email_domain.com",
-            date=timezone.now(),
-            body=None,
             subject="Some subject",
-            attachment=["some filename", attachment],
+            body=None,
+            attachment=("some filename", attachment),
         )
 
         mime_multipart = build_email_message(email_message_dto)

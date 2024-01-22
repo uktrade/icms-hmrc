@@ -8,7 +8,7 @@ from django.utils import timezone
 from mail import utils
 from mail.chief.licence_data.chiefprotocol import FIELD_SEP, LINE_SEP
 from mail.chief.licence_reply import types
-from mail.enums import ReceptionStatusEnum
+from mail.enums import FakeChiefLicenceReplyEnum, MailStatusEnum
 from mail.models import LicenceData, LicencePayload, Mail
 
 
@@ -26,20 +26,21 @@ class Command(BaseCommand):
     make manage args="dev_fake_licence_reply accept"
     make manage args="dev_fake_licence_reply reject"
     make manage args="dev_fake_licence_reply file_error"
+    make manage args="dev_fake_licence_reply unknown_error"
     """
 
     def add_arguments(self, parser: CommandParser):
         parser.add_argument(
             dest="outcome",
-            default="accept",
+            default=FakeChiefLicenceReplyEnum.ACCEPT,
             nargs="?",
             type=str,
-            choices=["accept", "reject", "file_error"],
+            choices=FakeChiefLicenceReplyEnum.values,
             help="Licence Reply outcome; accept, reject, random, file_error",
         )
 
     @transaction.atomic()
-    def handle(self, outcome, *args, **options):
+    def handle(self, outcome: FakeChiefLicenceReplyEnum, *args, **options):
         self.stdout.write(f"Desired outcome: {outcome}")
 
         if utils.get_app_env() == "PRODUCTION":
@@ -48,13 +49,11 @@ class Command(BaseCommand):
 
         # Search for a mail instance that is in REPLY_PENDING
         mail: Mail = (
-            Mail.objects.select_for_update()
-            .filter(status=ReceptionStatusEnum.REPLY_PENDING)
-            .first()
+            Mail.objects.select_for_update().filter(status=MailStatusEnum.REPLY_PENDING).first()
         )
 
         if not mail:
-            self.stdout.write(f"No mail records with {ReceptionStatusEnum.REPLY_PENDING} status")
+            self.stdout.write(f"No mail records with {MailStatusEnum.REPLY_PENDING} status")
             return
 
         self.stdout.write(f"Mail instance found: {mail.id} - {mail.edi_filename}")
@@ -74,23 +73,31 @@ class Command(BaseCommand):
         ]
 
         counts = {"accept": 0, "reject": 0, "file_error": 0}
-        if outcome in ("accept", "reject"):
-            func_map = {"accept": get_accepted_transaction, "reject": get_rejected_transaction}
 
-            get_transaction = func_map[outcome]
+        match outcome:
+            case FakeChiefLicenceReplyEnum.ACCEPT | FakeChiefLicenceReplyEnum.REJECT:
+                func_map = {"accept": get_accepted_transaction, "reject": get_rejected_transaction}
 
-            for lp in ld.licence_payloads.all():
-                data.extend(get_transaction(lp))
+                get_transaction = func_map[outcome]
 
-            counts[outcome] = ld.licence_payloads.count()
+                for lp in ld.licence_payloads.all():
+                    data.extend(get_transaction(lp))
 
-        if outcome == "file_error":
-            data.append(
-                types.FileError(
-                    code="18", text="Record type 'fileHeader' not recognised", position="99"
+                counts[outcome] = ld.licence_payloads.count()
+
+            case FakeChiefLicenceReplyEnum.FILE_ERROR:
+                data.append(
+                    types.FileError(
+                        code="18", text="Record type 'fileHeader' not recognised", position="99"
+                    )
                 )
-            )
-            counts["file_error"] = 1
+                counts["file_error"] = 1
+
+            case FakeChiefLicenceReplyEnum.UNKNOWN_ERROR:
+                self.stdout.write(
+                    "Returning without updating mail record to simulate no response from HMRC."
+                )
+                return
 
         data.append(
             types.FileTrailer(
@@ -104,7 +111,7 @@ class Command(BaseCommand):
         licence_reply_filename = f"CHIEF_licenceReply_{ld.hmrc_run_number}_{created_at}"
         licence_reply_file = create_licence_reply_file(data)
 
-        mail.status = ReceptionStatusEnum.REPLY_RECEIVED
+        mail.status = MailStatusEnum.REPLY_RECEIVED
         mail.response_filename = licence_reply_filename
         mail.response_data = licence_reply_file
         mail.response_date = timezone.now()

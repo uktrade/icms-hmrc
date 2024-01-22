@@ -1,20 +1,18 @@
 import logging
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from mail.chief.email import EmailMessageData
+from mail.chief.email import build_request_mail_message_dto
 from mail.email.utils import send_email_wrapper
-from mail.enums import ExtractTypeEnum, ReceptionStatusEnum, SourceEnum
+from mail.enums import ExtractTypeEnum, MailStatusEnum, SourceEnum
 from mail.models import LicenceData, Mail
 
 logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = """
-    Command to resend an email corresponding to the given hmrc run number
+    help = """Command to resend an email corresponding to the given hmrc run number.
 
     Arguments:
     hmrc_run_number: The run number used by HMRC to identify this mail.
@@ -50,63 +48,41 @@ class Command(BaseCommand):
         dry_run = options.pop("dry_run")
 
         destination = SourceEnum.HMRC
-        mail = get_mail_extract(hmrc_run_number)
+        mail = self.get_mail_extract(hmrc_run_number)
 
         if not mail:
-            logger.error("hmrc_run_number %s does not belong to Licence data mail", hmrc_run_number)
-            return
-
-        if mail.extract_type != ExtractTypeEnum.LICENCE_DATA:
-            logger.error("Unexpected extract_type for the mail %s", mail.edi_filename)
-            return
-
-        if mail.status != ReceptionStatusEnum.REPLY_PENDING:
-            logger.error(
-                "Mail is expected to be in 'reply_pending' status but current status is %s",
-                mail.status,
+            self.stderr.write(
+                f"hmrc_run_number {hmrc_run_number} does not belong to Licence data mail"
             )
             return
 
-        message_to_send_dto = _build_request_mail_message_dto_internal(mail)
+        if mail.extract_type != ExtractTypeEnum.LICENCE_DATA:
+            self.stderr.write(f"Unexpected extract_type for the mail {mail.edi_filename}")
+            return
+
+        if mail.status != MailStatusEnum.REPLY_PENDING:
+            self.stderr.write(
+                f"Mail is expected to be in 'reply_pending' status but current status is {mail.status}"
+            )
+            return
+
+        message_to_send_dto = build_request_mail_message_dto(mail)
         if not dry_run:
             send_email_wrapper(message_to_send_dto)
 
+        # Update when we sent the mail.
+        mail.sent_at = timezone.now()
+        mail.save()
+
         logger.info("Mail %s resent to %s successfully", message_to_send_dto.subject, destination)
 
+    def get_mail_extract(self, hmrc_run_number: int) -> Mail | None:
+        try:
+            licence_data = LicenceData.objects.get(hmrc_run_number=hmrc_run_number)
+            return licence_data.mail
+        except LicenceData.DoesNotExist:
+            self.stderr.write(
+                f"No licence data instance found for given run number {hmrc_run_number}"
+            )
 
-def get_mail_extract(hmrc_run_number: int) -> Mail | None:
-    try:
-        licence_data = LicenceData.objects.get(hmrc_run_number=hmrc_run_number)
-        return licence_data.mail
-    except LicenceData.DoesNotExist:
-        logger.info("No licence data instance found for given run number %s", hmrc_run_number)
-
-    return None
-
-
-def _build_request_mail_message_dto_internal(mail: Mail) -> EmailMessageData:
-    if mail.extract_type != ExtractTypeEnum.LICENCE_DATA:
-        raise Exception(f"Extract type not supported: {mail.extract_type}")
-
-    sender = settings.EMAIL_HOST_USER
-    receiver = settings.OUTGOING_EMAIL_USER
-    attachment = [mail.sent_filename, mail.sent_data]
-
-    logger.info(
-        "Preparing request Mail dto of extract type %s, sender %s, receiver %s with filename %s",
-        mail.extract_type,
-        sender,
-        receiver,
-        attachment[0],
-    )
-
-    return EmailMessageData(
-        # run_number isn't used when sending the email
-        run_number=0,
-        sender=sender,
-        receiver=receiver,
-        date=timezone.now(),
-        subject=attachment[0],
-        body=None,
-        attachment=attachment,
-    )
+        return None

@@ -38,7 +38,10 @@ def send_chief_email(email_data: EmailMessageData) -> int:
     Returns the number of emails sent.
     """
 
+    # DES23513 section: 12.2.1. - Overview
+    # The characters as transferred are in ISO 646 (ASCII).
     file_content = unidecode_expect_ascii(email_data.attachment[1], errors="replace")
+
     if email_data.attachment[1] != file_content:
         logger.info(
             "File content different after transliteration\nBefore: %s\nAfter: %s\n",

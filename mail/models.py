@@ -3,7 +3,7 @@ import logging
 from django.db import IntegrityError, models
 from django.utils import timezone
 
-from mail.enums import ExtractTypeEnum, LicenceActionEnum, ReceptionStatusEnum, SourceEnum
+from mail.enums import ExtractTypeEnum, LicenceActionEnum, MailStatusEnum, SourceEnum
 
 logger = logging.getLogger(__name__)
 
@@ -58,15 +58,13 @@ class Mail(models.Model):
     #
     # Status of mail through the icms-hmrc workflow
     status = models.CharField(
-        choices=ReceptionStatusEnum.choices, default=ReceptionStatusEnum.PENDING, max_length=20
+        choices=MailStatusEnum.choices, default=MailStatusEnum.PENDING, max_length=30
     )
 
     #
     # licenceData fields
     edi_filename = models.TextField(null=True, blank=True)
     edi_data = models.TextField(null=True, blank=True)
-    sent_filename = models.TextField(blank=True, null=True)
-    sent_data = models.TextField(blank=True, null=True)
     sent_at = models.DateTimeField(blank=True, null=True)
 
     #
@@ -75,11 +73,6 @@ class Mail(models.Model):
     response_data = models.TextField(blank=True, null=True)
     response_date = models.DateTimeField(blank=True, null=True)
     response_subject = models.TextField(null=True, blank=True)
-
-    #
-    # licenceReply fields
-    sent_response_filename = models.TextField(blank=True, null=True)
-    sent_response_data = models.TextField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
 

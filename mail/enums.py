@@ -26,11 +26,12 @@ ICMS_HMRC_LICENCE_TYPE_MAPPING = {
 }
 
 
-class ReceptionStatusEnum(TextChoices):
+class MailStatusEnum(TextChoices):
     PENDING = "pending"
     REPLY_PENDING = "reply_pending"
     REPLY_RECEIVED = "reply_received"
-    REPLY_SENT = "reply_sent"
+    REPLY_PARTIALLY_PROCESSED = "reply_partially_processed"
+    REPLY_PROCESSED = "reply_processed"
 
 
 class ExtractTypeEnum(TextChoices):
@@ -207,3 +208,10 @@ class QuantityCodeEnum(IntegerChoices):
     # Number of watt = 117, "Number of watt"
     # Kilogram Raw Sugar = 118, "Kilogram Raw Sugar"
     # KAC: (KG net of Acesulfame Potassium) = 119, "KAC: (KG net of Acesulfame Potassium)"
+
+
+class FakeChiefLicenceReplyEnum(TextChoices):
+    ACCEPT = "accept", "Licences acceped by HMRC"
+    REJECT = "reject", "Licences rejected by HMRC"
+    FILE_ERROR = "file_error", "File has errors"
+    UNKNOWN_ERROR = "unknown_error", "Unknown error as no response has been received from HMRC."

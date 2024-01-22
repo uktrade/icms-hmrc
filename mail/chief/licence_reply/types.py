@@ -96,7 +96,7 @@ class FileError:
 
     code: str
     text: str
-    position: str
+    position: str | None = None
 
 
 @dataclass

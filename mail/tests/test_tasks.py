@@ -12,7 +12,13 @@ from django.conf import settings
 from django.test import override_settings
 
 from mail import auth, servers, tasks
-from mail.enums import ChiefSystemEnum, ExtractTypeEnum, LicenceActionEnum, ReceptionStatusEnum
+from mail.enums import (
+    ChiefSystemEnum,
+    ExtractTypeEnum,
+    FakeChiefLicenceReplyEnum,
+    LicenceActionEnum,
+    MailStatusEnum,
+)
 from mail.models import LicenceData, LicencePayload, Mail, SourceEnum
 from mail.utils import pop3
 
@@ -99,8 +105,14 @@ def correct_email_settings():
 
 
 @pytest.fixture
-def licence_reply_example() -> str:
-    filename = "mail/tests/files/icms/CHIEF_licenceReply_accepted_and_rejected_example"
+def valid_licence_reply() -> str:
+    filename = "mail/tests/files/icms/licence_reply/accepted_and_rejected_example"
+    return pathlib.Path(filename).read_text()
+
+
+@pytest.fixture
+def partially_valid_licence_reply() -> str:
+    filename = "mail/tests/files/icms/licence_reply/partially_valid_example"
     return pathlib.Path(filename).read_text()
 
 
@@ -134,12 +146,10 @@ class TestProcessLicenceReplyAndUsageEmailTask:
 
         # Create a mail object that is waiting for a licence reply from HMRC
         self.mail = Mail.objects.create(
-            status=ReceptionStatusEnum.REPLY_PENDING,
+            status=MailStatusEnum.REPLY_PENDING,
             extract_type=ExtractTypeEnum.LICENCE_DATA,
             edi_filename="the_licence_data_file",
             edi_data="lovely data",
-            sent_filename="the_licence_data_file",
-            sent_data="lovely data",
         )
         LicenceData.objects.create(
             licence_ids="", hmrc_run_number=29236, source=SourceEnum.ICMS, mail=self.mail
@@ -171,7 +181,7 @@ class TestProcessLicenceReplyAndUsageEmailTask:
 
         # Test the licence mail has been updated with the response email
         mail = LicenceData.objects.get(hmrc_run_number=29236).mail
-        assert mail.status == ReceptionStatusEnum.REPLY_RECEIVED
+        assert mail.status == MailStatusEnum.REPLY_RECEIVED
         assert mail.response_filename == "CHIEF_licenceReply_29236_202209231140"
         assert mail.response_data == self.get_expected_file()
 
@@ -224,7 +234,7 @@ class TestProcessLicenceReplyAndUsageEmailTask:
         # Test the licence mail has been updated with the response email
         mail = Mail.objects.get(response_filename="ILBDOTI_live_CHIEF_usageData_7132_202209280300")
         assert mail.extract_type == ExtractTypeEnum.USAGE_DATA
-        assert mail.status == ReceptionStatusEnum.REPLY_RECEIVED
+        assert mail.status == MailStatusEnum.REPLY_RECEIVED
         assert mail.response_subject == "ILBDOTI_live_CHIEF_usageData_7132_202209280300"
         assert mail.response_data == self.get_expected_usage_file()
 
@@ -289,7 +299,7 @@ class TestProcessLicenceReplyAndUsageEmailTask:
 
         # Check the Mail model changes have been rolled back (as the task errored)
         self.mail.refresh_from_db()
-        assert self.mail.status == ReceptionStatusEnum.REPLY_PENDING
+        assert self.mail.status == MailStatusEnum.REPLY_PENDING
         assert not self.mail.response_filename
         assert not self.mail.response_data
 
@@ -349,19 +359,17 @@ def get_licence_reply_msg_list(filename: str) -> List[bytes]:
 @mock.patch("mail.requests.hawk_authentication_enabled", lambda: True)
 class TestSendLicenceDataToICMSTask:
     @pytest.fixture(autouse=True)
-    def _setup(self, transactional_db, requests_mock: "Mocker", licence_reply_example):
+    def _setup(self, transactional_db, requests_mock: "Mocker", valid_licence_reply):
         self.rq = requests_mock
 
         # Create a mail object that has data to send to ICMS
         self.mail = Mail.objects.create(
-            status=ReceptionStatusEnum.REPLY_RECEIVED,
+            status=MailStatusEnum.REPLY_RECEIVED,
             extract_type=ExtractTypeEnum.LICENCE_DATA,
             edi_filename="the_licence_data_file",
             edi_data="lovely data",
-            sent_filename="the_licence_data_file",
-            sent_data="lovely data",
             response_filename="CHIEF_licenceReply_29236_202209231140",
-            response_data=licence_reply_example,
+            response_data=valid_licence_reply,
         )
         ld = LicenceData.objects.create(
             licence_ids="", hmrc_run_number=29236, source=SourceEnum.ICMS, mail=self.mail
@@ -400,7 +408,7 @@ class TestSendLicenceDataToICMSTask:
         assert "hawk-authentication" in self.rq.last_request.headers
 
         # Check the mail has been updated
-        assert self.mail.status == ReceptionStatusEnum.REPLY_SENT
+        assert self.mail.status == MailStatusEnum.REPLY_PROCESSED
 
         # Check what data we sent to ICMS
         assert self.rq.last_request.json() == {
@@ -426,6 +434,45 @@ class TestSendLicenceDataToICMSTask:
             f" to ICMS for processing"
         )
 
+    def test_send_licence_data_to_icms_success_with_partially_valid_file(
+        self, partially_valid_licence_reply
+    ):
+        # Setup
+        self.mail.response_data = partially_valid_licence_reply
+        self.mail.save()
+        # Mock the response that ICMS sends back
+        url = parse.urljoin(settings.ICMS_API_URL, "chief/license-data-callback")
+        self.rq.post(url, status_code=HTTPStatus.OK, json={})
+
+        # Test
+        with (
+            mock.patch("mail.requests.verify_api_response", spec=True) as verify_resp,
+            mock.patch("mail.tasks.capture_message", spec=True) as mock_capture_message,
+        ):
+            # Send the licence data to ICMS
+            tasks.send_licence_data_to_icms()
+
+            verify_resp.assert_called_once()
+            mock_capture_message.assert_called_with(
+                f"Successfully sent mail (id: {self.mail.id}, filename: {self.mail.response_filename}) to ICMS for processing but not all records were processed.",
+                "error",
+            )
+
+        self.mail.refresh_from_db()
+
+        # Check the hawk headers is there
+        assert "hawk-authentication" in self.rq.last_request.headers
+
+        # Check the mail has been updated
+        assert self.mail.status == MailStatusEnum.REPLY_PARTIALLY_PROCESSED
+
+        # Check what data we sent to ICMS (less than the success test)
+        assert self.rq.last_request.json() == {
+            "accepted": [{"id": self.id_1}, {"id": self.id_2}],
+            "rejected": [],
+            "run_number": "29236",
+        }
+
     def test_send_licence_data_to_icms_http_error(self, caplog):
         # Mock the response that ICMS sends back - an internal server error
         url = parse.urljoin(settings.ICMS_API_URL, "chief/license-data-callback")
@@ -449,7 +496,7 @@ class TestSendLicenceDataToICMSTask:
         # Check the mail status hasn't changed
         self.mail.refresh_from_db()
 
-        assert self.mail.status == ReceptionStatusEnum.REPLY_RECEIVED
+        assert self.mail.status == MailStatusEnum.REPLY_RECEIVED
 
 
 def test_no_mail_found(db, caplog):
@@ -461,27 +508,23 @@ def test_no_mail_found(db, caplog):
     ]
 
 
-def test_multiple_mail_raises_error(db, licence_reply_example):
+def test_multiple_mail_raises_error(db, valid_licence_reply):
     Mail.objects.create(
-        status=ReceptionStatusEnum.REPLY_RECEIVED,
+        status=MailStatusEnum.REPLY_RECEIVED,
         extract_type=ExtractTypeEnum.LICENCE_DATA,
         edi_filename="the_licence_data_file",
         edi_data="lovely data",
-        sent_filename="the_licence_data_file",
-        sent_data="lovely data",
         response_filename="CHIEF_licenceReply_29236_202209231140",
-        response_data=licence_reply_example,
+        response_data=valid_licence_reply,
     )
 
     Mail.objects.create(
-        status=ReceptionStatusEnum.REPLY_RECEIVED,
+        status=MailStatusEnum.REPLY_RECEIVED,
         extract_type=ExtractTypeEnum.LICENCE_DATA,
         edi_filename="the_licence_data_file",
         edi_data="lovely data",
-        sent_filename="the_licence_data_file",
-        sent_data="lovely data",
         response_filename="CHIEF_licenceReply_29237_202209231140",
-        response_data=licence_reply_example,
+        response_data=valid_licence_reply,
     )
 
     with pytest.raises(
@@ -490,22 +533,19 @@ def test_multiple_mail_raises_error(db, licence_reply_example):
         tasks.send_licence_data_to_icms()
 
 
-def test_file_with_errors_raises_errors(db, caplog):
+def test_file_with_only_errors_raises_errors(db, caplog):
     mail = Mail.objects.create(
-        status=ReceptionStatusEnum.REPLY_RECEIVED,
+        status=MailStatusEnum.REPLY_RECEIVED,
         extract_type=ExtractTypeEnum.LICENCE_DATA,
         edi_filename="the_licence_data_file",
         edi_data="lovely data",
-        sent_filename="the_licence_data_file",
-        sent_data="lovely data",
         response_filename="CHIEF_licenceReply_29237_202209231140",
     )
 
     file_with_file_error = (
         "1\\fileHeader\\CHIEF\\ILBDOTI\\licenceReply\\202209231140\\29236\n"
         "2\\fileError\\18\\Record type 'fileHeader' not recognised\\99\n"
-        "3\\accepted\\ABC12348\n"
-        "4\\fileTrailer\\1\\0\\1\n"
+        "3\\fileTrailer\\0\\0\\1\n"
     )
 
     mail.response_data = file_with_file_error
@@ -526,8 +566,7 @@ def test_file_with_errors_raises_errors(db, caplog):
     file_with_file_error_and_file_trailer_errors = (
         "1\\fileHeader\\CHIEF\\ILBDOTI\\licenceReply\\202209231140\\29236\n"
         "2\\fileError\\18\\Record type 'fileHeader' not recognised\\99\n"
-        "3\\accepted\\ABC12348\n"
-        "4\\fileTrailer\\0\\1\\1\n"
+        "3\\fileTrailer\\0\\1\\1\n"
     )
     mail.response_data = file_with_file_error_and_file_trailer_errors
     mail.save()
@@ -564,6 +603,7 @@ class TestFakeLicenceReply:
     def _setup(self, db):
         ...
 
+    @override_settings(DEBUG=True, ICMS_FAKE_HMRC_REPLY=FakeChiefLicenceReplyEnum.ACCEPT)
     def test_task_is_called(self, caplog, capsys):
         tasks.fake_licence_reply()
 
