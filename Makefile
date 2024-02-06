@@ -41,6 +41,10 @@ createsuperuser:
 shell:
 	$(pipenv) ./manage.py shell -i python
 
+
+fake_dbt_built: ## Fake build command (builds static files without connection details to backing services)
+	$(run) -e DJANGO_SETTINGS_MODULE=conf.settings -e BUILD_STEP=True -e COPILOT_ENVIRONMENT_NAME=DUMMY web-api pipenv run ./manage.py collectstatic --noinput --traceback
+
 #
 # linting / formatting commands
 #

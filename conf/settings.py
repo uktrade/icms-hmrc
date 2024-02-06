@@ -2,28 +2,24 @@ import os
 import ssl
 import sys
 
-import environ
 import sentry_sdk
 from django_log_formatter_ecs import ECSFormatter
 from sentry_sdk.integrations.django import DjangoIntegration
 
+from conf.env import env
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-env = environ.Env()
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env("DJANGO_SECRET_KEY")
+SECRET_KEY = env.django_secret_key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool("DEBUG", default=False)
+DEBUG = env.debug
 
-APP_ENV = env.str("APP_ENV", default="notset")
+APP_ENV = env.app_env
 
-# TODO: Change this to use env setting from vault
-ALLOWED_HOSTS = ["*"]
-
-VCAP_SERVICES = env.json("VCAP_SERVICES", default={})
+ALLOWED_HOSTS = env.allowed_hosts
 
 # Application definition
 
@@ -73,46 +69,46 @@ WSGI_APPLICATION = "conf.wsgi.application"
 # Database https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-DATABASES = {"default": env.db()}
+DATABASES = env.database_config
 
-CHIEF_SOURCE_SYSTEM = env("CHIEF_SOURCE_SYSTEM", default="ILBDOTI")
+CHIEF_SOURCE_SYSTEM = env.chief_source_system
 
 # TODO: Rename these email settings
 # POP3 email settings (to fetch emails from HMRC)
-INCOMING_EMAIL_HOSTNAME = env("INCOMING_EMAIL_HOSTNAME", default="")
-INCOMING_EMAIL_USER = env("INCOMING_EMAIL_USER", default="")  # Also used to send licenceData
-INCOMING_EMAIL_POP3_PORT = env("INCOMING_EMAIL_POP3_PORT", default=None)
+INCOMING_EMAIL_HOSTNAME = env.incoming_email_hostname
+INCOMING_EMAIL_USER = env.incoming_email_user  # Also used to send licenceData
+INCOMING_EMAIL_POP3_PORT = env.incoming_email_pop3_port
 
 # Azure OAUTH2 email connection settings
-AZURE_AUTH_CLIENT_ID = env.str("AZURE_AUTH_CLIENT_ID")
-AZURE_AUTH_CLIENT_SECRET = env.str("AZURE_AUTH_CLIENT_SECRET")
-AZURE_AUTH_TENANT_ID = env.str("AZURE_AUTH_TENANT_ID")
+AZURE_AUTH_CLIENT_ID = env.azure_auth_client_id
+AZURE_AUTH_CLIENT_SECRET = env.azure_auth_client_secret
+AZURE_AUTH_TENANT_ID = env.azure_auth_tenant_id
 
 # Used to validate sender details
-HMRC_TO_DIT_EMAIL_HOSTNAME = env("HMRC_TO_DIT_EMAIL_HOSTNAME", default="")
-HMRC_TO_DIT_EMAIL_USER = env("HMRC_TO_DIT_EMAIL_USER", default="")
+HMRC_TO_DIT_EMAIL_HOSTNAME = env.hmrc_to_dit_email_hostname
+HMRC_TO_DIT_EMAIL_USER = env.hmrc_to_dit_email_user
 
 # Receiver email address
-OUTGOING_EMAIL_USER = env("OUTGOING_EMAIL_USER")
+OUTGOING_EMAIL_USER = env.outgoing_email_user
 
 # TODO: Support console backend in tests / replace mailhog?
 # DJANGO EMAIL SMTP SETTINGS used to send emails to HMRC from ICMS
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_PORT = env("DJANGO_EMAIL_PORT")
-EMAIL_HOST = env("DJANGO_EMAIL_HOST")
-EMAIL_HOST_USER = env("DJANGO_EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = env("DJANGO_EMAIL_HOST_PASSWORD")
-EMAIL_USE_TLS = env.bool("DJANGO_EMAIL_USE_TLS", default=True)
+EMAIL_PORT = env.django_email_port
+EMAIL_HOST = env.django_email_host
+EMAIL_HOST_USER = env.django_email_host_user
+EMAIL_HOST_PASSWORD = env.django_email_host_password
+EMAIL_USE_TLS = env.django_email_use_tls
 EMAIL_USE_SSL = False
 EMAIL_TIMEOUT = None
 
-USE_LEGACY_EMAIL_CODE = env.bool("USE_LEGACY_EMAIL_CODE")
+USE_LEGACY_EMAIL_CODE = env.use_legacy_email_code
 
-MAILHOG_URL = env.str("MAILHOG_URL", default="http://localhost:8025")
+MAILHOG_URL = env.mailhog_url
 
-EMAIL_AWAITING_REPLY_TIME = env.int("EMAIL_AWAITING_REPLY_TIME", default=3600)
+EMAIL_AWAITING_REPLY_TIME = env.email_awaiting_reply_time
 
-LICENSE_POLL_INTERVAL = env.int("LICENSE_POLL_INTERVAL", default=300)
+LICENSE_POLL_INTERVAL = env.license_poll_interval
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -137,9 +133,10 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = "en-gb"
 TIME_ZONE = "UTC"
 USE_I18N = True
-USE_TZ = env.bool("USE_TZ", default=True)
+USE_TZ = env.use_tz
 
-_log_level = env.str("LOG_LEVEL", default="INFO")
+_log_level = env.log_level
+
 if "test" not in sys.argv:
     LOGGING = {
         "version": 1,
@@ -164,27 +161,27 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 # HAWK
-HAWK_AUTHENTICATION_ENABLED = env.bool("HAWK_AUTHENTICATION_ENABLED", default=True)
+HAWK_AUTHENTICATION_ENABLED = env.hawk_authentication_enabled
 HAWK_RECEIVER_NONCE_EXPIRY_SECONDS = 60
 HAWK_ALGORITHM = "sha256"
 
 ICMS_API_ID = "icms-api"
-ICMS_API_URL = env("ICMS_API_URL", default="http://caseworker:8080/")
+ICMS_API_URL = env.icms_api_url
 ICMS_API_REQUEST_TIMEOUT = 60  # Maximum time, in seconds, to wait between bytes of a response
 
 HAWK_CREDENTIALS = {
     ICMS_API_ID: {
         "id": ICMS_API_ID,
-        "key": env("ICMS_API_HAWK_KEY"),
+        "key": env.icms_api_hawk_key,
         "algorithm": HAWK_ALGORITHM,
     },
 }
 
 # Sentry
-if env.str("SENTRY_DSN", ""):
+if env.sentry_dsn:
     sentry_sdk.init(
-        dsn=env.str("SENTRY_DSN"),
-        environment=env.str("SENTRY_ENVIRONMENT"),
+        dsn=env.sentry_dsn,
+        environment=env.sentry_environment,
         integrations=[DjangoIntegration()],
         send_default_pii=True,
     )
@@ -193,22 +190,23 @@ else:
     SENTRY_ENABLED = False
 
 # Application Performance Monitoring
-if env.str("ELASTIC_APM_SERVER_URL", ""):
+if env.elastic_apm_server_url:
     ELASTIC_APM = {
-        "SERVICE_NAME": env.str("ELASTIC_APM_SERVICE_NAME", default="icms-hmrc"),
-        "SECRET_TOKEN": env.str("ELASTIC_APM_SECRET_TOKEN"),
-        "SERVER_URL": env.str("ELASTIC_APM_SERVER_URL"),
-        "ENVIRONMENT": env.str("SENTRY_ENVIRONMENT"),
+        "SERVICE_NAME": env.elastic_apm_service_name,
+        "SECRET_TOKEN": env.elastic_apm_secret_token,
+        "SERVER_URL": env.elastic_apm_server_url,
+        "ENVIRONMENT": env.sentry_environment,
         "DEBUG": DEBUG,
     }
     INSTALLED_APPS.append("elasticapm.contrib.django")
 
 # Celery / Redis config
-if "redis" in VCAP_SERVICES:
-    REDIS_URL = VCAP_SERVICES["redis"][0]["credentials"]["uri"]
+REDIS_URL = env.redis_url
+
+# Set use_SSL as we are deployed to CF or DBT Platform
+if REDIS_URL not in [env.local_redis_url, ""]:
     CELERY_BROKER_USE_SSL = {"ssl_cert_reqs": ssl.CERT_REQUIRED}
-else:
-    REDIS_URL = env.str("REDIS_URL", default="redis://redis:6379")
+
 
 CELERY_BROKER_URL = REDIS_URL
 
@@ -217,11 +215,10 @@ CELERY_IMPORTS = [
     "mail.tasks",
 ]
 
-
 # used in drop_all_tables command
-ALLOW_DISASTROUS_DATA_DROPS_NEVER_ENABLE_IN_PROD = env.bool(
-    "ALLOW_DISASTROUS_DATA_DROPS_NEVER_ENABLE_IN_PROD", default=False
+ALLOW_DISASTROUS_DATA_DROPS_NEVER_ENABLE_IN_PROD = (
+    env.allow_disastrous_data_drops_never_enable_in_prod
 )
 
 # Setting for faking licence reply from HMRC
-ICMS_FAKE_HMRC_REPLY: str = env.str("ICMS_FAKE_HMRC_REPLY", "accept")
+ICMS_FAKE_HMRC_REPLY: str = env.icms_fake_hmrc_reply
