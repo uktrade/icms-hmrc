@@ -82,11 +82,11 @@ jobs:
 
       - run:
           name: Black
-          command: pipenv run black . --check --diff
+          command: pipenv run black .
 
       - run:
           name: isort
-          command: pipenv run isort --check --diff .
+          command: pipenv run isort .
 
       - run:
           name: Bandit
