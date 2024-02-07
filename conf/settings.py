@@ -1,9 +1,9 @@
 import os
 import ssl
-import sys
 
 import sentry_sdk
-from django_log_formatter_ecs import ECSFormatter
+from dbt_copilot_python.utility import is_copilot
+from django_log_formatter_asim import ASIMFormatter
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from conf.env import env
@@ -135,24 +135,50 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = env.use_tz
 
-_log_level = env.log_level
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "asim_formatter": {
+            "()": ASIMFormatter,
+        },
+        "simple": {
+            "style": "{",
+            "format": "{asctime} {levelname} {message}",
+        },
+    },
+    "handlers": {
+        "asim": {
+            "class": "logging.StreamHandler",
+            "formatter": "asim_formatter",
+        },
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": env.log_level.upper(),
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": env.log_level.upper(),
+            "propagate": False,
+        },
+    },
+}
 
-if "test" not in sys.argv:
-    LOGGING = {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {
-            "simple": {"format": "{asctime} {levelname} {message}", "style": "{"},
-            "ecs_formatter": {"()": ECSFormatter},
-        },
-        "handlers": {
-            "stdout": {"class": "logging.StreamHandler", "formatter": "simple"},
-            "ecs": {"class": "logging.StreamHandler", "formatter": "ecs_formatter"},
-        },
-        "root": {"handlers": ["stdout", "ecs"], "level": _log_level.upper()},
-    }
-else:
-    LOGGING = {"version": 1, "disable_existing_loggers": True}
+
+# Django Log Formatter ASIM settings
+if is_copilot():
+    DLFA_TRACE_HEADERS = ("X-B3-TraceId", "X-B3-SpanId")
+
+    # Set the correct handlers when running in DBT Platform
+    # console handler set as default as it's easier to read
+    LOGGING["root"]["handlers"] = ["asim"]
+    LOGGING["loggers"]["django"]["handlers"] = ["asim"]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
