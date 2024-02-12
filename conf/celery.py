@@ -2,6 +2,7 @@ import os
 
 from celery import Celery
 from celery.schedules import crontab
+from dbt_copilot_python.celery_health_check import healthcheck
 
 from mail import utils
 
@@ -9,6 +10,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "conf.settings")
 
 app = Celery("DjangoCelery")
 app.config_from_object("django.conf:settings", namespace="CELERY")
+
+app = healthcheck.setup(app)
 
 
 @app.on_after_configure.connect
