@@ -2,7 +2,8 @@ version: "3.8"
 
 services:
   postgres-db:
-    image: postgres:15.3
+    # The version we will run when migrating to DBT Platform
+    image: postgres:16.1
     environment:
       - POSTGRES_PASSWORD=password
     expose:
