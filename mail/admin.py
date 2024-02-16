@@ -21,7 +21,7 @@ class LicenceDataAdmin(admin.ModelAdmin):
     def mail_status(self, obj):
         return obj.mail.status
 
-    list_display = ["pk", "licence_ids", "source", "mail_status"]
+    list_display = ["pk", "hmrc_run_number", "licence_ids", "source", "mail_status"]
     exclude = ["licence_payloads"]
     inlines = [LicencePayloadInline]
 
