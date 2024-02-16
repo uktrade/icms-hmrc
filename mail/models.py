@@ -37,7 +37,6 @@ class LicencePayload(models.Model):
 class LicenceData(models.Model):
     licence_ids = models.TextField()
     hmrc_run_number = models.IntegerField()
-    source_run_number = models.IntegerField(null=True)
     source = models.CharField(choices=SourceEnum.choices, max_length=10)
     mail = models.ForeignKey("Mail", on_delete=models.DO_NOTHING)
     licence_payloads = models.ManyToManyField(
