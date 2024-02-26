@@ -1,0 +1,6 @@
+repository: icms-hmrc
+builder:
+  name: paketobuildpacks/builder-jammy-full
+  version: 0.3.294
+packages:
+  - vim
