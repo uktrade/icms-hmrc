@@ -40,7 +40,7 @@ class TestDevProcessLicenceReply:
     def call_command(*args, **kwargs):
         call_command("dev_fake_licence_reply", *args, **kwargs)
 
-    @override_settings(APP_ENV="PRODUCTION")
+    @override_settings(APP_ENV="production")
     def test_dev_fake_licence_reply_disabled(self, db, capsys):
         self.call_command()
 

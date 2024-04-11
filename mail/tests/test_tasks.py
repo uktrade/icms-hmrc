@@ -614,7 +614,7 @@ class TestFakeLicenceReply:
             "",
         ]
 
-    @override_settings(APP_ENV="PRODUCTION")
+    @override_settings(APP_ENV="production")
     def test_run_in_prod_returns_early(self, caplog):
         tasks.fake_licence_reply()
 

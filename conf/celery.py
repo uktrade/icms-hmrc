@@ -16,7 +16,7 @@ app = healthcheck.setup(app)
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    if utils.get_app_env() == "PRODUCTION":
+    if utils.get_app_env() == "production":
         schedule = get_icms_prod_beat_schedule()
     else:
         schedule = get_imcs_dev_beat_schedule()
