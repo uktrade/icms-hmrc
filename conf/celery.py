@@ -4,7 +4,8 @@ from celery import Celery
 from celery.schedules import crontab
 from dbt_copilot_python.celery_health_check import healthcheck
 
-from mail import utils
+# TODO: ICMSLST-2662 Uncomment this
+# from mail import utils
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "conf.settings")
 
@@ -16,10 +17,12 @@ app = healthcheck.setup(app)
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    if utils.get_app_env() == "production":
-        schedule = get_icms_prod_beat_schedule()
-    else:
-        schedule = get_imcs_dev_beat_schedule()
+    # TODO: ICMSLST-2662 Remove this line and uncomment if / else block below
+    schedule = get_imcs_dev_beat_schedule()
+    # if utils.get_app_env() == "production":
+    #     schedule = get_icms_prod_beat_schedule()
+    # else:
+    #     schedule = get_imcs_dev_beat_schedule()
 
     app.conf.beat_schedule = schedule
 
