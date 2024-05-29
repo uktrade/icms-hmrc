@@ -19,7 +19,7 @@ DEBUG = env.debug
 
 APP_ENV = env.app_env
 
-ALLOWED_HOSTS = env.allowed_hosts
+ALLOWED_HOSTS = env.allowed_hosts_list
 
 # Application definition
 

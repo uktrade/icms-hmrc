@@ -1,16 +1,42 @@
-import os
+from typing import Annotated, Any
 
 import dj_database_url
-from dbt_copilot_python.database import database_url_from_env
-from dbt_copilot_python.network import setup_allowed_hosts
-from dbt_copilot_python.utility import is_copilot
-from pydantic import Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field, PostgresDsn, TypeAdapter, computed_field
+from pydantic.functional_validators import PlainValidator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from .cf_env import CloudFoundryEnvironment
+
+# Convert the database_url to a PostgresDsn instance
+def validate_postgres_dsn_str(val) -> PostgresDsn:
+    return TypeAdapter(PostgresDsn).validate_python(val)
 
 
-class DBTPlatformEnvironment(BaseSettings):
+CFPostgresDSN = Annotated[PostgresDsn, PlainValidator(validate_postgres_dsn_str)]
+
+
+class VCAPServices(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    postgres: list[dict[str, Any]]
+    redis: list[dict[str, Any]]
+
+
+class VCAPApplication(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    application_id: str
+    application_name: str
+    application_uris: list[str]
+    cf_api: str
+    limits: dict[str, Any]
+    name: str
+    organization_id: str
+    organization_name: str
+    space_id: str
+    uris: list[str]
+
+
+class CloudFoundryEnvironment(BaseSettings):
     """Class holding all environment variables for ICMS-HMRC.
 
     Instance attributes are matched to environment variables by name (ignoring case).
@@ -18,21 +44,19 @@ class DBTPlatformEnvironment(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_prefix="HMRC_",
         extra="ignore",
         validate_default=False,
     )
 
-    # Build step doesn't have "HMRC_" prefix
-    build_step: bool = Field(alias="build_step", default=False)
+    database_url: CFPostgresDSN
 
-    # DBT Platform environment variables
-    # Redis env vars
-    celery_broker_url: str = Field(alias="celery_broker_url", default="")
+    # Cloud Foundry environment variables
+    vcap_services: VCAPServices | None = None
+    vcap_application: VCAPApplication | None = None
 
     # Rest of environment variables
     django_secret_key: str
-    allowed_hosts: list[str] = ["*"]
+    allowed_hosts: list[str] = Field(alias="icms_allowed_hosts", default=["*"])
     debug: bool = False
     app_env: str = "not_set"
     chief_source_system: str = "ILBDOTI"
@@ -80,7 +104,7 @@ class DBTPlatformEnvironment(BaseSettings):
 
     # Sentry
     sentry_dsn: str = ""
-    sentry_environment: str = Field(alias="sentry_environment", default="")
+    sentry_environment: str = ""
 
     # Elactic AMP
     elastic_apm_server_url: str = ""
@@ -97,41 +121,17 @@ class DBTPlatformEnvironment(BaseSettings):
     @computed_field  # type: ignore[misc]
     @property
     def allowed_hosts_list(self) -> list[str]:
-        if self.build_step:
-            return self.allowed_hosts
-
-        # Makes an external network request so only call when running on DBT Platform
-        return setup_allowed_hosts(self.allowed_hosts)
+        return self.allowed_hosts
 
     @computed_field  # type: ignore[misc]
     @property
     def database_config(self) -> dict:
-        if self.build_step:
-            return {"default": {}}
-
-        return {
-            "default": dj_database_url.config(default=database_url_from_env("DATABASE_CREDENTIALS"))
-        }
+        return {"default": dj_database_url.parse(str(self.database_url))}
 
     @computed_field  # type: ignore[misc]
     @property
     def redis_url(self) -> str:
-        if self.build_step:
-            return ""
+        if self.vcap_services:
+            return self.vcap_services.redis[0]["credentials"]["uri"]
 
-        return self.celery_broker_url
-
-
-if is_copilot():
-    if "BUILD_STEP" in os.environ:
-        # When building use a fake value for the django_secret_key
-        # Everything else has a default value.
-        env: DBTPlatformEnvironment | CloudFoundryEnvironment = DBTPlatformEnvironment(
-            django_secret_key="FAKE_SECRET_KEY"  # nosec B106
-        )
-    else:
-        # When deployed read values from environment variables
-        env = DBTPlatformEnvironment()  # type:ignore[call-arg]
-else:
-    # Cloud Foundry environment
-    env = CloudFoundryEnvironment()  # type:ignore[call-arg]
+        return self.local_redis_url
