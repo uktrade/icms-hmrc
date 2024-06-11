@@ -167,6 +167,7 @@ LOGGING = {
             "level": env.log_level.upper(),
             "propagate": False,
         },
+        "mohawk": {"level": "INFO"},
     },
 }
 
