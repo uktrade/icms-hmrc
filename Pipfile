@@ -20,7 +20,7 @@ flake8 = "*"
 freezegun = "*"
 
 [packages]
-djangorestframework = "~=3.14.0"
+djangorestframework = "~=3.15.2"
 mohawk = ">=1.1"
 requests = "~=2.32"
 unidecode = "~=1.3"
