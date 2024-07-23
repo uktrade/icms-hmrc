@@ -2,7 +2,8 @@ from conf.settings import *  # noqa: F401, F403
 
 HAWK_AUTHENTICATION_ENABLED = False
 
-# TODO: Rename these email settings
+# INCOMING_EMAIL_XXX settings are used when processing licenceReply and usageData emails
+# POP3 email settings (to fetch emails from HMRC)
 INCOMING_EMAIL_HOSTNAME = "localhost"
 INCOMING_EMAIL_USER = "test_user"
 INCOMING_EMAIL_POP3_PORT = "995"

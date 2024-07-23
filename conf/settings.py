@@ -73,7 +73,7 @@ DATABASES = env.database_config
 
 CHIEF_SOURCE_SYSTEM = env.chief_source_system
 
-# TODO: Rename these email settings
+# INCOMING_EMAIL_XXX settings are used when processing licenceReply and usageData emails
 # POP3 email settings (to fetch emails from HMRC)
 INCOMING_EMAIL_HOSTNAME = env.incoming_email_hostname
 INCOMING_EMAIL_USER = env.incoming_email_user  # Also used to send licenceData
@@ -91,8 +91,7 @@ HMRC_TO_DIT_EMAIL_USER = env.hmrc_to_dit_email_user
 # Receiver email address
 OUTGOING_EMAIL_USER = env.outgoing_email_user
 
-# TODO: Support console backend in tests / replace mailhog?
-# DJANGO EMAIL SMTP SETTINGS used to send emails to HMRC from ICMS
+# DJANGO EMAIL SMTP SETTINGS used to send emails to HMRC from ICMS (licenceData emails)
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_PORT = env.django_email_port
 EMAIL_HOST = env.django_email_host
