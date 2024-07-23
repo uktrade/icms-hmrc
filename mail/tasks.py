@@ -158,7 +158,8 @@ def process_licence_reply_and_usage_emails():
                     _save_usage_data_email(mail)
                     con.dele(msg_id)
                 else:
-                    # TODO: ICMSLST-2187 Need to investigate mailbox setup.
+                    # LicenceData files get sent via a different mailbox so the below sentry
+                    # should never happen (for licenceData files).
                     # e.g. licenceData files get sent here will produce error logs.
                     log_to_sentry(f"Unable to process email with subject: {subject}")
 
@@ -387,7 +388,6 @@ def _check_sender_valid(
     """Check the sender is valid"""
 
     # TODO: ICMSLST-1760 Revisit this before going live.
-
     mail_from_header: UniqueAddressHeader = mail.get("From")
     mail_from: Address = mail_from_header.addresses[0]
 
@@ -437,7 +437,6 @@ def _save_licence_reply_email(reply_email: email.message.EmailMessage) -> None:
     )
 
 
-# TODO: ICMSLST-2184 Revisit run numbers
 def _get_run_number_from_subject(s: str) -> int:
     try:
         if "licenceReply" in s:
@@ -457,8 +456,6 @@ def _get_run_number_from_subject(s: str) -> int:
 def _save_usage_data_email(usage_email: email.message.EmailMessage) -> None:
     subject = usage_email.get("Subject")
 
-    # TODO: ICMSLST-2184 Revisit run numbers
-    # run_number = _get_run_number_from_subject(subject)
     logger.debug("usageData email subject: %s", subject)
 
     attachments = list(usage_email.iter_attachments())
