@@ -30,13 +30,13 @@ django = "~=4.2"
 elastic-apm = "==6.7.2"
 msal = "~=1.23"
 celery = {version = "==5.3.6", extras = ["redis"]}
-sentry-sdk = {version = "==1.17.0", extras = ["django"]}
 whitenoise = "~=6.6"
 pydantic-settings = "~=2.1.0"
 dbt-copilot-python = "==0.2.0"
 dj-database-url = "==2.1.0"
 django-log-formatter-asim = "==0.0.4"
 psycopg = {version = "~=3.1.18", extras = ["binary"]}
+sentry-sdk = {version = "~=2.8.0", extras = ["django"]}
 
 [requires]
 python_version = "3.10"
