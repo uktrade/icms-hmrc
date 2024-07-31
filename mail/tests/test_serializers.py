@@ -84,7 +84,7 @@ class TestICMSLicenceDataSerializer:
                 },
             },
             "country_group": "G001",
-            "restrictions": "Some restrictions.\n\n Some more restrictions",
+            "restrictions": "Some restrictions.\nSome more restrictions",
             "goods": [
                 {
                     "description": (
@@ -128,7 +128,7 @@ class TestICMSLicenceDataSerializer:
                     "postcode": "S118ZZ",  # /PS-IGNORE
                 },
             },
-            "restrictions": "Some restrictions.\n\n Some more restrictions",
+            "restrictions": "Some restrictions.\nSome more restrictions",
             "goods": [
                 {
                     "description": (
@@ -177,7 +177,7 @@ class TestICMSLicenceDataSerializer:
                 },
             },
             "country_code": "AU",
-            "restrictions": "Some restrictions.\n\n Some more restrictions",
+            "restrictions": "Some restrictions.\nSome more restrictions",
             "goods": [
                 {
                     "description": (
