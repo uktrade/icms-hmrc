@@ -63,7 +63,7 @@ class TestBuildICMSLicenceDataFAOIL(testcases.TestCase):
                     },
                 },
                 "country_group": "G001",
-                "restrictions": "Some restrictions.\n\n Some more restrictions",
+                "restrictions": "Some restrictions.\nSome more restrictions",
                 "goods": [
                     {
                         "description": (

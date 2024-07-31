@@ -1,5 +1,6 @@
 import re
 
+from mail.chief import FIELD_SEP, LINE_SEP
 from mail.chief.licence_data import types
 from mail.enums import ICMS_HMRC_LICENCE_TYPE_MAPPING, LicenceActionEnum
 
@@ -26,7 +27,7 @@ CONTROLLED_BY_VALUES = ["B", "O", "Q", "V"]
 
 def validate_file_header(record):
     errors = []
-    tokens = record.split("\\")
+    tokens = record.split(FIELD_SEP)
     record_type = tokens[1]
 
     if len(tokens) != FILE_HEADER_FIELDS_LEN:
@@ -53,7 +54,7 @@ def validate_file_header(record):
 
 def validate_licence_transaction_header(data_identifier, record):
     errors = []
-    tokens = record.split("\\")
+    tokens = record.split(FIELD_SEP)
     record_type = tokens[1]
     action = tokens[3]
 
@@ -99,7 +100,7 @@ def is_postcode_valid(value):
 
 def validate_permitted_trader(record):
     errors = []
-    tokens = record.split("\\")
+    tokens = record.split(FIELD_SEP)
     record_type = tokens[1]
 
     if len(tokens) != PERMITTED_TRADER_HEADER_FIELDS_LEN:
@@ -141,7 +142,7 @@ def validate_permitted_trader(record):
 
 def validate_country(record):
     errors = []
-    tokens = record.split("\\")
+    tokens = record.split(FIELD_SEP)
     record_type = tokens[1]
 
     if len(tokens) != COUNTRY_FIELDS_LEN:
@@ -164,7 +165,7 @@ def validate_country(record):
 
 def validate_foreign_trader(record):
     errors = []
-    tokens = record.split("\\")
+    tokens = record.split(FIELD_SEP)
     record_type = tokens[1]
 
     if len(tokens) != FOREIGN_TRADER_FIELDS_LEN:
@@ -211,7 +212,7 @@ def validate_foreign_trader(record):
 
 def validate_restrictions(record):
     errors = []
-    tokens = record.split("\\")
+    tokens = record.split(FIELD_SEP)
     record_type = tokens[1]
 
     if len(tokens) != 3:
@@ -226,7 +227,7 @@ def validate_restrictions(record):
 
 def validate_licence_product_line(record):
     errors = []
-    tokens = record.split("\\")
+    tokens = record.split(FIELD_SEP)
     record_type = tokens[1]
 
     if len(tokens) != LICENCE_LINE_FIELDS_LEN:
@@ -250,7 +251,7 @@ def validate_licence_product_line(record):
 
 def validate_end_line(record):
     errors = []
-    tokens = record.split("\\")
+    tokens = record.split(FIELD_SEP)
     record_type = tokens[1]
 
     if len(tokens) != 4:
@@ -265,7 +266,7 @@ def validate_end_line(record):
 
 def validate_file_trailer(record):
     errors = []
-    tokens = record.split("\\")
+    tokens = record.split(FIELD_SEP)
     record_type = tokens[1]
 
     if len(tokens) != FILE_TRAILER_FIELDS_LEN:
@@ -284,13 +285,13 @@ def validate_edifact_file(file_data):
 
     Validates each line and returns the list of discrepencies
     """
-    file_lines = [line for line in file_data.split("\n") if line]
+    file_lines = [line for line in file_data.split(LINE_SEP) if line]
 
     errors = []
     data_identifier = ""
     for line in file_lines[:]:
         line_errors = list()
-        tokens = line.split("\\")
+        tokens = line.split(FIELD_SEP)
         record_type = tokens[1]
 
         if record_type == "fileHeader":

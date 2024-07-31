@@ -192,7 +192,8 @@ def get_date_field(obj, key, default="") -> str:
 
 def get_restrictions(licence: LicencePayload) -> types.Restrictions:
     restrictions: str = licence.data.get("restrictions", "")
-    text = restrictions.replace("\n", "|").strip()
+
+    text = "|".join(restrictions.splitlines()).strip()
 
     return types.Restrictions(text=text)
 
