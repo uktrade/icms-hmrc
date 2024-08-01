@@ -35,8 +35,8 @@ pydantic-settings = "~=2.1.0"
 dbt-copilot-python = "==0.2.0"
 dj-database-url = "==2.1.0"
 django-log-formatter-asim = "==0.0.4"
-psycopg = {version = "~=3.1.18", extras = ["binary"]}
 sentry-sdk = {version = "~=2.8.0", extras = ["django"]}
+psycopg = {version = "~=3.2.0", extras = ["c"]}
 
 [requires]
 python_version = "3.10"
