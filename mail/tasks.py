@@ -387,7 +387,6 @@ def _check_sender_valid(
 ) -> None:
     """Check the sender is valid"""
 
-    # TODO: ICMSLST-1760 Revisit this before going live.
     mail_from_header: UniqueAddressHeader = mail.get("From")
     mail_from: Address = mail_from_header.addresses[0]
 
