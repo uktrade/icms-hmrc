@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   postgres-db:
     # The version we will run when migrating to DBT Platform
