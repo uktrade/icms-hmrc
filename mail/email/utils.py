@@ -1,7 +1,7 @@
 import logging
 
 from django.conf import settings
-from django.core.mail import EmailMessage
+from django.core.mail import DEFAULT_ATTACHMENT_MIME_TYPE, EmailMessage
 from unidecode import unidecode_expect_ascii
 
 from mail.chief.email import EmailMessageData, build_email_message
@@ -28,11 +28,17 @@ def send_email_wrapper(email_data: EmailMessageData) -> None:
 
     else:
         logger.info("Sending email to hmrc using mail.email.send_chief_email")
+        # Sends attachment base64 encoded
         count = send_chief_email(email_data)
+        # Sends as raw text.
+        # count = send_chief_email(email_data, attachment_mimetype="text/plain")
+
         logger.info("%s emails sent to CHIEF", count)
 
 
-def send_chief_email(email_data: EmailMessageData) -> int:
+def send_chief_email(
+    email_data: EmailMessageData, attachment_mimetype: str = DEFAULT_ATTACHMENT_MIME_TYPE
+) -> int:
     """Send licence data email to CHIEF.
 
     Returns the number of emails sent.
@@ -55,9 +61,7 @@ def send_chief_email(email_data: EmailMessageData) -> int:
         # content
         file_content,
         # mimetype
-        "application/octet-stream",
-        # Replace with this if we want to attach a text file.
-        # "text/plain",
+        attachment_mimetype,
     )
 
     mail = ChiefEmailMessage(
