@@ -43,7 +43,7 @@ class Command(BaseCommand):
     def handle(self, outcome: FakeChiefLicenceReplyEnum, *args, **options):
         self.stdout.write(f"Desired outcome: {outcome}")
 
-        if utils.get_app_env() == "production":
+        if utils.is_production_environment():
             self.stdout.write("This command is only for development environments")
             return
 

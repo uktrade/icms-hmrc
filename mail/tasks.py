@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 def dev_process_hmrc_licence_data() -> None:
     """Run all tasks in one task for speed when in a development environment."""
 
-    if utils.get_app_env() == "production":
+    if utils.is_production_environment():
         logger.warning("This command is only for development environments")
         return
 
@@ -117,7 +117,7 @@ def send_licence_data_to_hmrc() -> None:
 
 @celery_app.task(name="icms:fake_licence_reply")
 def fake_licence_reply():
-    if utils.get_app_env() == "production":
+    if utils.is_production_environment():
         logger.warning("This command is only for development environments")
         return
 
