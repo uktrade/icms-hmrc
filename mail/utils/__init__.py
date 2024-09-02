@@ -6,3 +6,7 @@ def get_app_env() -> str:
         raise ValueError("APP_ENV has not been set")
 
     return settings.APP_ENV
+
+
+def is_production_environment() -> bool:
+    return get_app_env() == "production"

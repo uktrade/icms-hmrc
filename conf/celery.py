@@ -1,11 +1,11 @@
 import os
+from typing import TypeAlias
 
 from celery import Celery
 from celery.schedules import crontab
 from dbt_copilot_python.celery_health_check import healthcheck
 
-# TODO: ICMSLST-2662 Uncomment this
-# from mail import utils
+from mail import utils
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "conf.settings")
 
@@ -15,19 +15,22 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 app = healthcheck.setup(app)
 
 
+CELERY_SCHEDULE: TypeAlias = dict[str, dict[str, str | crontab]]
+
+
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    # TODO: ICMSLST-2662 Remove this line and uncomment if / else block below
-    schedule = get_imcs_dev_beat_schedule()
-    # if utils.get_app_env() == "production":
-    #     schedule = get_icms_prod_beat_schedule()
-    # else:
-    #     schedule = get_imcs_dev_beat_schedule()
+    if utils.is_production_environment():
+        # TODO: ICMSLST-2662 Disable production schedule until we are ready to enable it.
+        # schedule = get_icms_prod_beat_schedule()
+        schedule = {}
+    else:
+        schedule = get_imcs_dev_beat_schedule()
 
     app.conf.beat_schedule = schedule
 
 
-def get_icms_prod_beat_schedule():
+def get_icms_prod_beat_schedule() -> CELERY_SCHEDULE:
     """Production beat schedule used when configured to run for IMCS."""
 
     return {
@@ -58,7 +61,7 @@ def get_icms_prod_beat_schedule():
     }
 
 
-def get_imcs_dev_beat_schedule():
+def get_imcs_dev_beat_schedule() -> CELERY_SCHEDULE:
     """Non production beat schedule used when configured to run for ICMS.
 
     This schedule contains a task that will fake a response from hmrc.
@@ -91,7 +94,7 @@ def get_imcs_dev_beat_schedule():
 
 
 # Not used - change schedule in setup_periodic_tasks to use.
-def get_test_usage_ingest_schedule():
+def get_test_usage_ingest_schedule() -> CELERY_SCHEDULE:
     return {
         "process-hmrc-emails": {
             "task": "icms:process_licence_reply_and_usage_emails",
