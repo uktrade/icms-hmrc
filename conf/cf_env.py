@@ -114,8 +114,6 @@ class CloudFoundryEnvironment(BaseSettings):
     # Redis settings
     local_redis_url: str = "redis://redis:6379"
 
-    allow_disastrous_data_drops_never_enable_in_prod: bool = False
-
     icms_fake_hmrc_reply: str = "accept"
 
     @computed_field  # type: ignore[misc]

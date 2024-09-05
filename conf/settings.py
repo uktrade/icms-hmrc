@@ -241,10 +241,5 @@ CELERY_IMPORTS = [
     "mail.tasks",
 ]
 
-# used in drop_all_tables command
-ALLOW_DISASTROUS_DATA_DROPS_NEVER_ENABLE_IN_PROD = (
-    env.allow_disastrous_data_drops_never_enable_in_prod
-)
-
 # Setting for faking licence reply from HMRC
 ICMS_FAKE_HMRC_REPLY: str = env.icms_fake_hmrc_reply
