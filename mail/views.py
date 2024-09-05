@@ -76,3 +76,18 @@ def get_serializer_cls(app_type: str, action: str) -> Type["Serializer"]:
             return serializers.SanctionLicenceDataSerializer
         case _:
             raise ValueError(f"Unsupported app type: ({app_type})")
+
+
+class CheckICMSHMRCConnectionView(APIView):
+    """View used by ICMS to test connection to ICMS-HMRC"""
+
+    authentication_classes = (HawkOnlyAuthentication,)
+    http_method_names = ["post"]
+
+    def post(self, request):
+        if request.data != {"foo": "bar"}:
+            error_msg = f"Invalid request data: {request.data}"
+
+            return JsonResponse(status=status.HTTP_400_BAD_REQUEST, data={"errors": error_msg})
+
+        return JsonResponse(status=status.HTTP_200_OK, data={"bar": "foo"})
