@@ -130,7 +130,7 @@ def process_licence_reply_and_usage_emails():
 
     logger.info("Checking for reply and usage emails")
 
-    auth = _get_hmrc_mailbox_auth()
+    auth = get_licence_reply_mailbox_auth()
     mailbox_hostname = settings.INCOMING_EMAIL_HOSTNAME
     port = settings.INCOMING_EMAIL_POP3_PORT
 
@@ -141,7 +141,7 @@ def process_licence_reply_and_usage_emails():
 
                 mail = pop3.get_email(con, msg_id)
 
-                _check_sender_valid(
+                check_sender_valid(
                     mail,
                     expected_sender_domain=settings.HMRC_TO_DIT_EMAIL_HOSTNAME,
                     expected_sender_user=settings.HMRC_TO_DIT_EMAIL_USER,
@@ -368,7 +368,7 @@ def send_usage_data_to_icms():
     mail.save()
 
 
-def _get_hmrc_mailbox_auth() -> Authenticator:
+def get_licence_reply_mailbox_auth() -> Authenticator:
     """Mailbox that receives reply emails from HMRC.
 
     These are licenceReply and usageData emails.
@@ -382,7 +382,7 @@ def _get_hmrc_mailbox_auth() -> Authenticator:
     )
 
 
-def _check_sender_valid(
+def check_sender_valid(
     mail: email.message.EmailMessage, *, expected_sender_domain: str, expected_sender_user
 ) -> None:
     """Check the sender is valid"""
