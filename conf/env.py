@@ -42,6 +42,7 @@ class DBTPlatformEnvironment(BaseSettings):
     # Hawk Envs
     hawk_authentication_enabled: bool = True
     icms_api_hawk_key: str = ""
+    icms_api_url: str = "http://caseworker:8080/"
 
     # POP3 mail settings
     incoming_email_hostname: str = ""
@@ -75,8 +76,6 @@ class DBTPlatformEnvironment(BaseSettings):
     email_awaiting_reply_time: int = 3600
 
     license_poll_interval: int = 300
-
-    icms_api_url: str = "http://caseworker:8080/"
 
     # Sentry
     sentry_dsn: str = ""
