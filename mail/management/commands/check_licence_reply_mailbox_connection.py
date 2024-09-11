@@ -30,8 +30,8 @@ class Command(BaseCommand):
             self.stdout.write(f"Count of msg_ids: {len(msg_ids)}")
 
             if fetch_email:
-                # Fetch the first and last three messages
-                for m_id in msg_ids[:3] + msg_ids[-3:]:
+                # Fetch the last three messages
+                for m_id in msg_ids[-3:]:
                     self.stdout.write("=" * 80)
                     mail = pop3.get_email(con, m_id)
 
