@@ -3,11 +3,8 @@ import os
 import dj_database_url
 from dbt_copilot_python.database import database_url_from_env
 from dbt_copilot_python.network import setup_allowed_hosts
-from dbt_copilot_python.utility import is_copilot
 from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-from .cf_env import CloudFoundryEnvironment
 
 
 class DBTPlatformEnvironment(BaseSettings):
@@ -119,16 +116,10 @@ class DBTPlatformEnvironment(BaseSettings):
         return self.celery_broker_url
 
 
-if is_copilot():
-    if "BUILD_STEP" in os.environ:
-        # When building use a fake value for the django_secret_key
-        # Everything else has a default value.
-        env: DBTPlatformEnvironment | CloudFoundryEnvironment = DBTPlatformEnvironment(
-            django_secret_key="FAKE_SECRET_KEY"  # nosec B106
-        )
-    else:
-        # When deployed read values from environment variables
-        env = DBTPlatformEnvironment()  # type:ignore[call-arg]
+if "BUILD_STEP" in os.environ:
+    # When building use a fake value for the django_secret_key
+    # Everything else has a default value.
+    env = DBTPlatformEnvironment(django_secret_key="FAKE_SECRET_KEY")  # nosec B106
 else:
-    # Cloud Foundry environment
-    env = CloudFoundryEnvironment()  # type:ignore[call-arg]
+    # When deployed read values from environment variables
+    env = DBTPlatformEnvironment()  # type:ignore[call-arg]
