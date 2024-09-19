@@ -21,9 +21,7 @@ CELERY_SCHEDULE: TypeAlias = dict[str, dict[str, str | crontab]]
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     if utils.is_production_environment():
-        # TODO: ICMSLST-2662 Disable production schedule until we are ready to enable it.
-        # schedule = get_icms_prod_beat_schedule()
-        schedule = {}
+        schedule = get_icms_prod_beat_schedule()
     else:
         schedule = get_imcs_dev_beat_schedule()
 
