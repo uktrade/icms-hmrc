@@ -3,7 +3,7 @@ import os
 import dj_database_url
 from dbt_copilot_python.database import database_url_from_env
 from dbt_copilot_python.network import setup_allowed_hosts
-from pydantic import Field, computed_field
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -88,18 +88,10 @@ class DBTPlatformEnvironment(BaseSettings):
 
     icms_fake_hmrc_reply: str = "accept"
 
-    @computed_field  # type: ignore[misc]
-    @property
-    def allowed_hosts_list(self) -> list[str]:
-        if self.build_step:
-            return self.allowed_hosts
-
-        # Makes an external network request so only call when running on DBT Platform
+    def get_allowed_hosts(self) -> list[str]:
         return setup_allowed_hosts(self.allowed_hosts)
 
-    @computed_field  # type: ignore[misc]
-    @property
-    def database_config(self) -> dict:
+    def get_database_config(self) -> dict:
         if self.build_step:
             return {"default": {}}
 
@@ -107,9 +99,7 @@ class DBTPlatformEnvironment(BaseSettings):
             "default": dj_database_url.config(default=database_url_from_env("DATABASE_CREDENTIALS"))
         }
 
-    @computed_field  # type: ignore[misc]
-    @property
-    def redis_url(self) -> str:
+    def get_redis_url(self) -> str:
         if self.build_step:
             return ""
 

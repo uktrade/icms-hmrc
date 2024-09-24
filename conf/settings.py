@@ -19,7 +19,7 @@ DEBUG = env.debug
 
 APP_ENV = env.app_env
 
-ALLOWED_HOSTS = env.allowed_hosts_list
+ALLOWED_HOSTS = env.get_allowed_hosts()
 
 # Application definition
 
@@ -69,7 +69,7 @@ WSGI_APPLICATION = "conf.wsgi.application"
 # Database https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-DATABASES = env.database_config
+DATABASES = env.get_database_config()
 
 CHIEF_SOURCE_SYSTEM = env.chief_source_system
 
@@ -227,7 +227,7 @@ if env.elastic_apm_server_url:
     INSTALLED_APPS.append("elasticapm.contrib.django")
 
 # Celery / Redis config
-REDIS_URL = env.redis_url
+REDIS_URL = env.get_redis_url()
 
 # Set use_SSL as we are deployed to CF or DBT Platform
 if REDIS_URL not in [env.local_redis_url, ""]:
