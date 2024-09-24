@@ -19,7 +19,9 @@ DEBUG = env.debug
 
 APP_ENV = env.app_env
 
-ALLOWED_HOSTS = env.get_allowed_hosts()
+# TODO: Revisit in ICMSLST-2974
+# ALLOWED_HOSTS = env.get_allowed_hosts()
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
