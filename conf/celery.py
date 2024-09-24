@@ -54,7 +54,7 @@ def get_icms_prod_beat_schedule() -> CELERY_SCHEDULE:
         # Task to forward licence usage data (icms-hmrc -> ICMS)
         "send-usage-data": {
             "task": "icms:send_usage_data_to_icms",
-            "schedule": crontab(hour="*/2"),
+            "schedule": crontab(minute="0", hour="*/2"),
         },
     }
 
