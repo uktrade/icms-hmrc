@@ -225,7 +225,9 @@ class LicenceReplyProcessor:
         """Load the licence reply data."""
 
         for line in filter(None, reply_data.split(LINE_SEP)):
-            self._process_line(line)
+            # The live licenceReply file contains empty spaces at the end of each line.
+            stripped = line.rstrip()
+            self._process_line(stripped)
 
     def _process_line(self, line: str) -> None:
         """Process the reply data line into the correct chief type."""

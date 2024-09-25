@@ -20,6 +20,12 @@ def partially_valid_licence_reply() -> str:
     return pathlib.Path(filename).read_text()
 
 
+@pytest.fixture
+def valid_file_with_trailing_spaces() -> str:
+    filename = "mail/tests/files/icms/licence_reply/accepted_with_trailing_spaces_example"
+    return pathlib.Path(filename).read_text()
+
+
 def test_processor_with_valid_file(valid_licence_reply):
     processor = LicenceReplyProcessor(valid_licence_reply)
 
@@ -188,3 +194,32 @@ def test_processor_works_with_reply_file_contains_no_data():
     assert not processor.reply_file_is_invalid()
     assert not processor.reply_file_is_partially_valid()
     assert processor.reply_file_contains_no_data()
+
+
+def test_valid_file_with_trailing_spaces(valid_file_with_trailing_spaces):
+    processor = LicenceReplyProcessor(valid_file_with_trailing_spaces)
+
+    assert processor.reply_file_is_valid()
+
+    expected_references = ["IMA/2024/00558"]
+    actual_references = [at.transaction_ref for at in processor.accepted_licences]
+
+    assert expected_references == actual_references
+
+
+def test_valid_file_with_trailing_spaces_with_mail_instance(valid_file_with_trailing_spaces):
+    mail = Mail(
+        id=1,
+        response_subject="ExampleLicenceReply",
+        response_data=valid_file_with_trailing_spaces,
+        extract_type=ExtractTypeEnum.LICENCE_DATA,
+        status=MailStatusEnum.REPLY_RECEIVED,
+    )
+
+    processor = LicenceReplyProcessor.load_from_mail(mail)
+    assert processor.reply_file_is_valid()
+
+    expected_references = ["IMA/2024/00558"]
+    actual_references = [at.transaction_ref for at in processor.accepted_licences]
+
+    assert expected_references == actual_references
