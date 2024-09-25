@@ -102,3 +102,28 @@ def health_check(request: HttpRequest) -> HttpResponse:
             body += COMMENT_TEMPLATE.format(comment=f"The following check failed: {check_name}")
 
         return HttpResponse(body, status=HTTPStatus.SERVICE_UNAVAILABLE, content_type="text/xml")
+
+
+def pingdom_healthcheck(request: HttpRequest) -> HttpResponse:
+    t = time.time()
+
+    failed = [
+        check_func.__name__ for check_func in [check_database, check_redis] if not check_func()
+    ]
+
+    t = time.time() - t
+
+    # pingdom can only accept 3 fractional digits
+    t_str = "%.3f" % t
+
+    if not failed:
+        return HttpResponse(
+            PINGDOM_TEMPLATE.format(status="OK", response_time=t_str), content_type="text/xml"
+        )
+    else:
+        body = PINGDOM_TEMPLATE.format(status="FALSE", response_time=t_str)
+
+        for check_name in failed:
+            body += COMMENT_TEMPLATE.format(comment=f"The following check failed: {check_name}")
+
+        return HttpResponse(body, status=HTTPStatus.SERVICE_UNAVAILABLE, content_type="text/xml")

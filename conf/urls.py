@@ -16,11 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
-from conf.views import health_check
+from conf.views import health_check, pingdom_healthcheck
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("mail/", include("mail.urls")),
     path("healthcheck/", health_check, name="healthcheck"),
-    path("pingdom/ping.xml", health_check, name="dbt-platform-health-check"),
+    path("pingdom/ping.xml", pingdom_healthcheck, name="dbt-platform-health-check"),
 ]
