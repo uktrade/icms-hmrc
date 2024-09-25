@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 
 
 def create_licence_data_mail(licences: "QuerySet[LicencePayload]", source: SourceEnum) -> Mail:
-    last_licence_data = LicenceData.objects.last()
+    # Copied the order_by from the model so that this logic is preserved
+    last_licence_data = LicenceData.objects.order_by("mail__created_at").last()
     run_number = last_licence_data.hmrc_run_number + 1 if last_licence_data else 1
     when = timezone.now()
 

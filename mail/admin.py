@@ -13,6 +13,8 @@ class LicencePayloadInline(admin.TabularInline):
 
 
 class LicenceDataAdmin(admin.ModelAdmin):
+    ordering = ["-pk"]
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
 
@@ -28,6 +30,7 @@ class LicenceDataAdmin(admin.ModelAdmin):
 
 class MailAdmin(admin.ModelAdmin):
     list_display = ["pk", "edi_filename", "status", "extract_type", "sent_at", "response_date"]
+    ordering = ["-created_at"]
 
     def has_change_permission(self, request, obj=None):
         """Prevent modification of Mail records to minimise the risk of introducing data bugs.
@@ -38,6 +41,10 @@ class MailAdmin(admin.ModelAdmin):
         return False
 
 
+class LicencePayloadAdmin(admin.ModelAdmin):
+    ordering = ["-received_at"]
+
+
 admin.site.register(LicenceData, LicenceDataAdmin)
 admin.site.register(Mail, MailAdmin)
-admin.site.register(LicencePayload)
+admin.site.register(LicencePayload, LicencePayloadAdmin)

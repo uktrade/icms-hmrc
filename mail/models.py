@@ -22,6 +22,8 @@ class LicencePayload(models.Model):
 
     class Meta:
         unique_together = [["icms_id", "action"]]
+
+        # NOTE: Do not change this as the app code is flaky and requires this ordering
         ordering = ["received_at"]
 
     def __str__(self):
@@ -46,6 +48,7 @@ class LicenceData(models.Model):
     )
 
     class Meta:
+        # NOTE: Do not change this as the app code is flaky and requires this ordering
         ordering = ["mail__created_at"]
 
 
@@ -77,6 +80,7 @@ class Mail(models.Model):
 
     class Meta:
         db_table = "mail"
+        # NOTE: Do not change this as the app code is flaky and requires this ordering
         ordering = ["created_at"]
 
     def __str__(self):
