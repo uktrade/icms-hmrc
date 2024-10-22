@@ -257,7 +257,7 @@ class TestICMSLicenceDataSerializer:
     @parameterized.expand(
         [
             ("Prefix missing", "00000000000000", "'eori_number' must start with 'GB' prefix"),
-            ("EORI too short", "GB00000", "Ensure this field has at least 14 characters."),
+            ("EORI too short", "GBP", "Ensure this field has at least 4 characters."),
             (
                 "EORI too long",
                 "GB00000000000000000",
@@ -266,7 +266,7 @@ class TestICMSLicenceDataSerializer:
             (
                 "EORI length not 12 or 15",
                 "GB0000000000000",
-                "'eori_number' must start with 'GB' followed by 12 or 15 numbers",
+                "'eori_number' must start with 'GB' followed by 12 or 15 numbers or 'PR' for individual importers",
             ),
         ]
     )
@@ -277,6 +277,22 @@ class TestICMSLicenceDataSerializer:
         assert not serializer.is_valid()
 
         assert str(serializer.errors["eori_number"][0]) == expected_error, f"{name} test failed"
+
+    def test_eori_number_gbpr(self):
+        data = {
+            "eori_number": "GBPR",
+            "name": "org name",
+            "address": {
+                "line_1": "line_1",
+                "line_2": "line_2",
+                "line_3": "line_3",
+                "line_4": "line_4",
+                "line_5": "line_5",
+                "postcode": "S118ZZ",  # /PS-IGNORE
+            },
+        }
+        serializer = serializers.OrganisationSerializer(data=data)
+        assert serializer.is_valid()
 
     def test_valid_fa_sil_revoke_payload(self, fa_sil_revoke_payload):
         data = fa_sil_revoke_payload

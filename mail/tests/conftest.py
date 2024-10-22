@@ -167,6 +167,42 @@ def fa_sil_insert_payload():
 
 
 @pytest.fixture
+def fa_sil_individual_importer_payload():
+
+    return {
+        "type": "SIL",
+        "action": "insert",
+        "id": str(uuid.uuid4()),
+        "reference": "IMA/2022/00003",
+        "licence_reference": "GBSIL3333333H",
+        "start_date": "2022-06-29",
+        "end_date": "2024-12-29",
+        "organisation": {
+            "eori_number": "GBPR",
+            "name": "SIL Organisation",
+            "address": {
+                "line_1": "line_1",
+                "line_2": "line_2",
+                "line_3": "line_3",
+                "line_4": "",
+                "line_5": "",
+                "postcode": "S227ZZ",
+            },
+        },
+        "country_code": "US",
+        "restrictions": "Sample restrictions",
+        "goods": [
+            {
+                "description": "Sample goods description 1",
+                "quantity": 1,
+                "controlled_by": "Q",
+                "unit": 30,
+            },
+        ],
+    }
+
+
+@pytest.fixture
 def fa_sil_revoke_payload():
     return {
         "action": LicenceActionEnum.CANCEL,

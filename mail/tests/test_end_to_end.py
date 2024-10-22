@@ -119,6 +119,30 @@ class TestICMSEndToEnd:
 
         self._assert_reply_pending("IMA/2022/00003")
 
+    def test_icms_send_email_to_hmrc_fa_sil_individual_importer_e2e(
+        self, fa_sil_individual_importer_payload
+    ):
+        clear_stmp_mailbox()
+        Mail.objects.all().update(status=MailStatusEnum.REPLY_PROCESSED)
+
+        resp = self.client.post(
+            reverse("mail:update_licence"),
+            data={"licence": fa_sil_individual_importer_payload},
+            content_type="application/json",
+        )
+        assert resp.status_code == 201
+
+        tasks.send_licence_data_to_hmrc.apply()
+        body = get_smtp_body().replace("\r", "")
+        ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
+
+        # Replace the hardcoded date in the test file with the one in the email.
+        test_file = Path("mail/tests/files/icms/licence_data_files/fa_sil_individual_importer")
+        expected_content = test_file.read_text().replace("202201011011", ymdhm_timestamp).strip()
+        assert expected_content == body
+
+        self._assert_reply_pending("IMA/2022/00003")
+
     def test_icms_send_email_to_hmrc_sanctions_e2e(self, sanctions_insert_payload):
         clear_stmp_mailbox()
         Mail.objects.all().update(status=MailStatusEnum.REPLY_PROCESSED)
