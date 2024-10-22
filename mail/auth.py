@@ -15,7 +15,7 @@ class Authenticator(Protocol):
     tenant_id: str
 
     def authenticate(self, connection: poplib.POP3_SSL):
-        ...
+        ...  # fmt: skip
 
 
 class ModernAuthentication:
