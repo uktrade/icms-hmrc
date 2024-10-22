@@ -587,7 +587,7 @@ def test_file_with_only_errors_raises_errors(db, caplog):
 class TestSendLicenceDataToHMRC:
     @pytest.fixture(autouse=True)
     def _setup(self, db):
-        ...
+        ...  # fmt: skip
 
     def test_task_is_called(self, caplog):
         tasks.send_licence_data_to_hmrc()
@@ -601,7 +601,7 @@ class TestSendLicenceDataToHMRC:
 class TestFakeLicenceReply:
     @pytest.fixture(autouse=True)
     def _setup(self, db):
-        ...
+        ...  # fmt: skip
 
     @override_settings(DEBUG=True, ICMS_FAKE_HMRC_REPLY=FakeChiefLicenceReplyEnum.ACCEPT)
     def test_task_is_called(self, caplog, capsys):
