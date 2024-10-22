@@ -37,7 +37,7 @@ class AddressSerializer(serializers.Serializer):
 
 class OrganisationSerializer(serializers.Serializer):
     # "GB" + 12 or 15 digits.
-    eori_number = serializers.CharField(min_length=14, max_length=17)
+    eori_number = serializers.CharField(min_length=4, max_length=17)
     name = serializers.CharField(max_length=80, allow_blank=True)
     address = AddressSerializer()
     start_date = serializers.DateField(required=False, allow_null=True)
@@ -53,12 +53,15 @@ class OrganisationSerializer(serializers.Serializer):
         if not value.upper().startswith("GB"):
             raise serializers.ValidationError("'eori_number' must start with 'GB' prefix")
 
+        if value.upper() == "GBPR":
+            return "GBPR"
+
         # Example value: GB123456789012345
         eori_number_length = len(value[2:])
 
         if eori_number_length != 12 and eori_number_length != 15:
             raise serializers.ValidationError(
-                "'eori_number' must start with 'GB' followed by 12 or 15 numbers"
+                "'eori_number' must start with 'GB' followed by 12 or 15 numbers or 'PR' for individual importers"
             )
 
         return value
