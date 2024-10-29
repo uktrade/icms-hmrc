@@ -1,4 +1,5 @@
 import re
+import string
 
 from rest_framework import serializers
 
@@ -70,6 +71,11 @@ class OrganisationSerializer(serializers.Serializer):
 class GoodSerializer(serializers.Serializer):
     description = serializers.CharField(max_length=2000)
 
+    def validate_description(self, value: str) -> str:
+        _validate_description_whitespace(value)
+
+        return value
+
 
 class BaseSerializer(serializers.Serializer):
     """Baseclass serializer for all LicenceData records."""
@@ -139,9 +145,10 @@ class FirearmSilGoods(serializers.Serializer):
         choices=QuantityCodeEnum.choices, required=False, allow_null=True
     )
 
-    def validate(self, data):
+    def validate(self, data: dict[str, int | str]) -> dict[str, int | str]:
         data = super().validate(data)
         _validate_controlled_by(data)
+        _validate_description_whitespace(data["description"])
 
         return data
 
@@ -187,7 +194,7 @@ class RevokeLicenceDataSerializer(BaseSerializer):
     action = serializers.ChoiceField([LicenceActionEnum.CANCEL])
 
 
-def _validate_controlled_by(data):
+def _validate_controlled_by(data: dict[str, int | str]) -> None:
     """Conditionally check that quantity / unit is set"""
 
     if data["controlled_by"] == ControlledByEnum.QUANTITY:
@@ -198,3 +205,10 @@ def _validate_controlled_by(data):
 
         if not data.get("unit"):
             raise serializers.ValidationError("'unit' must be set when controlled_by equals 'Q'")
+
+
+def _validate_description_whitespace(description: str) -> None:
+    """Check for invalid whitespace characters in description"""
+    whitespace = f'[{string.whitespace.replace(" ", "")}]'
+    if re.search(whitespace, description) is not None:
+        raise serializers.ValidationError("'description' contains an invalid whitespace character")

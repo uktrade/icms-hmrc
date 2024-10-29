@@ -200,6 +200,21 @@ class TestICMSLicenceDataSerializer:
         for key in data.keys():
             assert key in serializer.validated_data
 
+    def test_invalid_dfl_newline_error(self, fa_dfl_insert_payload):
+        data = fa_dfl_insert_payload
+        data["goods"] = [{"description": "goods\ndescription"}]
+        serializer = serializers.FirearmDflLicenceDataSerializer(data=data)
+
+        assert not serializer.is_valid()
+
+        expected_error = [
+            ErrorDetail(
+                string="'description' contains an invalid whitespace character", code="invalid"
+            )
+        ]
+        goods_error = serializer.errors["goods"][0]["description"]
+        assert goods_error == expected_error
+
     def test_valid_fa_sil_payload(self, fa_sil_insert_payload):
         data = fa_sil_insert_payload
         serializer = serializers.FirearmSilLicenceDataSerializer(data=data)
@@ -239,6 +254,45 @@ class TestICMSLicenceDataSerializer:
 
         expected_error = [
             ErrorDetail(string="'unit' must be set when controlled_by equals 'Q'", code="invalid")
+        ]
+        goods_error = serializer.errors["goods"][0]["non_field_errors"]
+        assert goods_error == expected_error
+
+    def test_sil_invalid_description_carriage_return_error(self, fa_sil_insert_payload):
+        data = fa_sil_insert_payload
+        data["goods"] = [
+            {
+                "controlled_by": "Q",
+                "description": "goods\r\ndescription",
+                "quantity": 30,
+                "unit": 30,
+            },
+        ]
+        serializer = serializers.FirearmSilLicenceDataSerializer(data=data)
+
+        assert not serializer.is_valid()
+
+        expected_error = [
+            ErrorDetail(
+                string="'description' contains an invalid whitespace character", code="invalid"
+            )
+        ]
+        goods_error = serializer.errors["goods"][0]["non_field_errors"]
+        assert goods_error == expected_error
+
+    def test_sil_invalid_description_tab_error(self, fa_sil_insert_payload):
+        data = fa_sil_insert_payload
+        data["goods"] = [
+            {"controlled_by": "Q", "description": "goods\tdescription", "quantity": 30, "unit": 30},
+        ]
+        serializer = serializers.FirearmSilLicenceDataSerializer(data=data)
+
+        assert not serializer.is_valid()
+
+        expected_error = [
+            ErrorDetail(
+                string="'description' contains an invalid whitespace character", code="invalid"
+            )
         ]
         goods_error = serializer.errors["goods"][0]["non_field_errors"]
         assert goods_error == expected_error
