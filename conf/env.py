@@ -39,7 +39,7 @@ class DBTPlatformEnvironment(BaseSettings):
     # Hawk Envs
     hawk_authentication_enabled: bool = True
     icms_api_hawk_key: str = ""
-    icms_api_url: str = "http://caseworker:8080/"
+    icms_api_url: str = "http://caseworker:8008/"
 
     # POP3 mail settings
     incoming_email_hostname: str = ""

@@ -62,40 +62,21 @@ class TestICMSLicenceDataSerializer:
 
         assert "quantity" not in serializer.errors
 
-    def test_valid_fa_oil_payload(self):
-        data = {
-            "type": "OIL",
-            "action": "insert",
-            "id": "deaa301d-d978-473b-b76b-da275f28f447",
-            "reference": "IMA/2022/00001",
-            "licence_reference": "GBOIL2222222C",
-            "start_date": "2022-06-06",
-            "end_date": "2025-05-30",
-            "organisation": {
-                "eori_number": "GB112233445566000",
-                "name": "org name",
-                "address": {
-                    "line_1": "line_1",
-                    "line_2": "line_2",
-                    "line_3": "line_3",
-                    "line_4": "line_4",
-                    "line_5": "line_5",
-                    "postcode": "S118ZZ",  # /PS-IGNORE
-                },
-            },
-            "country_group": "G001",
-            "restrictions": "Some restrictions.\nSome more restrictions",
-            "goods": [
-                {
-                    "description": (
-                        "Firearms, component parts thereof, or ammunition of"
-                        " any applicable commodity code, other than those"
-                        " falling under Section 5 of the Firearms Act 1968"
-                        " as amended."
-                    ),
-                }
-            ],
-        }
+    def test_valid_fa_oil_payload(self, fa_oil_insert_payload):
+        data = fa_oil_insert_payload
+        serializer = serializers.FirearmOilLicenceDataSerializer(data=data)
+
+        is_valid = serializer.is_valid()
+
+        assert is_valid
+
+        # Check all the keys here are in the validated data
+        for key in data.keys():
+            assert key in serializer.validated_data
+
+    def test_valid_fa_oil_payload_empty_postcode(self, fa_oil_insert_payload):
+        data = fa_oil_insert_payload
+        data["organisation"]["address"]["postcode"] = ""
 
         serializer = serializers.FirearmOilLicenceDataSerializer(data=data)
 

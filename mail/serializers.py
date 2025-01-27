@@ -33,7 +33,8 @@ class AddressSerializer(serializers.Serializer):
     line_3 = serializers.CharField(required=False, max_length=35, allow_blank=True)
     line_4 = serializers.CharField(required=False, max_length=35, allow_blank=True)
     line_5 = serializers.CharField(required=False, max_length=35, allow_blank=True)
-    postcode = serializers.CharField(max_length=8)
+    # TODO: Revisit in ECIL-486 part 2
+    postcode = serializers.CharField(required=False, max_length=8, allow_blank=True)
 
 
 class OrganisationSerializer(serializers.Serializer):

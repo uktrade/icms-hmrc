@@ -134,7 +134,8 @@ def validate_permitted_trader(record):
                 }
             )
 
-    if not is_postcode_valid(tr.postcode):
+    # TODO: Revisit in ECIL-486 part 2
+    if tr.postcode and not is_postcode_valid(tr.postcode):
         errors.append({record_type: f"Invalid postcode found {tr.postcode}"})
 
     return errors
@@ -306,7 +307,7 @@ def validate_edifact_file(file_data):
         elif record_type == "foreignTrader":
             line_errors = validate_foreign_trader(line)
         elif record_type == "restrictions":
-            line = validate_restrictions(line)
+            line_errors = validate_restrictions(line)
         elif record_type == "line":
             line_errors = validate_licence_product_line(line)
         elif record_type == "end":
