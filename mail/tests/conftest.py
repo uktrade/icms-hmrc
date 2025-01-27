@@ -168,7 +168,6 @@ def fa_sil_insert_payload():
 
 @pytest.fixture
 def fa_sil_individual_importer_payload():
-
     return {
         "type": "SIL",
         "action": "insert",
