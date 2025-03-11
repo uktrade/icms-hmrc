@@ -277,7 +277,7 @@ class TestBuildICMSLicenceDataFASIL(testcases.TestCase):
 class TestBuildICMSLicenceDataFASILIndividualImporter(testcases.TestCase):
     def setUp(self) -> None:
         org_data = {
-            "eori_number": "GBPR",
+            "eori_number": "GB123451234512345",
             "name": "SIL Organisation",
             "address": {
                 "line_1": "line_1",

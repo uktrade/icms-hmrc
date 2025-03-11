@@ -55,15 +55,12 @@ class OrganisationSerializer(serializers.Serializer):
         if not value.upper().startswith("GB"):
             raise serializers.ValidationError("'eori_number' must start with 'GB' prefix")
 
-        if value.upper() == "GBPR":
-            return "GBPR"
-
         # Example value: GB123456789012345
         eori_number_length = len(value[2:])
 
         if eori_number_length != 12 and eori_number_length != 15:
             raise serializers.ValidationError(
-                "'eori_number' must start with 'GB' followed by 12 or 15 numbers or 'PR' for individual importers"
+                "'eori_number' must start with 'GB' followed by 12 or 15 numbers"
             )
 
         return value

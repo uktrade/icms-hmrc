@@ -177,7 +177,7 @@ def fa_sil_individual_importer_payload():
         "start_date": "2022-06-29",
         "end_date": "2024-12-29",
         "organisation": {
-            "eori_number": "GBPR",
+            "eori_number": "GB123451234512345",
             "name": "SIL Organisation",
             "address": {
                 "line_1": "line_1",
