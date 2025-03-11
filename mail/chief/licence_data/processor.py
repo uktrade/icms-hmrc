@@ -153,11 +153,9 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[types._
         trader = payload.get("organisation")
         trader_address = trader.get("address")
         eori = trader.get("eori_number")
-        turn = "PR" if eori == "GBPR" else None
 
         yield types.Trader(
-            rpa_trader_id=None if turn else eori,
-            turn=turn,
+            rpa_trader_id=eori,
             start_date=get_date_field(trader, "start_date"),
             end_date=get_date_field(trader, "end_date"),
             name=trader.get("name"),

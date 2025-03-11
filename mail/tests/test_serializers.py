@@ -301,7 +301,7 @@ class TestICMSLicenceDataSerializer:
             (
                 "EORI length not 12 or 15",
                 "GB0000000000000",
-                "'eori_number' must start with 'GB' followed by 12 or 15 numbers or 'PR' for individual importers",
+                "'eori_number' must start with 'GB' followed by 12 or 15 numbers",
             ),
         ]
     )
@@ -315,7 +315,7 @@ class TestICMSLicenceDataSerializer:
 
     def test_eori_number_gbpr(self):
         data = {
-            "eori_number": "GBPR",
+            "eori_number": "GB123451234512345",
             "name": "org name",
             "address": {
                 "line_1": "line_1",
