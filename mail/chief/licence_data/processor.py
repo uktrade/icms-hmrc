@@ -213,6 +213,18 @@ def get_goods(licence_type: str, goods: Optional[list]) -> Iterable[types.Restri
 
             yield types.LicenceDataLine(line_num=idx, commodity=good["commodity"], **kwargs)
 
+    # Nuclear
+    if licence_type == LicenceTypeEnum.IMPORT_NUCLEAR:
+        for idx, good in goods_iter:
+            kwargs = _get_controlled_by_kwargs(good)
+
+            yield types.LicenceDataLine(
+                line_num=idx,
+                commodity=good["commodity"],
+                goods_description=good["description"],
+                **kwargs,
+            )
+
     # FA-SIL
     elif licence_type == LicenceTypeEnum.IMPORT_SIL:
         for idx, good in goods_iter:

@@ -172,6 +172,27 @@ class SanctionGoodsSerializer(serializers.Serializer):
         return data
 
 
+class NuclearMaterialGoodsSerializer(serializers.Serializer):
+    # Required fields
+    commodity = serializers.CharField(max_length=11)
+    controlled_by = serializers.ChoiceField(choices=ControlledByEnum.choices, required=True)
+
+    # Conditional / Optional fields
+    # Format in CHIEF SPEC: 9(11).9(3)
+    quantity = serializers.DecimalField(
+        decimal_places=3, max_digits=14, required=False, allow_null=True
+    )
+    unit = serializers.ChoiceField(
+        choices=QuantityCodeEnum.choices, required=False, allow_null=True
+    )
+
+    def validate(self, data):
+        data = super().validate(data)
+        _validate_controlled_by(data)
+
+        return data
+
+
 class FirearmSilLicenceDataSerializer(InsertAndReplacePayloadBase):
     """FA-SIL licence data serializer."""
 
@@ -184,6 +205,13 @@ class SanctionLicenceDataSerializer(InsertAndReplacePayloadBase):
 
     type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_SAN])
     goods = SanctionGoodsSerializer(many=True)
+
+
+class NuclearMaterialLicenceDataSerializer(InsertAndReplacePayloadBase):
+    """Sanctions licence data serializer."""
+
+    type = serializers.ChoiceField(choices=[LicenceTypeEnum.IMPORT_NUCLEAR])
+    goods = NuclearMaterialGoodsSerializer(many=True)
 
 
 class RevokeLicenceDataSerializer(BaseSerializer):

@@ -74,6 +74,8 @@ def get_serializer_cls(app_type: str, action: str) -> Type["Serializer"]:
             return serializers.FirearmSilLicenceDataSerializer
         case LicenceTypeEnum.IMPORT_SAN:
             return serializers.SanctionLicenceDataSerializer
+        case LicenceTypeEnum.IMPORT_NUCLEAR:
+            return serializers.NuclearMaterialLicenceDataSerializer
         case _:
             raise ValueError(f"Unsupported app type: ({app_type})")
 
