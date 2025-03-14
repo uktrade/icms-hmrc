@@ -16,6 +16,7 @@ class LicenceTypeEnum(TextChoices):
     IMPORT_OIL = "OIL", "Open Individual Import Licence"
     IMPORT_SIL = "SIL", "Specific Individual Import Licence"
     IMPORT_SAN = "SAN", "Sanctions and Adhoc Import Licence"
+    IMPORT_NUCLEAR = "NUCLEAR", "Nuclear Material Import Licence"
 
 
 ICMS_HMRC_LICENCE_TYPE_MAPPING = {
@@ -23,6 +24,7 @@ ICMS_HMRC_LICENCE_TYPE_MAPPING = {
     LicenceTypeEnum.IMPORT_OIL.value: "OIL",
     LicenceTypeEnum.IMPORT_SIL.value: "SIL",
     LicenceTypeEnum.IMPORT_SAN.value: "SAN",
+    LicenceTypeEnum.IMPORT_NUCLEAR.value: "SIL",
 }
 
 
@@ -93,7 +95,7 @@ class QuantityCodeEnum(IntegerChoices):
     # Ton = 16, "Ton"
     # Oz Troy = 17, "Oz Troy"
     # Lb Troy = 18, "Lb Troy"
-    # Gramme = 21, "Gramme"
+    GRAMME = 21, "Gramme"
     # Hectogramme (100 gms) = 22, "Hectogramme (100 gms)"
     KILOGRAMME = 23, "Kilogramme"
     # 100 kgs = 24, "100 kgs"
@@ -141,9 +143,9 @@ class QuantityCodeEnum(IntegerChoices):
     # Pint = 71, "Pint"
     # Gallon = 72, "Gallon"
     # 36 gallons (Bulk barrel) = 73, "36 gallons (Bulk barrel)"
-    # Millilitre (cu centimetre) = 74, "Millilitre (cu centimetre)"
+    MILLILITRE_CU_CENTIMETRE = 74, "Millilitre (cu centimetre)"
     # Centilitre = 75, "Centilitre"
-    # Litre = 76, "Litre"
+    LITRE = 76, "Litre"
     # Dekalitre = 77, "Dekalitre"
     # Hectolitre = 78, "Hectolitre"
     # US Gallon = 79, "US Gallon"
