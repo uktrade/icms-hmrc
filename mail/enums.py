@@ -102,6 +102,7 @@ class QuantityCodeEnum(IntegerChoices):
     # Tonne = 25, "Tonne"
     METRIC_CARAT = 26, "Metric Carat"
     # 50 kgs = 27, "50 kgs"
+    MICROGRAM = 116, "Microgram"
 
     # 2. Gross weight
     # Pound gross = 60, "Pound gross"
