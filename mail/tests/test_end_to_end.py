@@ -165,6 +165,28 @@ class TestICMSEndToEnd:
 
         self._assert_reply_pending("IMA/2022/00004")
 
+    def test_icms_send_email_to_hmrc_nuclear_material_e2e(self, nuclear_insert_payload):
+        clear_stmp_mailbox()
+        Mail.objects.all().update(status=MailStatusEnum.REPLY_PROCESSED)
+
+        resp = self.client.post(
+            reverse("mail:update_licence"),
+            data={"licence": nuclear_insert_payload},
+            content_type="application/json",
+        )
+        assert resp.status_code == 201
+
+        tasks.send_licence_data_to_hmrc.apply()
+        body = get_smtp_body().replace("\r", "")
+        ymdhm_timestamp = body.split("\n")[0].split("\\")[5]
+
+        # Replace the hardcoded date in the test file with the one in the email.
+        test_file = Path("mail/tests/files/icms/licence_data_files/nuclear_material_insert")
+        expected_content = test_file.read_text().replace("202503311011", ymdhm_timestamp).strip()
+        assert expected_content == body
+
+        self._assert_reply_pending("IMA/2025/00001")
+
     def test_icms_send_email_to_hmrc_fa_sil_cancel_e2e(self, fa_sil_revoke_payload):
         clear_stmp_mailbox()
         Mail.objects.all().update(status=MailStatusEnum.REPLY_PROCESSED)

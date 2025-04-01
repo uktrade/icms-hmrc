@@ -246,3 +246,70 @@ def sanctions_insert_payload():
         "restrictions": "",
         "goods": goods,
     }
+
+
+@pytest.fixture
+def nuclear_insert_payload():
+    goods = [
+        {
+            "commodity": "2612101000",
+            "description": "Goods description 1",
+            "controlled_by": "Q",
+            "unit": 21,
+            "quantity": 12345.0,
+        },
+        {
+            "commodity": "2844306100",
+            "description": "Goods description 2",
+            "controlled_by": "Q",
+            "unit": 23,
+            "quantity": 22222.0,
+        },
+        {
+            "commodity": "2844305190",
+            "description": "Goods description 3",
+            "controlled_by": "Q",
+            "unit": 76,
+            "quantity": 33333.0,
+        },
+        {
+            "commodity": "2844500000",
+            "description": "Goods description 4",
+            "controlled_by": "Q",
+            "unit": 116,
+            "quantity": 44444.0,
+        },
+        {
+            "commodity": "2844306900",
+            "description": "Goods description 5",
+            "controlled_by": "Q",
+            "unit": 74,
+            "quantity": 55555.0,
+        },
+        {"commodity": "2844209900", "description": "Goods description 6", "controlled_by": "O"},
+    ]
+
+    return {
+        "type": "NUCLEAR",
+        "action": "insert",
+        "id": str(uuid.uuid4()),
+        "reference": "IMA/2025/00001",
+        "licence_reference": "GBSIL0000001B",
+        "start_date": "2025-03-31",
+        "end_date": "2026-03-31",
+        "organisation": {
+            "eori_number": "GB112233445566000",
+            "name": "Nuclear Organisation",
+            "address": {
+                "line_1": "line_1",
+                "line_2": "line_2",
+                "line_3": "line_3",
+                "line_4": "",
+                "line_5": "",
+                "postcode": "S227ZZ",
+            },
+        },
+        "country_code": "RU",
+        "restrictions": "",
+        "goods": goods,
+    }
