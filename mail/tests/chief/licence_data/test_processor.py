@@ -419,3 +419,95 @@ class TestBuildICMSLicenceDataSanction(testcases.TestCase):
         self.maxDiff = None
         expected_content = self.test_file.read_text()
         self.assertEqual(expected_content, file_content)
+
+
+class TestBuildICMSLicenceDataNuclearMaterial(testcases.TestCase):
+    def setUp(self) -> None:
+        org_data = {
+            "eori_number": "GB112233445566000",
+            "name": "Nuclear Organisation",
+            "address": {
+                "line_1": "line_1",
+                "line_2": "line_2",
+                "line_3": "line_3",
+                "line_4": "",
+                "line_5": "",
+                "postcode": "S227ZZ",
+            },
+        }
+
+        restrictions = ""
+        goods = [
+            {
+                "commodity": "2612101000",
+                "description": "Goods description 1",
+                "controlled_by": "Q",
+                "unit": 21,
+                "quantity": 12345.0,
+            },
+            {
+                "commodity": "2844306100",
+                "description": "Goods description 2",
+                "controlled_by": "Q",
+                "unit": 23,
+                "quantity": 22222.0,
+            },
+            {
+                "commodity": "2844305190",
+                "description": "Goods description 3",
+                "controlled_by": "Q",
+                "unit": 76,
+                "quantity": 33333.0,
+            },
+            {
+                "commodity": "2844500000",
+                "description": "Goods description 4",
+                "controlled_by": "Q",
+                "unit": 116,
+                "quantity": 44444.0,
+            },
+            {
+                "commodity": "2844306900",
+                "description": "Goods description 5",
+                "controlled_by": "Q",
+                "unit": 74,
+                "quantity": 55555.0,
+            },
+            {"commodity": "2844209900", "description": "Goods description 6", "controlled_by": "O"},
+        ]
+
+        LicencePayload.objects.create(
+            icms_id="4277dd90-7ac0-4f48-b228-94c4a2fc61b2",
+            reference="IMA/2022/00004",
+            action=LicenceActionEnum.INSERT,
+            data={
+                "type": LicenceTypeEnum.IMPORT_NUCLEAR.value,
+                "reference": "IMA/2025/00001",
+                "licence_reference": "GBSIL0000001B",
+                "start_date": "2025-03-31",
+                "end_date": "2026-03-31",
+                "organisation": org_data,
+                "country_code": "RU",
+                "restrictions": restrictions,
+                "goods": goods,
+            },
+        )
+
+        self.test_file = Path("mail/tests/files/icms/licence_data_files/nuclear_material_insert")
+        self.assertTrue(self.test_file.is_file())
+
+    def test_generate_licence_data_file(self):
+        licences = LicencePayload.objects.all()
+        self.assertEqual(licences.count(), 1)
+
+        run_number = 1
+        when = datetime.datetime(2025, 3, 31, 10, 11, 00)
+
+        filename, file_content = build_licence_data_file(licences, run_number, when)
+
+        self.assertEqual(filename, "CHIEF_LIVE_ILBDOTI_licenceData_1_202503311011")
+
+        self.maxDiff = None
+        expected_content = self.test_file.read_text()
+        print("Actual:", file_content)
+        self.assertEqual(expected_content, file_content)

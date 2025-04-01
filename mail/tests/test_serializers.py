@@ -289,6 +289,18 @@ class TestICMSLicenceDataSerializer:
         for key in data.keys():
             assert key in serializer.validated_data
 
+    def test_valid_nuclear_material_payload(self, nuclear_insert_payload):
+        data = nuclear_insert_payload
+
+        serializer = serializers.NuclearMaterialLicenceDataSerializer(data=data)
+        is_valid = serializer.is_valid()
+
+        assert is_valid
+
+        # Check all the keys here are in the validated data
+        for key in data.keys():
+            assert key in serializer.validated_data
+
     @parameterized.expand(
         [
             ("Prefix missing", "00000000000000", "'eori_number' must start with 'GB' prefix"),
