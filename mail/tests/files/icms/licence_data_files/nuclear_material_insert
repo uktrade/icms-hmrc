@@ -2,12 +2,11 @@
 2\licence\IMA/2025/00001\insert\GBSIL0000001B\SIL\I\20250331\20260331
 3\trader\\GB112233445566000\\\Nuclear Organisation\line_1\line_2\line_3\\\S227ZZ
 4\country\RU\\O
-5\restrictions\
-6\line\1\2612101000\\\\Goods description 1\Q\\021\\12345.0\\\\\\
-7\line\2\2844306100\\\\Goods description 2\Q\\023\\22222.0\\\\\\
-8\line\3\2844305190\\\\Goods description 3\Q\\076\\33333.0\\\\\\
-9\line\4\2844500000\\\\Goods description 4\Q\\116\\44444.0\\\\\\
-10\line\5\2844306900\\\\Goods description 5\Q\\074\\55555.0\\\\\\
-11\line\6\2844209900\\\\Goods description 6\O\\\\\\\\\\
-12\end\licence\11
-13\fileTrailer\1
+5\line\1\2612101000\\\\Goods description 1\Q\\021\\12345.0\\\\\\
+6\line\2\2844306100\\\\Goods description 2\Q\\023\\22222.0\\\\\\
+7\line\3\2844305190\\\\Goods description 3\Q\\076\\33333.0\\\\\\
+8\line\4\2844500000\\\\Goods description 4\Q\\116\\44444.0\\\\\\
+9\line\5\2844306900\\\\Goods description 5\Q\\074\\55555.0\\\\\\
+10\line\6\2844209900\\\\Goods description 6\O\\\\\\\\\\
+11\end\licence\10
+12\fileTrailer\1
