@@ -243,7 +243,7 @@ def sanctions_insert_payload():
             },
         },
         "country_code": "RU",
-        "restrictions": "",
+        "restrictions": "example_restrictions",
         "goods": goods,
     }
 

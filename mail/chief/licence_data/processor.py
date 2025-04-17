@@ -174,7 +174,8 @@ def generate_lines_for_icms_licence(licence: LicencePayload) -> Iterable[types._
         elif payload.get("country_code"):
             yield types.Country(code=payload.get("country_code"), **kwargs)
 
-        yield get_restrictions(licence)
+        if payload.get("restrictions", ""):
+            yield get_restrictions(licence)
 
         for g in get_goods(icms_licence_type, payload.get("goods")):
             yield g

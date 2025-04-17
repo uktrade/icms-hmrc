@@ -378,7 +378,7 @@ class TestBuildICMSLicenceDataSanction(testcases.TestCase):
             },
         }
 
-        restrictions = ""
+        restrictions = "example_restrictions"
         goods = [
             {"commodity": "7214993100", "quantity": 26710, "controlled_by": "Q", "unit": 23},
             {"commodity": "7214997100", "quantity": 48042, "controlled_by": "Q", "unit": 23},

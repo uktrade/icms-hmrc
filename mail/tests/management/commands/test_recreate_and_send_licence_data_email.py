@@ -5,6 +5,7 @@ from unittest import mock
 import pytest
 from django.conf import settings
 from django.core.management import CommandError, call_command
+from django.utils.timezone import make_aware
 from freezegun import freeze_time
 
 from mail.chief.email import EmailMessageData
@@ -33,7 +34,7 @@ class TestResendLicenceDataEmail:
             extract_type=ExtractTypeEnum.LICENCE_DATA,
             edi_filename="the_licence_data_file",
             edi_data="lovely data",
-            sent_at=dt.datetime(2024, 1, 1),
+            sent_at=make_aware(dt.datetime(2024, 1, 1)),
         )
 
         self.ld = LicenceData.objects.create(
